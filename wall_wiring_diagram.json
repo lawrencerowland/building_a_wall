@@ -1,0 +1,378 @@
+{
+  "schema": "wiring-diagram.v1",
+  "category": "W_Set (labeled boxes and wiring diagrams)",
+  "types": {
+    "BL": {
+      "label": "Bricklayer (labor)",
+      "kind": "resource"
+    },
+    "P": {
+      "label": "Pegs & string line kit",
+      "kind": "tool"
+    },
+    "D": {
+      "label": "Design drawing/spec",
+      "kind": "information"
+    },
+    "S": {
+      "label": "Sand",
+      "kind": "material"
+    },
+    "C": {
+      "label": "Cement",
+      "kind": "material"
+    },
+    "WATER": {
+      "label": "Water",
+      "kind": "material"
+    },
+    "M": {
+      "label": "Mortar",
+      "kind": "material"
+    },
+    "L": {
+      "label": "Set-out line (pegged)",
+      "kind": "state"
+    },
+    "B": {
+      "label": "Bricks",
+      "kind": "material"
+    },
+    "LIN": {
+      "label": "Lintels",
+      "kind": "material"
+    },
+    "WALL": {
+      "label": "Completed wall",
+      "kind": "scope"
+    }
+  },
+  "outer": {
+    "id": "build_wall",
+    "label": "Build wall (composed)",
+    "inputs": [
+      {
+        "id": "in_BL",
+        "type": "BL",
+        "label": "BL"
+      },
+      {
+        "id": "in_P",
+        "type": "P",
+        "label": "P"
+      },
+      {
+        "id": "in_D",
+        "type": "D",
+        "label": "D"
+      },
+      {
+        "id": "in_S",
+        "type": "S",
+        "label": "S"
+      },
+      {
+        "id": "in_C",
+        "type": "C",
+        "label": "C"
+      },
+      {
+        "id": "in_WATER",
+        "type": "WATER",
+        "label": "W"
+      },
+      {
+        "id": "in_B",
+        "type": "B",
+        "label": "B"
+      },
+      {
+        "id": "in_LIN",
+        "type": "LIN",
+        "label": "Lin"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out_WALL",
+        "type": "WALL",
+        "label": "Wall"
+      },
+      {
+        "id": "out_BL",
+        "type": "BL",
+        "label": "BL"
+      },
+      {
+        "id": "out_P",
+        "type": "P",
+        "label": "P"
+      },
+      {
+        "id": "out_D",
+        "type": "D",
+        "label": "D"
+      }
+    ]
+  },
+  "boxes": [
+    {
+      "id": "set_out",
+      "label": "Set out line",
+      "inputs": [
+        {
+          "id": "in_BL",
+          "type": "BL",
+          "label": "BL"
+        },
+        {
+          "id": "in_P",
+          "type": "P",
+          "label": "P"
+        },
+        {
+          "id": "in_D",
+          "type": "D",
+          "label": "D"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "out_BL",
+          "type": "BL",
+          "label": "BL"
+        },
+        {
+          "id": "out_P",
+          "type": "P",
+          "label": "P"
+        },
+        {
+          "id": "out_D",
+          "type": "D",
+          "label": "D"
+        },
+        {
+          "id": "out_L",
+          "type": "L",
+          "label": "L"
+        }
+      ]
+    },
+    {
+      "id": "mix_mortar",
+      "label": "Mix mortar",
+      "inputs": [
+        {
+          "id": "in_BL",
+          "type": "BL",
+          "label": "BL"
+        },
+        {
+          "id": "in_S",
+          "type": "S",
+          "label": "S"
+        },
+        {
+          "id": "in_C",
+          "type": "C",
+          "label": "C"
+        },
+        {
+          "id": "in_WATER",
+          "type": "WATER",
+          "label": "W"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "out_BL",
+          "type": "BL",
+          "label": "BL"
+        },
+        {
+          "id": "out_M",
+          "type": "M",
+          "label": "M"
+        }
+      ]
+    },
+    {
+      "id": "lay_bricks",
+      "label": "Lay bricks / build wall",
+      "inputs": [
+        {
+          "id": "in_BL",
+          "type": "BL",
+          "label": "BL"
+        },
+        {
+          "id": "in_D",
+          "type": "D",
+          "label": "D"
+        },
+        {
+          "id": "in_L",
+          "type": "L",
+          "label": "L"
+        },
+        {
+          "id": "in_M",
+          "type": "M",
+          "label": "M"
+        },
+        {
+          "id": "in_B",
+          "type": "B",
+          "label": "B"
+        },
+        {
+          "id": "in_LIN",
+          "type": "LIN",
+          "label": "Lin"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "out_WALL",
+          "type": "WALL",
+          "label": "Wall"
+        },
+        {
+          "id": "out_BL",
+          "type": "BL",
+          "label": "BL"
+        },
+        {
+          "id": "out_D",
+          "type": "D",
+          "label": "D"
+        }
+      ]
+    }
+  ],
+  "wires": [
+    {
+      "from": "outer.in.in_BL",
+      "to": "set_out.in.in_BL"
+    },
+    {
+      "from": "outer.in.in_P",
+      "to": "set_out.in.in_P"
+    },
+    {
+      "from": "outer.in.in_D",
+      "to": "set_out.in.in_D"
+    },
+    {
+      "from": "set_out.out.out_BL",
+      "to": "mix_mortar.in.in_BL"
+    },
+    {
+      "from": "outer.in.in_S",
+      "to": "mix_mortar.in.in_S"
+    },
+    {
+      "from": "outer.in.in_C",
+      "to": "mix_mortar.in.in_C"
+    },
+    {
+      "from": "outer.in.in_WATER",
+      "to": "mix_mortar.in.in_WATER"
+    },
+    {
+      "from": "mix_mortar.out.out_BL",
+      "to": "lay_bricks.in.in_BL"
+    },
+    {
+      "from": "set_out.out.out_D",
+      "to": "lay_bricks.in.in_D"
+    },
+    {
+      "from": "set_out.out.out_L",
+      "to": "lay_bricks.in.in_L"
+    },
+    {
+      "from": "mix_mortar.out.out_M",
+      "to": "lay_bricks.in.in_M"
+    },
+    {
+      "from": "outer.in.in_B",
+      "to": "lay_bricks.in.in_B"
+    },
+    {
+      "from": "outer.in.in_LIN",
+      "to": "lay_bricks.in.in_LIN"
+    },
+    {
+      "from": "lay_bricks.out.out_WALL",
+      "to": "outer.out.out_WALL"
+    },
+    {
+      "from": "lay_bricks.out.out_BL",
+      "to": "outer.out.out_BL"
+    },
+    {
+      "from": "set_out.out.out_P",
+      "to": "outer.out.out_P"
+    },
+    {
+      "from": "lay_bricks.out.out_D",
+      "to": "outer.out.out_D"
+    }
+  ],
+  "layout": {
+    "outer": {
+      "x": 50,
+      "y": 80,
+      "w": 900,
+      "h": 320
+    },
+    "boxes": {
+      "set_out": {
+        "x": 180,
+        "y": 120,
+        "w": 180,
+        "h": 140
+      },
+      "mix_mortar": {
+        "x": 420,
+        "y": 120,
+        "w": 180,
+        "h": 140
+      },
+      "lay_bricks": {
+        "x": 660,
+        "y": 105,
+        "w": 220,
+        "h": 170
+      }
+    }
+  },
+  "morphism": {
+    "name": "f_wall",
+    "domain": "SetOut \u2297 MixMortar \u2297 LayBricks",
+    "codomain": "BuildWall",
+    "f_in": {
+      "set_out.BL": "Yin.BL",
+      "set_out.P": "Yin.P",
+      "set_out.D": "Yin.D",
+      "mix_mortar.BL": "Xout.set_out.BL",
+      "mix_mortar.S": "Yin.S",
+      "mix_mortar.C": "Yin.C",
+      "mix_mortar.WATER": "Yin.WATER",
+      "lay_bricks.BL": "Xout.mix_mortar.BL",
+      "lay_bricks.D": "Xout.set_out.D",
+      "lay_bricks.L": "Xout.set_out.L",
+      "lay_bricks.M": "Xout.mix_mortar.M",
+      "lay_bricks.B": "Yin.B",
+      "lay_bricks.LIN": "Yin.LIN"
+    },
+    "f_out": {
+      "Yout.WALL": "Xout.lay_bricks.WALL",
+      "Yout.BL": "Xout.lay_bricks.BL",
+      "Yout.P": "Xout.set_out.P",
+      "Yout.D": "Xout.lay_bricks.D"
+    }
+  }
+}
