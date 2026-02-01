@@ -1,0 +1,1121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Geometry of Interaction: Composition as Cut + Execution</title>
+  <link rel="stylesheet" href="../../common.css">
+  <style>
+    :root{
+      --bg: #0b0c10;
+      --panel: #111319;
+      --panel2: #0f1116;
+      --ink: #e7eaf0;
+      --muted: #b7bfce;
+      --faint: #7f8aa0;
+      --accent: #7dd3fc;
+      --accent2: #c4b5fd;
+      --warn: #fb7185;
+
+      --edge: rgba(231,234,240,0.35);
+      --edgeReduced: rgba(231,234,240,0.95);
+      --edgeActive: rgba(125,211,252,0.95);
+
+      --stroke: rgba(231,234,240,0.55);
+      --strokeFaint: rgba(231,234,240,0.20);
+    }
+
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 15% 10%, #12152a 0%, var(--bg) 55%, #06070a 100%);
+      color: var(--ink);
+    }
+
+    header{
+      padding: 18px 20px 8px;
+      border-bottom: 1px solid rgba(231,234,240,0.12);
+    }
+    header h1{
+      margin:0 0 6px 0;
+      font-size: 18px;
+      letter-spacing: 0.2px;
+      font-weight: 650;
+    }
+    header p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      max-width: 1000px;
+    }
+
+    .wrap{
+      display:grid;
+      grid-template-columns: 380px 1fr;
+      gap: 14px;
+      padding: 14px 14px 18px;
+      box-sizing: border-box;
+      min-height: calc(100% - 70px);
+    }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
+      border: 1px solid rgba(231,234,240,0.12);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
+
+    .panel .hd{
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid rgba(231,234,240,0.10);
+      display:flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .panel .hd .title{
+      font-size: 13px;
+      color: var(--ink);
+      font-weight: 650;
+      letter-spacing: 0.15px;
+    }
+    .panel .hd .sub{
+      font-size: 12px;
+      color: var(--faint);
+      white-space: nowrap;
+    }
+
+    .panel .bd{
+      padding: 12px 14px;
+    }
+
+    .controls{
+      display:grid;
+      gap: 10px;
+    }
+
+    label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    select, button, input[type="range"]{
+      width:100%;
+      box-sizing: border-box;
+      padding: 10px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(231,234,240,0.16);
+      background: rgba(10,12,18,0.55);
+      color: var(--ink);
+      outline: none;
+    }
+    select:focus, button:focus{
+      border-color: rgba(125,211,252,0.55);
+      box-shadow: 0 0 0 3px rgba(125,211,252,0.12);
+    }
+
+    button{
+      cursor: pointer;
+      font-weight: 650;
+      letter-spacing: 0.15px;
+      background: linear-gradient(180deg, rgba(125,211,252,0.18), rgba(125,211,252,0.05));
+    }
+    button.secondary{
+      background: linear-gradient(180deg, rgba(196,181,253,0.16), rgba(196,181,253,0.05));
+    }
+    button.ghost{
+      background: rgba(255,255,255,0.03);
+      font-weight: 600;
+    }
+    button.danger{
+      background: linear-gradient(180deg, rgba(251,113,133,0.18), rgba(251,113,133,0.06));
+      border-color: rgba(251,113,133,0.20);
+    }
+
+    .row2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .small code{
+      color: var(--ink);
+      background: rgba(255,255,255,0.06);
+      padding: 1px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(231,234,240,0.10);
+    }
+
+    .callout{
+      border-radius: 12px;
+      border: 1px solid rgba(231,234,240,0.12);
+      background: rgba(255,255,255,0.03);
+      padding: 12px 12px;
+    }
+    .callout h3{
+      margin: 0 0 6px 0;
+      font-size: 12px;
+      color: var(--ink);
+      letter-spacing: 0.1px;
+      font-weight: 700;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+    .callout p{
+      margin: 0;
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .vizPanel{
+      display:grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 640px;
+    }
+    .vizTop{
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(231,234,240,0.10);
+      background: rgba(255,255,255,0.02);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .vizTop .meta{
+      display:flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .vizTop .meta .line1{
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .vizTop .meta .line2{
+      font-size: 12px;
+      color: var(--faint);
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(231,234,240,0.14);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .pill strong{
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    #diagramWrap{
+      position: relative;
+      padding: 10px 10px 4px;
+    }
+    svg{
+      width: 100%;
+      height: 100%;
+      min-height: 520px;
+      display:block;
+      border-radius: 12px;
+      background: radial-gradient(900px 500px at 50% 20%, rgba(125,211,252,0.07) 0%, rgba(0,0,0,0.0) 55%),
+                  radial-gradient(700px 500px at 75% 55%, rgba(196,181,253,0.06) 0%, rgba(0,0,0,0.0) 55%),
+                  rgba(0,0,0,0.10);
+      border: 1px solid rgba(231,234,240,0.10);
+    }
+
+    .legend{
+      padding: 10px 14px 14px;
+      border-top: 1px solid rgba(231,234,240,0.10);
+      background: rgba(255,255,255,0.015);
+      display:grid;
+      gap: 8px;
+    }
+
+    .legend .readout{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+      white-space: pre-wrap;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(231,234,240,0.10);
+      border-radius: 12px;
+      padding: 10px 10px;
+      min-height: 72px;
+    }
+
+    /* SVG styles */
+    .box{
+      fill: rgba(255,255,255,0.02);
+      stroke: var(--stroke);
+      stroke-width: 1.2;
+      rx: 12;
+      ry: 12;
+    }
+    .boxLabel{
+      font-size: 12px;
+      fill: rgba(231,234,240,0.85);
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .boxSubLabel{
+      font-size: 11px;
+      fill: rgba(183,191,206,0.9);
+    }
+
+    .edge{
+      fill: none;
+      stroke: var(--edge);
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      vector-effect: non-scaling-stroke;
+    }
+    .edge.reduced{
+      stroke: var(--edgeReduced);
+      stroke-width: 3.0;
+      opacity: 0.95;
+    }
+    .edge.active{
+      stroke: var(--edgeActive);
+      stroke-width: 3.2;
+      opacity: 1;
+      filter: drop-shadow(0 0 5px rgba(125,211,252,0.25));
+    }
+    .edge.faint{
+      opacity: 0.14;
+    }
+
+    .port{
+      fill: rgba(231,234,240,0.92);
+      stroke: rgba(0,0,0,0.35);
+      stroke-width: 1.2;
+      cursor: pointer;
+    }
+    .port:hover{
+      filter: drop-shadow(0 0 8px rgba(125,211,252,0.22));
+    }
+    .portLabel{
+      font-size: 11px;
+      fill: rgba(231,234,240,0.85);
+      user-select: none;
+      pointer-events: none;
+    }
+    .portGroupLabel{
+      font-size: 12px;
+      fill: rgba(231,234,240,0.9);
+      font-weight: 800;
+      letter-spacing: 0.25px;
+      opacity: 0.9;
+    }
+
+    .token{
+      fill: rgba(125,211,252,0.95);
+      stroke: rgba(0,0,0,0.35);
+      stroke-width: 1.0;
+      filter: drop-shadow(0 0 10px rgba(125,211,252,0.25));
+    }
+
+    .hint{
+      font-size: 12px;
+      color: var(--faint);
+      line-height: 1.35;
+    }
+    .kbd{
+      display:inline-block;
+      font-size: 11px;
+      padding: 1px 7px;
+      border-radius: 8px;
+      border: 1px solid rgba(231,234,240,0.14);
+      background: rgba(255,255,255,0.05);
+      color: var(--ink);
+      margin: 0 2px;
+    }
+
+    details{
+      border-radius: 12px;
+      border: 1px solid rgba(231,234,240,0.10);
+      background: rgba(255,255,255,0.02);
+      padding: 10px 10px;
+    }
+    details summary{
+      cursor: pointer;
+      color: var(--ink);
+      font-weight: 650;
+      font-size: 13px;
+      outline: none;
+    }
+    details p{
+      margin: 10px 0 0 0;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+    .ref{
+      color: rgba(231,234,240,0.9);
+    }
+
+    .back-link{
+      padding: 16px 20px 0;
+    }
+
+    @media (max-width: 980px){
+      .wrap{ grid-template-columns: 1fr; }
+      .vizPanel{ min-height: 560px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="back-link">
+    <a href="../../index.html">Back to app index</a>
+  </div>
+  <header>
+    <h1>Geometry of Interaction — Composition as Cut + Execution (Token Chasing)</h1>
+    <p>
+      Pick a morphism <span class="ref">f : A → B</span> and <span class="ref">g : B → C</span>.
+      Composition is “glue along B” (a <span class="ref">cut</span>), then <em>execute</em> by following paths; hiding the internal interface yields the composite wiring on A and C, plus any closed feedback loops (a scalar/traced residue).
+    </p>
+  </header>
+
+  <div class="wrap">
+    <!-- LEFT: controls + explanation -->
+    <section class="panel">
+      <div class="hd">
+        <div class="title">Controls</div>
+        <div class="sub">click ports to launch a token</div>
+      </div>
+      <div class="bd">
+        <div class="controls">
+          <div>
+            <label for="selF">Choose f : A → B (a small “proof/net”)</label>
+            <select id="selF"></select>
+          </div>
+
+          <div>
+            <label for="selG">Choose g : B → C</label>
+            <select id="selG"></select>
+          </div>
+
+          <div class="row2">
+            <button id="btnCompose">Compose (cut along B)</button>
+            <button class="secondary" id="btnToggleReduced">Toggle executed/reduced view</button>
+          </div>
+
+          <div class="row2">
+            <button class="ghost" id="btnStopToken">Stop / clear token</button>
+            <button class="danger" id="btnRandom">Random pair</button>
+          </div>
+
+          <div class="callout">
+            <h3>Token machine micro-rule</h3>
+            <p>
+              Treat every drawn wire as an undirected “conductor.” A token at a port follows the unique incident wire; at internal B-ports it continues through the other incident wire, so paths concatenate across the cut. If the subgraph closes into a cycle, the token loops forever (that’s the geometric shadow of a traced feedback component).
+            </p>
+          </div>
+
+          <div>
+            <label for="speed">Token speed</label>
+            <input id="speed" type="range" min="0.35" max="2.5" value="1.1" step="0.05" />
+            <div class="small">Higher = faster; the drawing stays the same.</div>
+          </div>
+
+          <details>
+            <summary>What this is (and isn’t) showing</summary>
+            <p>
+              This is a deliberately minimal “GoI-flavoured” picture: morphisms are wiring constraints, composition is gluing along a shared interface, and <em>execution</em> is path-following (the classic “token chasing” intuition behind Girard’s execution formula).
+              The reduced view is the <span class="ref">observable composite</span> after hiding the internal interface B — categorically, think “trace”/feedback; diagrammatically, think “erase the middle column and reconnect endpoints by chasing paths,” counting any closed cycles as a scalar residue.
+            </p>
+            <p>
+              If you want to map this closer to linear logic proper: A,B,C are interfaces/types, the cut is proof composition, and the token is a caricature of the GoI dynamics that computes cut-elimination without rewriting the whole net — it “measures” the composite by running through it.
+            </p>
+            <p class="small">
+              References to triangulate: Girard’s <span class="ref">GoI I–III</span> (operator-algebraic semantics), Danos–Regnier proof nets, and the traced/symmetric-monoidal account (Joyal–Street–Verity). The picture here is closest in spirit to compact-closed/string-diagram “interaction = trace” folklore.
+            </p>
+          </details>
+
+          <div class="callout">
+            <h3>Strategy relevance (textbox)</h3>
+            <p id="strategyText">
+              Strategy is rarely “a plan in isolation”; it’s composition of partial capabilities across an interface (teams, partners, supply chains, institutions) plus the feedback that inevitably appears when you hide the internal coordination layer. GoI’s lesson is that composition creates latent cycles: some loops are productive (amplification/learning), others are pure scalar cost (coordination drag) that doesn’t change outward behaviour yet changes feasibility. Thinking in GoI terms pushes you to design interfaces so that the executed/reduced composite is simple, and to treat internal loops as first-class (measurable) strategic residues rather than embarrassing implementation details.
+            </p>
+          </div>
+
+          <div class="hint">
+            Tip: click a port (e.g. <span class="kbd">A2</span> or <span class="kbd">Bf0</span>) to launch a token and watch the composed structure “compute itself.”
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: visualization -->
+    <section class="panel vizPanel">
+      <div class="vizTop">
+        <div class="meta">
+          <div class="line1" id="metaTitle">f ∘ g</div>
+          <div class="line2" id="metaSub">Reduced view hidden. Loops (scalar residue): 0.</div>
+        </div>
+        <div class="pill" id="pill">
+          <strong>Execution</strong> = chase paths, hide B
+        </div>
+      </div>
+
+      <div id="diagramWrap">
+        <svg id="svg" viewBox="0 0 820 420" aria-label="GoI composition diagram"></svg>
+      </div>
+
+      <div class="legend">
+        <div class="readout" id="readout">
+Click a port to launch a token.
+Compose changes f,g; “reduced view” shows the executed composite on A,C (and counts internal loops).
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ---------- Utilities ----------
+    const NS = "http://www.w3.org/2000/svg";
+    const $ = (id) => document.getElementById(id);
+
+    function el(name, attrs = {}, parent = null) {
+      const e = document.createElementNS(NS, name);
+      for (const [k,v] of Object.entries(attrs)) e.setAttribute(k, v);
+      if (parent) parent.appendChild(e);
+      return e;
+    }
+
+    function edgeKey(a,b){
+      return [a,b].sort().join("|");
+    }
+
+    function dist2(x1,y1,x2,y2){
+      const dx = x1 - x2, dy = y1 - y2;
+      return dx*dx + dy*dy;
+    }
+
+    // ---------- Port layout ----------
+    const PORTS = (() => {
+      const y0 = 120, dy = 80;
+      const ys = [y0, y0+dy, y0+2*dy];
+
+      const ports = {};
+      for (let i=0;i<3;i++){
+        ports[`A${i}`]  = { id:`A${i}`,  x:  80, y: ys[i], group:"A" };
+        ports[`Bf${i}`] = { id:`Bf${i}`, x: 380, y: ys[i], group:"Bf" };
+        ports[`Bg${i}`] = { id:`Bg${i}`, x: 420, y: ys[i], group:"Bg" };
+        ports[`C${i}`]  = { id:`C${i}`,  x: 740, y: ys[i], group:"C" };
+      }
+      return ports;
+    })();
+
+    const GROUP_LABELS = [
+      {text:"A", x: 52,  y: 78},
+      {text:"B", x: 398, y: 78},
+      {text:"C", x: 768, y: 78},
+    ];
+
+    // ---------- Component libraries (matchings) ----------
+    // Each component is a perfect matching on 6 boundary ports.
+    // f uses A* and Bf*; g uses Bg* and C*.
+    const LIB_F = [
+      {
+        name: "Straight (identity-ish): A0–B0, A1–B1, A2–B2",
+        pairs: [["A0","Bf0"],["A1","Bf1"],["A2","Bf2"]],
+        note: "A clean through-wiring: no local cups/caps."
+      },
+      {
+        name: "Swap (1↔2): A0–B0, A1–B2, A2–B1",
+        pairs: [["A0","Bf0"],["A1","Bf2"],["A2","Bf1"]],
+        note: "A small permutation on the interface."
+      },
+      {
+        name: "Cup/Cap on 0–1, Through on 2: A0–A1, B0–B1, A2–B2",
+        pairs: [["A0","A1"],["Bf0","Bf1"],["A2","Bf2"]],
+        note: "Creates a local cup on A and a local cap on B."
+      },
+      {
+        name: "Cup/Cap on 1–2, Through on 0: A1–A2, B1–B2, A0–B0",
+        pairs: [["A1","A2"],["Bf1","Bf2"],["A0","Bf0"]],
+        note: "Same idea, shifted indices."
+      },
+      {
+        name: "Mixed: A0–B1, A1–A2, B0–B2",
+        pairs: [["A0","Bf1"],["A1","A2"],["Bf0","Bf2"]],
+        note: "A cross-wire plus local cups/caps."
+      }
+    ];
+
+    const LIB_G = [
+      {
+        name: "Straight: B0–C0, B1–C1, B2–C2",
+        pairs: [["Bg0","C0"],["Bg1","C1"],["Bg2","C2"]],
+        note: "A clean through-wiring: no local cups/caps."
+      },
+      {
+        name: "Swap (0↔1): B0–C1, B1–C0, B2–C2",
+        pairs: [["Bg0","C1"],["Bg1","C0"],["Bg2","C2"]],
+        note: "A small permutation on the interface."
+      },
+      {
+        name: "Through on 2, Cup/Cap on 0–1: B0–B1, C0–C1, B2–C2",
+        pairs: [["Bg0","Bg1"],["C0","C1"],["Bg2","C2"]],
+        note: "Pairs B0–B1 internally (a ‘cup’ on B) and C0–C1 internally."
+      },
+      {
+        name: "Through on 0, Cup/Cap on 1–2: B1–B2, C1–C2, B0–C0",
+        pairs: [["Bg1","Bg2"],["C1","C2"],["Bg0","C0"]],
+        note: "Shifted indices."
+      },
+      {
+        name: "Mixed: B0–B1, B2–C0, C1–C2",
+        pairs: [["Bg0","Bg1"],["Bg2","C0"],["C1","C2"]],
+        note: "A local B-cup plus a C-cap."
+      }
+    ];
+
+    // ---------- Diagram state ----------
+    let selectedF = 0;
+    let selectedG = 0;
+    let reducedOn = false;
+
+    // Full edges: f internal + g internal + cut wires (Bf i to Bg i)
+    let fullEdges = [];
+    let reducedEdges = []; // computed external connections (A/C) after hiding B
+    let loopCount = 0;
+
+    // Render caches
+    let svg;
+    let layerBoxes, layerEdgesFull, layerEdgesReduced, layerPorts, layerLabels, layerToken;
+    let edgePathByKey = new Map();
+
+    // Token animation state
+    let tokenEl = null;
+    let rafId = null;
+    let activePaths = [];
+
+    // ---------- SVG path geometry ----------
+    function edgeD(p, q){
+      // Special: cut edge between Bf and Bg (short straight).
+      const isCut = (p.group === "Bf" && q.group === "Bg") || (p.group === "Bg" && q.group === "Bf");
+      if (isCut) {
+        return `M ${p.x} ${p.y} L ${q.x} ${q.y}`;
+      }
+
+      const dx = Math.abs(p.x - q.x);
+
+      // Same column => draw an inward arc.
+      if (dx < 2) {
+        // Arc direction: A and Bg arc rightward; Bf and C arc leftward
+        const dir = (p.group === "A" || p.group === "Bg") ? +1 : -1;
+        const bend = 120;
+        const midX = p.x + dir * bend;
+        const midY = (p.y + q.y) / 2;
+        return `M ${p.x} ${p.y} Q ${midX} ${midY} ${q.x} ${q.y}`;
+      }
+
+      // Across columns => cubic curve through the interior.
+      // Bend depends on span.
+      const bend = Math.min(220, Math.max(90, dx * 0.35));
+      const c1x = p.x + (q.x > p.x ? bend : -bend);
+      const c1y = p.y;
+      const c2x = q.x + (p.x > q.x ? bend : -bend);
+      const c2y = q.y;
+      return `M ${p.x} ${p.y} C ${c1x} ${c1y} ${c2x} ${c2y} ${q.x} ${q.y}`;
+    }
+
+    function reducedEdgeD(p, q){
+      // For reduced edges we want slightly bigger arcs.
+      const dx = Math.abs(p.x - q.x);
+
+      if (dx < 2) {
+        const dir = (p.group === "A") ? +1 : -1;
+        const bend = 150;
+        const midX = p.x + dir * bend;
+        const midY = (p.y + q.y) / 2;
+        return `M ${p.x} ${p.y} Q ${midX} ${midY} ${q.x} ${q.y}`;
+      }
+
+      const bend = Math.min(320, Math.max(120, dx * 0.32));
+      const c1x = p.x + (q.x > p.x ? bend : -bend);
+      const c1y = p.y;
+      const c2x = q.x + (p.x > q.x ? bend : -bend);
+      const c2y = q.y;
+      return `M ${p.x} ${p.y} C ${c1x} ${c1y} ${c2x} ${c2y} ${q.x} ${q.y}`;
+    }
+
+    // ---------- Graph algorithms (token chasing + reduction) ----------
+    function buildAdj(edges){
+      const adj = new Map();
+      for (const [u,v] of edges){
+        if (!adj.has(u)) adj.set(u, []);
+        if (!adj.has(v)) adj.set(v, []);
+        adj.get(u).push(v);
+        adj.get(v).push(u);
+      }
+      return adj;
+    }
+
+    function isExternal(id){
+      return id.startsWith("A") || id.startsWith("C");
+    }
+
+    function tracePath(start, adj, maxSteps = 80){
+      // Deterministic path-following on a degree-<=2 graph:
+      // at each node, go to the neighbor different from where you came from.
+      let prev = null;
+      let cur = start;
+      const path = [start];
+
+      const seen = new Set(); // state = prev|cur
+      for (let step=0; step<maxSteps; step++){
+        const nbrs = adj.get(cur) || [];
+        if (nbrs.length === 0){
+          return { path, end: cur, loop: false, reason:"dead-end" };
+        }
+
+        let next;
+        if (prev === null){
+          next = nbrs[0];
+        } else {
+          next = (nbrs[0] === prev) ? nbrs[1] : nbrs[0];
+        }
+
+        if (next === undefined){
+          // endpoint
+          return { path, end: cur, loop: false, reason:"endpoint" };
+        }
+
+        const state = `${prev ?? "∅"}|${cur}`;
+        if (seen.has(state)){
+          return { path, end: null, loop: true, reason:"cycle-detected" };
+        }
+        seen.add(state);
+
+        prev = cur;
+        cur = next;
+        path.push(cur);
+
+        // stop if we hit an external port different from start
+        if (isExternal(cur) && cur !== start){
+          return { path, end: cur, loop: false, reason:"reached-external" };
+        }
+
+        // if we returned to start => loop
+        if (cur === start){
+          return { path, end: null, loop: true, reason:"returned-to-start" };
+        }
+      }
+
+      return { path, end: null, loop: true, reason:"max-steps" };
+    }
+
+    function computeReduction(edges){
+      const adj = buildAdj(edges);
+
+      // Count loops: connected components with no external ports
+      const visited = new Set();
+      let loops = 0;
+
+      for (const node of adj.keys()){
+        if (visited.has(node)) continue;
+        const stack = [node];
+        const comp = [];
+        visited.add(node);
+        while (stack.length){
+          const n = stack.pop();
+          comp.push(n);
+          for (const m of (adj.get(n) || [])){
+            if (!visited.has(m)){
+              visited.add(m);
+              stack.push(m);
+            }
+          }
+        }
+        const hasExt = comp.some(isExternal);
+        if (!hasExt){
+          // In these matchings + cut-wires, non-external components are cycles.
+          loops += 1;
+        }
+      }
+
+      // External connections by chasing paths from each external port
+      const externals = Object.keys(PORTS).filter(isExternal);
+      const used = new Set();
+      const conns = [];
+
+      for (const e of externals){
+        if (used.has(e)) continue;
+        const res = tracePath(e, adj, 120);
+        if (res.loop){
+          // A looping component reachable from an external would be weird here, but handle anyway.
+          used.add(e);
+          continue;
+        }
+        if (res.end && isExternal(res.end)){
+          used.add(e);
+          used.add(res.end);
+          conns.push([e, res.end, res.path]);
+        } else {
+          used.add(e);
+        }
+      }
+
+      return { loops, conns, adj };
+    }
+
+    // ---------- Rendering ----------
+    function initUI(){
+      // populate selects
+      const selF = $("selF");
+      const selG = $("selG");
+
+      LIB_F.forEach((c, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = c.name;
+        selF.appendChild(opt);
+      });
+      LIB_G.forEach((c, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = c.name;
+        selG.appendChild(opt);
+      });
+
+      selF.value = String(selectedF);
+      selG.value = String(selectedG);
+
+      selF.addEventListener("change", () => { selectedF = Number(selF.value); composeAndRender(); });
+      selG.addEventListener("change", () => { selectedG = Number(selG.value); composeAndRender(); });
+
+      $("btnCompose").addEventListener("click", composeAndRender);
+      $("btnToggleReduced").addEventListener("click", () => {
+        reducedOn = !reducedOn;
+        updateReducedVisibility();
+        updateMeta();
+      });
+
+      $("btnStopToken").addEventListener("click", clearToken);
+
+      $("btnRandom").addEventListener("click", () => {
+        selectedF = Math.floor(Math.random() * LIB_F.length);
+        selectedG = Math.floor(Math.random() * LIB_G.length);
+        selF.value = String(selectedF);
+        selG.value = String(selectedG);
+        composeAndRender();
+      });
+
+      svg = $("svg");
+      svg.innerHTML = "";
+
+      // Layers
+      layerBoxes = el("g", {id:"layerBoxes"}, svg);
+      layerEdgesFull = el("g", {id:"layerEdgesFull"}, svg);
+      layerEdgesReduced = el("g", {id:"layerEdgesReduced"}, svg);
+      layerPorts = el("g", {id:"layerPorts"}, svg);
+      layerLabels = el("g", {id:"layerLabels"}, svg);
+      layerToken = el("g", {id:"layerToken"}, svg);
+
+      drawStaticScaffold();
+      composeAndRender();
+    }
+
+    function drawStaticScaffold(){
+      // Boxes for f and g
+      el("rect", {class:"box", x:140, y:80, width:240, height:260}, layerBoxes);
+      el("text", {class:"boxLabel", x:152, y:104}, layerBoxes).textContent = "f : A → B";
+
+      el("rect", {class:"box", x:420, y:80, width:240, height:260}, layerBoxes);
+      el("text", {class:"boxLabel", x:432, y:104}, layerBoxes).textContent = "g : B → C";
+
+      // Cut band label
+      el("text", {class:"boxSubLabel", x:392, y:360, "text-anchor":"middle"}, layerBoxes)
+        .textContent = "cut / shared interface B";
+
+      // Group labels (A, B, C)
+      for (const gl of GROUP_LABELS){
+        el("text", {class:"portGroupLabel", x:gl.x, y:gl.y}, layerLabels).textContent = gl.text;
+      }
+
+      // Ports
+      for (const [id,p] of Object.entries(PORTS)){
+        const c = el("circle", {
+          class:"port",
+          cx: p.x,
+          cy: p.y,
+          r: 7.5,
+          "data-port": id
+        }, layerPorts);
+
+        c.addEventListener("click", () => launchToken(id));
+
+        // Labels: offset to avoid overlap
+        let dx = 0, anchor="middle";
+        if (p.group === "A") { dx = -20; anchor="end"; }
+        if (p.group === "C") { dx = +20; anchor="start"; }
+        if (p.group === "Bf") { dx = -16; anchor="end"; }
+        if (p.group === "Bg") { dx = +16; anchor="start"; }
+
+        const t = el("text", {
+          class:"portLabel",
+          x: p.x + dx,
+          y: p.y + 4,
+          "text-anchor": anchor
+        }, layerLabels);
+        t.textContent = id;
+      }
+    }
+
+    function clearLayer(layer){
+      while (layer.firstChild) layer.removeChild(layer.firstChild);
+    }
+
+    function composeAndRender(){
+      clearToken();
+
+      // Build full edges
+      const f = LIB_F[selectedF];
+      const g = LIB_G[selectedG];
+
+      const cut = [["Bf0","Bg0"],["Bf1","Bg1"],["Bf2","Bg2"]];
+      fullEdges = [...f.pairs, ...g.pairs, ...cut];
+
+      // Draw full edges
+      drawFullEdges(fullEdges);
+
+      // Compute reduction (executed composite)
+      const red = computeReduction(fullEdges);
+      loopCount = red.loops;
+      reducedEdges = red.conns.map(([u,v,_path]) => [u,v]);
+
+      drawReducedEdges(red.conns, loopCount);
+
+      updateReducedVisibility();
+      updateMeta();
+      updateReadout(
+        `Composed with cut along B.\n` +
+        `f: ${f.note}\n` +
+        `g: ${g.note}\n\n` +
+        `Now click a port to launch a token and see the interaction.`
+      );
+    }
+
+    function drawFullEdges(edges){
+      clearLayer(layerEdgesFull);
+      edgePathByKey = new Map();
+
+      // draw each edge once
+      for (const [u,v] of edges){
+        const p = PORTS[u], q = PORTS[v];
+        const d = edgeD(p,q);
+        const path = el("path", {
+          class:"edge",
+          d,
+          "data-edge": edgeKey(u,v),
+        }, layerEdgesFull);
+        edgePathByKey.set(edgeKey(u,v), path);
+      }
+    }
+
+    function drawReducedEdges(conns, loops){
+      clearLayer(layerEdgesReduced);
+
+      // title-ish label
+      const label = el("text", {
+        class:"boxSubLabel",
+        x: 410,
+        y: 400,
+        "text-anchor":"middle"
+      }, layerEdgesReduced);
+      const scalar = loops === 0 ? "no closed loops" : `${loops} closed loop${loops===1?"":"s"} (scalar residue)`;
+      label.textContent = `executed composite (A,C only) — ${scalar}`;
+
+      // draw reduced connections
+      for (const [u,v,pathPorts] of conns){
+        const p = PORTS[u], q = PORTS[v];
+        const d = reducedEdgeD(p,q);
+        const e = el("path", {
+          class:"edge reduced",
+          d
+        }, layerEdgesReduced);
+
+        // a tiny tooltip-ish title for the reduced edge
+        const title = document.createElementNS(NS, "title");
+        title.textContent = `Composite connection: ${u} ↔ ${v}\n(Chased path: ${pathPorts.join(" → ")})`;
+        e.appendChild(title);
+      }
+    }
+
+    function updateReducedVisibility(){
+      // Reduced view = show reduced edges; fade the full edges a bit
+      if (reducedOn){
+        layerEdgesReduced.style.display = "block";
+        // faint full edges so reduced edges pop
+        for (const path of layerEdgesFull.querySelectorAll("path.edge")){
+          path.classList.add("faint");
+        }
+      } else {
+        layerEdgesReduced.style.display = "none";
+        for (const path of layerEdgesFull.querySelectorAll("path.edge")){
+          path.classList.remove("faint");
+        }
+      }
+    }
+
+    function updateMeta(){
+      const fName = LIB_F[selectedF].name.split(":")[0];
+      const gName = LIB_G[selectedG].name.split(":")[0];
+
+      $("metaTitle").textContent = `f ∘ g  (f=${fName.trim()} ; g=${gName.trim()})`;
+      const loops = loopCount;
+      const loopText = loops === 0 ? "0" : String(loops);
+      const reducedText = reducedOn ? "Reduced view shown." : "Reduced view hidden.";
+      $("metaSub").textContent = `${reducedText} Loops (scalar residue): ${loopText}.`;
+    }
+
+    function updateReadout(text){
+      $("readout").textContent = text;
+    }
+
+    // ---------- Token animation ----------
+    function clearToken(){
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+
+      for (const p of activePaths){
+        p.classList.remove("active");
+      }
+      activePaths = [];
+
+      if (tokenEl){
+        tokenEl.remove();
+        tokenEl = null;
+      }
+    }
+
+    function launchToken(startId){
+      clearToken();
+
+      const adj = buildAdj(fullEdges);
+      const res = tracePath(startId, adj, 200);
+
+      const pathText = res.path.join(" → ");
+      if (res.loop){
+        updateReadout(
+          `Token launched from ${startId}.\n` +
+          `Path (prefix): ${pathText}\n` +
+          `Result: loop (${res.reason}).\n\n` +
+          `Interpretation: the token got trapped in a feedback cycle — in GoI terms this is “internal execution” that never produces a boundary answer unless you quotient/measure it (trace/scalar).`
+        );
+        // We still animate a few steps to show it moving, but stop early
+        animateToken(res.path.slice(0, Math.min(10, res.path.length)), true);
+        return;
+      }
+
+      const end = res.end ?? "(none)";
+      updateReadout(
+        `Token launched from ${startId}.\n` +
+        `Chased path: ${pathText}\n` +
+        `Ends at: ${end}\n\n` +
+        `If reduced view is on, the thick edge directly connects the same endpoints (the “executed” composite after hiding B).`
+      );
+
+      animateToken(res.path, false);
+    }
+
+    function animateToken(pathPorts, truncate){
+      if (pathPorts.length < 2) return;
+
+      // create token
+      tokenEl = el("circle", {class:"token", cx: PORTS[pathPorts[0]].x, cy: PORTS[pathPorts[0]].y, r: 6.2}, layerToken);
+
+      // build segments (each segment corresponds to an edge in the full drawing)
+      const segments = [];
+      for (let i=0;i<pathPorts.length-1;i++){
+        const u = pathPorts[i], v = pathPorts[i+1];
+        const k = edgeKey(u,v);
+        const pathEl = edgePathByKey.get(k);
+        if (!pathEl) continue;
+
+        const len = pathEl.getTotalLength();
+        const p0 = pathEl.getPointAtLength(0);
+        const pE = pathEl.getPointAtLength(len);
+        const from = PORTS[u];
+
+        const forward = dist2(p0.x,p0.y,from.x,from.y) < dist2(pE.x,pE.y,from.x,from.y);
+
+        segments.push({pathEl, len, forward});
+      }
+
+      // highlight edges
+      for (const s of segments){
+        s.pathEl.classList.add("active");
+        activePaths.push(s.pathEl);
+      }
+
+      const speed = Number($("speed").value); // higher => faster
+      let segIdx = 0;
+      let segStart = null;
+
+      function tick(ts){
+        if (segIdx >= segments.length){
+          rafId = null;
+          if (truncate){
+            // keep token at last position
+          }
+          return;
+        }
+
+        if (segStart === null) segStart = ts;
+        const seg = segments[segIdx];
+
+        // duration proportional to curve length, inversely to speed
+        const base = 650; // ms for a medium curve at speed=1
+        const duration = (base * (seg.len / 260)) / speed;
+
+        const t = Math.min(1, (ts - segStart) / duration);
+        const sDist = t * seg.len;
+
+        const pt = seg.forward
+          ? seg.pathEl.getPointAtLength(sDist)
+          : seg.pathEl.getPointAtLength(seg.len - sDist);
+
+        tokenEl.setAttribute("cx", pt.x);
+        tokenEl.setAttribute("cy", pt.y);
+
+        if (t >= 1){
+          segIdx += 1;
+          segStart = null;
+          if (truncate && segIdx >= segments.length){
+            rafId = null;
+            return;
+          }
+        }
+
+        rafId = requestAnimationFrame(tick);
+      }
+
+      rafId = requestAnimationFrame(tick);
+    }
+
+    // ---------- Boot ----------
+    initUI();
+  </script>
+</body>
+</html>

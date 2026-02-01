@@ -1,0 +1,76 @@
+.app-container {
+  font-family: 'Inter', sans-serif;
+  padding: 1rem;
+  max-width: 1000px;
+  margin: auto;
+}
+
+.layout {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.content {
+  flex: 1;
+}
+
+.side-image {
+  max-width: 300px;
+  height: auto;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+  .side-image {
+    align-self: center;
+    max-width: 100%;
+  }
+}
+
+.selectors {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.selectors label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 0.75rem;
+  background: #fff;
+}
+
+.card h3 {
+  margin-top: 0;
+}
+
+.list {
+  max-height: 15rem;
+  overflow-y: auto;
+  font-size: 0.85rem;
+}
+
+.count {
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.explanation {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+}

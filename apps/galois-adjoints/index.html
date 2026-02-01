@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Galois Adjoints for Project Management (Rail Upgrade Demo)</title>
+  <link rel="stylesheet" href="../../common.css">
+  <style>
+    :root{
+      --bg:#0b0f17;
+      --panel:#111a2a;
+      --muted:#93a4c7;
+      --text:#e8eefc;
+      --good:#2ecc71;
+      --warn:#f1c40f;
+      --bad:#e74c3c;
+      --line:rgba(255,255,255,.12);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+    html,body{height:100%;}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:linear-gradient(180deg, #070a10, var(--bg));
+      color:var(--text);
+    }
+    header{
+      padding:18px 18px 6px 18px;
+      border-bottom:1px solid var(--line);
+    }
+    header h1{
+      margin:0 0 6px 0;
+      font-size:18px;
+      letter-spacing:.2px;
+    }
+    header p{
+      margin:0 0 10px 0;
+      color:var(--muted);
+      line-height:1.35;
+      max-width:1050px;
+    }
+    .wrap{
+      padding:14px 18px 24px 18px;
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:14px;
+      max-width:1200px;
+      margin:0 auto;
+    }
+    .card{
+      background:rgba(17,26,42,.92);
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:14px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    .card h2{
+      margin:0 0 10px 0;
+      font-size:14px;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+      color:#cfe0ff;
+    }
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      margin:10px 0;
+    }
+    label{color:var(--muted); font-size:13px;}
+    input[type="range"]{width: 220px;}
+    input[type="number"]{
+      width:120px;
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:#0c1322;
+      color:var(--text);
+      font-family:var(--mono);
+    }
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.2);
+      font-family:var(--mono);
+      font-size:12px;
+      color:#d6e2ff;
+    }
+    .mono{
+      font-family:var(--mono);
+      font-size:12px;
+      color:#d6e2ff;
+      line-height:1.35;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+    th,td{
+      border-bottom:1px solid var(--line);
+      padding:8px 6px;
+      text-align:left;
+    }
+    th{color:#cfe0ff; font-weight:600;}
+    td{color:#e7efff;}
+    .sub{color:var(--muted); font-size:12px;}
+    .status{
+      border-radius:12px;
+      padding:10px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.18);
+      margin-top:10px;
+    }
+    .ok{border-color: rgba(46,204,113,.5);}
+    .warn{border-color: rgba(241,196,15,.5);}
+    .bad{border-color: rgba(231,76,60,.55);}
+    .status b{display:block; margin-bottom:6px;}
+    .btns{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    button{
+      cursor:pointer;
+      border:1px solid var(--line);
+      background:#0c1322;
+      color:var(--text);
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:13px;
+    }
+    button:hover{filter:brightness(1.1);}
+    details{
+      margin-top:10px;
+      border-top:1px solid var(--line);
+      padding-top:10px;
+    }
+    summary{cursor:pointer; color:#cfe0ff;}
+    .note{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+      margin-top:8px;
+    }
+    .back-link{
+      display:inline-block;
+      margin:16px 18px 0 18px;
+      color:#cfe0ff;
+    }
+    @media (max-width: 980px){
+      .wrap{
+        grid-template-columns: 1fr;
+      }
+      input[type="range"]{width: 180px;}
+    }
+  </style>
+</head>
+<body>
+<a class="back-link" href="../../index.html">Back to app index</a>
+<header>
+  <h1>Galois Adjoints as a Requirement ↔ Commitment “Translator” (Rail Upgrade Example)</h1>
+  <p>
+    We model two posets: <span class="pill">Requirements</span> (capacity tiers) and
+    <span class="pill">Commitments</span> (platform/signalling/power/approvals + budget + schedule).
+    The <span class="pill">left adjoint</span> f maps a requirement to the weakest commitment package that guarantees it.
+    The <span class="pill">right adjoint</span> g maps your current commitments to the strongest requirement tier you can safely claim.
+  </p>
+</header>
+
+<div class="wrap">
+
+  <div class="card">
+    <h2>1) Choose a requirement (what stakeholders ask for)</h2>
+
+    <div class="row">
+      <label for="reqTier">Capacity tier (0–4)</label>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <input id="reqTier" type="range" min="0" max="4" step="1" value="2"/>
+        <span id="reqTierLabel" class="pill"></span>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card" style="padding:12px; margin:0;">
+        <h2 style="margin-bottom:8px;">Left adjoint f(requirement)</h2>
+        <div class="sub">“Weakest commitment package that still guarantees this tier.”</div>
+        <div id="fOfReq" class="mono" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="card" style="padding:12px; margin:0;">
+        <h2 style="margin-bottom:8px;">Closure g(f(requirement))</h2>
+        <div class="sub">“If you package the minimum commitments, what tier do you effectively land on?”</div>
+        <div id="closureReq" class="mono" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Why this helps a project director</summary>
+      <div class="note">
+        If a requirement changes by one notch, f propagates a <i>monotone</i> (non-decreasing) uplift into every commitment dimension.
+        That makes scope-control legible: you can show exactly which subsystems, approvals, and budgets must move together to stay coherent.
+        The closure highlights “step changes” (e.g., once you ask for tighter headway, signalling jumps to a new regime).
+      </div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>2) Choose commitments (what you’re actually funding/scheduling/procuring)</h2>
+
+    <div class="row">
+      <label for="cPlat">Platform extension stage (0–4)</label>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <input id="cPlat" type="range" min="0" max="4" step="1" value="2"/>
+        <span id="cPlatVal" class="pill"></span>
+      </div>
+    </div>
+
+    <div class="row">
+      <label for="cSig">Signalling stage (0–5)</label>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <input id="cSig" type="range" min="0" max="5" step="1" value="2"/>
+        <span id="cSigVal" class="pill"></span>
+      </div>
+    </div>
+
+    <div class="row">
+      <label for="cPow">Power stage (0–5)</label>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <input id="cPow" type="range" min="0" max="5" step="1" value="2"/>
+        <span id="cPowVal" class="pill"></span>
+      </div>
+    </div>
+
+    <div class="row">
+      <label for="cApp">Approvals / Safety case stage (0–3)</label>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <input id="cApp" type="range" min="0" max="3" step="1" value="2"/>
+        <span id="cAppVal" class="pill"></span>
+      </div>
+    </div>
+
+    <div class="row">
+      <label for="cBudget">Budget committed (M£)</label>
+      <input id="cBudget" type="number" min="0" step="1" value="235"/>
+    </div>
+
+    <div class="row">
+      <label for="cSched">Schedule committed (months)</label>
+      <input id="cSched" type="number" min="0" step="1" value="28"/>
+    </div>
+
+    <div class="btns">
+      <button id="btnEstimate">Fill budget/schedule from selected scope (rough estimate)</button>
+      <button id="btnJustEnough">Snap commitments to “just enough” for your current guarantee</button>
+    </div>
+
+    <div class="status" id="statusBox">
+      <b id="statusTitle"></b>
+      <div id="statusBody" class="mono"></div>
+    </div>
+
+    <details>
+      <summary>What you’re seeing (the adjunction law)</summary>
+      <div class="note mono" id="adjLaw"></div>
+    </details>
+  </div>
+
+  <div class="card" style="grid-column: 1 / -1;">
+    <h2>3) Director view: a single coherent “so what?”</h2>
+    <div class="grid2">
+      <div>
+        <div class="sub">Strongest tier you can safely claim under your commitments: <span class="pill" id="gOfCommit"></span></div>
+        <div class="sub" style="margin-top:8px;">Interior f(g(commitment)) strips slack: “smallest commitment that still justifies your current claim.”</div>
+        <div id="interiorCommit" class="mono" style="margin-top:10px;"></div>
+      </div>
+      <div>
+        <div class="sub">How to use this in governance:</div>
+        <ul class="note">
+          <li><b>Change control:</b> when a tier changes, show Δf as the “must move” list across modules.</li>
+          <li><b>Stage-gates:</b> freeze commitments at f(tier) before promising that tier externally.</li>
+          <li><b>Negotiation:</b> if commitments are capped, g(commitment) is your defensible counter-offer.</li>
+          <li><b>Co-design alignment:</b> the monotonicity enforces “no subsystem left behind”.</li>
+        </ul>
+        <div class="note">
+          Note: if time-vs-money trade-offs create multiple incomparable “minimum” options, you won’t get a single weakest package;
+          you’ll get a Pareto set (antichain). That’s exactly where monotone co-design uses set-valued solutions rather than single points.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ======= Rail upgrade toy model =======
+  // Requirement tiers 0..4 with a deliberate step-change at tier 3:
+  // tighter headway pushes signalling + power into a higher regime (e.g., CBTC + substations).
+  const req = [
+    {tier:0, label:"Tier 0 — Baseline (4-car, current headway)", plat:0, sig:0, pow:0, app:0},
+    {tier:1, label:"Tier 1 — 6-car trains (minor works)",        plat:1, sig:1, pow:1, app:1},
+    {tier:2, label:"Tier 2 — 8-car trains (moderate works)",     plat:2, sig:2, pow:2, app:2},
+    {tier:3, label:"Tier 3 — 10-car + tighter headway (step)",   plat:3, sig:4, pow:4, app:3},
+    {tier:4, label:"Tier 4 — 12-car + CBTC (major programme)",   plat:4, sig:5, pow:5, app:3},
+  ];
+
+  // Rough cost/time lookup tables (M£, months)
+  const costPlat = [0, 40, 80, 120, 160];
+  const costSig  = [0, 35, 80, 130, 210, 280];
+  const costPow  = [0, 25, 60, 105, 165, 230];
+  const costApp  = [0,  8, 15,  25];
+
+  const timePlat = [0, 10, 16, 20, 24];
+  const timeSig  = [0,  8, 12, 16, 24, 32];
+  const timePow  = [0,  6, 10, 14, 20, 26];
+  const timeApp  = [0,  4,  8, 12];
+
+  const INTEGRATION_COST = 15; // M£ (testing, commissioning, ops readiness)
+  const INTEGRATION_TIME =  6; // months
+
+  function packageFromStages(plat, sig, pow, app){
+    const anyWork = (plat+sig+pow+app) > 0;
+    const budget = costPlat[plat] + costSig[sig] + costPow[pow] + costApp[app] + (anyWork ? INTEGRATION_COST : 0);
+    const sched  = Math.max(timePlat[plat], timeSig[sig], timePow[pow], timeApp[app]) + (anyWork ? INTEGRATION_TIME : 0);
+    return {plat, sig, pow, app, budget, sched};
+  }
+
+  // LEFT ADJOINT f : Requirements -> Commitments
+  // "Weakest commitment package that guarantees tier t"
+  function f(tier){
+    const r = req[tier];
+    return packageFromStages(r.plat, r.sig, r.pow, r.app);
+  }
+
+  // Order on commitments: componentwise <= (weaker -> stronger).
+  function leqCommit(a,b){
+    return a.plat<=b.plat && a.sig<=b.sig && a.pow<=b.pow && a.app<=b.app && a.budget<=b.budget && a.sched<=b.sched;
+  }
+
+  // RIGHT ADJOINT g : Commitments -> Requirements
+  // derived from f as: g(c) = max{ t | f(t) <= c }
+  function g(c){
+    let best = 0;
+    for(let t=0; t<req.length; t++){
+      if(leqCommit(f(t), c)) best = t;
+    }
+    return best;
+  }
+
+  // Closure on requirements: g(f(t))
+  function closureTier(t){ return g(f(t)); }
+
+  // Interior on commitments: f(g(c))
+  function interiorCommit(c){ return f(g(c)); }
+
+  // Pretty printing
+  function fmtPkg(p){
+    return [
+      `platform ≥ ${p.plat}`,
+      `signalling ≥ ${p.sig}`,
+      `power ≥ ${p.pow}`,
+      `approvals ≥ ${p.app}`,
+      `budget ≥ ${p.budget} M£`,
+      `schedule ≥ ${p.sched} months`,
+    ].join("\n");
+  }
+  function pkgDiff(p, q){
+    // q - p (how much extra you have beyond "just enough")
+    const d = {
+      plat: q.plat - p.plat,
+      sig:  q.sig  - p.sig,
+      pow:  q.pow  - p.pow,
+      app:  q.app  - p.app,
+      budget: q.budget - p.budget,
+      sched:  q.sched  - p.sched
+    };
+    return d;
+  }
+
+  // ======= UI wiring =======
+  const el = (id)=>document.getElementById(id);
+
+  function currentCommit(){
+    return {
+      plat: +el("cPlat").value,
+      sig:  +el("cSig").value,
+      pow:  +el("cPow").value,
+      app:  +el("cApp").value,
+      budget: +el("cBudget").value,
+      sched:  +el("cSched").value
+    };
+  }
+
+  function update(){
+    const t = +el("reqTier").value;
+    el("reqTierLabel").textContent = req[t].label;
+
+    // Show f(requirement)
+    const fr = f(t);
+    el("fOfReq").textContent = fmtPkg(fr);
+
+    // Closure on requirements
+    const ct = closureTier(t);
+    const closureText = (ct===t)
+      ? `Closed: g(f(tier ${t})) = tier ${ct} (no step-change).`
+      : `Step-change: g(f(tier ${t})) = tier ${ct}.\nMeaning: the “minimum package” lands you in a higher deliverable regime.`;
+    el("closureReq").textContent = closureText;
+
+    // Commitments display
+    el("cPlatVal").textContent = `≥ ${el("cPlat").value}`;
+    el("cSigVal").textContent  = `≥ ${el("cSig").value}`;
+    el("cPowVal").textContent  = `≥ ${el("cPow").value}`;
+    el("cAppVal").textContent  = `≥ ${el("cApp").value}`;
+
+    const c = currentCommit();
+
+    // g(commitment)
+    const gt = g(c);
+    el("gOfCommit").textContent = req[gt].label;
+
+    // Interior f(g(commitment))
+    const ic = interiorCommit(c);
+    el("interiorCommit").textContent = fmtPkg(ic);
+
+    // Status: does commitment satisfy chosen requirement?
+    const leftOk  = leqCommit(fr, c);     // f(r) <= c
+    const rightOk = (t <= gt);            // r <= g(c)
+    const agree = (leftOk === rightOk);
+
+    let statusClass = "warn";
+    let title = "Review";
+    if(leftOk && rightOk && agree){ statusClass="ok"; title="Feasible & coherent"; }
+    else if((!leftOk && !rightOk) && agree){ statusClass="bad"; title="Not feasible"; }
+    else { statusClass="warn"; title="Incoherent (model/inputs mismatch)"; }
+
+    const sb = el("statusBox");
+    sb.className = `status ${statusClass}`;
+    el("statusTitle").textContent = title;
+
+    // Explain gaps if infeasible
+    let body = [];
+    body.push(`Chosen requirement: tier ${t}`);
+    body.push(`Your current safe claim: tier ${gt}`);
+    body.push("");
+    body.push(`Adjunction check:`);
+    body.push(`  f(req) ≤ commit : ${leftOk ? "TRUE" : "FALSE"}`);
+    body.push(`  req ≤ g(commit) : ${rightOk ? "TRUE" : "FALSE"}`);
+    body.push(`  (they should match): ${agree ? "OK" : "Mismatch"}`);
+    body.push("");
+
+    // If not feasible, show what's missing relative to f(req)
+    if(!leftOk){
+      body.push(`Missing vs weakest package f(req):`);
+      const miss = {
+        plat: Math.max(0, fr.plat - c.plat),
+        sig:  Math.max(0, fr.sig  - c.sig),
+        pow:  Math.max(0, fr.pow  - c.pow),
+        app:  Math.max(0, fr.app  - c.app),
+        budget: Math.max(0, fr.budget - c.budget),
+        sched:  Math.max(0, fr.sched  - c.sched),
+      };
+      body.push(`  +platform stage: ${miss.plat}`);
+      body.push(`  +signalling stage: ${miss.sig}`);
+      body.push(`  +power stage: ${miss.pow}`);
+      body.push(`  +approvals stage: ${miss.app}`);
+      body.push(`  +budget (M£): ${miss.budget}`);
+      body.push(`  +schedule (months): ${miss.sched}`);
+    } else {
+      // If feasible, show slack relative to interior
+      const slack = pkgDiff(ic, c);
+      body.push(`Slack beyond “just enough” f(g(commitment)) (could be intentional contingency):`);
+      body.push(`  platform: +${slack.plat}`);
+      body.push(`  signalling: +${slack.sig}`);
+      body.push(`  power: +${slack.pow}`);
+      body.push(`  approvals: +${slack.app}`);
+      body.push(`  budget (M£): +${slack.budget}`);
+      body.push(`  schedule (months): +${slack.sched}`);
+    }
+
+    el("statusBody").textContent = body.join("\n");
+
+    // Show the adjunction law in words
+    el("adjLaw").textContent =
+`We built a Galois connection f ⊣ g by defining:
+  f(tier) = weakest commitment package guaranteeing that tier
+  g(commit) = max tier whose package fits inside the commitment
+
+So you can use either equivalent test:
+  (A) f(tier) ≤ commitment
+  (B) tier ≤ g(commitment)
+
+This equivalence is the “single source of truth” for scope/budget/schedule coherence.`;
+  }
+
+  // Buttons
+  el("btnEstimate").addEventListener("click", ()=>{
+    const plat = +el("cPlat").value;
+    const sig  = +el("cSig").value;
+    const pow  = +el("cPow").value;
+    const app  = +el("cApp").value;
+    const pkg = packageFromStages(plat, sig, pow, app);
+    el("cBudget").value = pkg.budget;
+    el("cSched").value  = pkg.sched;
+    update();
+  });
+
+  el("btnJustEnough").addEventListener("click", ()=>{
+    const c = currentCommit();
+    const ic = interiorCommit(c);
+    el("cPlat").value = ic.plat;
+    el("cSig").value  = ic.sig;
+    el("cPow").value  = ic.pow;
+    el("cApp").value  = ic.app;
+    el("cBudget").value = ic.budget;
+    el("cSched").value  = ic.sched;
+    update();
+  });
+
+  // Bind inputs
+  ["reqTier","cPlat","cSig","cPow","cApp","cBudget","cSched"].forEach(id=>{
+    el(id).addEventListener("input", update);
+  });
+
+  update();
+</script>
+</body>
+</html>

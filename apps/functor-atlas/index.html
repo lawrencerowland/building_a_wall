@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Functorial Project‑Management Atlas (v5)</title>
+<link rel="stylesheet" href="../../common.css">
+<style>
+:root{--bg:#f7f9fc;--card:#fff;--accent:#1464f6;--accent-m:#1464f622;
+      --bright:#ff8c00;--dun:#b5a99c;--txt:#1d1d1f;--toast:#323232d0;--warn:#d93025;
+      --source:#20c997;--source-m:#20c99722;--target:#fd7e14;--target-m:#fd7e1422;
+      --feeder:#8e44ad;--feeder-m:#8e44ad22;}
+*{box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif}
+body{margin:0;background:var(--bg);color:var(--txt)}
+header{padding:1rem 2vw;text-align:center;font-size:clamp(1.4rem,3vw,2.2rem);font-weight:700}
+#app{display:flex;flex-direction:column;gap:1rem;padding:0 2vw 2vw}
+#searchWrap{display:flex;justify-content:center}
+#searchInput{width:min(30rem,90%);padding:.55rem 1rem;margin-bottom:.5rem;
+             border:2px solid #00000022;border-radius:999px;font-size:1rem;}
+#searchInput:focus{outline:none;border-color:var(--accent)}
+.grid{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem}
+.card{background:var(--card);border-radius:1rem;box-shadow:0 4px 8px #0000000a;
+      padding:1rem 1.25rem;flex:1 1 18rem;min-height:12rem;transition:.3s;border:2px solid transparent;cursor:pointer}
+.card:hover{transform:translateY(-4px);box-shadow:0 8px 16px #00000014}
+.card.hot{border-color:var(--accent)}
+.card.source{border-color:var(--source);background:var(--source-m)}
+.card.target{border-color:var(--target);background:var(--target-m)}
+.card.feeder{border-color:var(--feeder);background:var(--feeder-m)}
+.card.interesting{border-color:var(--warn)}
+.card.interesting:hover{border-color:var(--warn)}
+.title{font-size:1.2rem;font-weight:600;margin-bottom:.25rem}
+.btnbar{display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;margin-bottom:1rem}
+.btn{padding:.45rem .9rem;border:none;border-radius:999px;font-weight:600;cursor:pointer;transition:.2s}
+.btn:hover{opacity:.85}
+.btn[data-on="1"]{box-shadow:0 0 0 3px #0000001a}
+.btn.accent{background:var(--accent);color:#fff}
+.btn.bright{background:var(--bright);color:#fff}
+.btn.dun{background:var(--dun);color:#000}
+.btn.warn{background:var(--warn);color:#fff}
+#panel{display:none;background:var(--card);border:1px solid #0000001a;border-radius:1rem;
+       box-shadow:0 4px 8px #0000000a;padding:1.5rem;max-width:72ch;margin:1rem auto;line-height:1.6}
+#panel h3{margin-top:0;color:var(--accent)}
+#panel h4{margin-top:1.5em;border-bottom:1px solid #0000001a;padding-bottom:.3em}
+#panel ul{padding-left:20px}
+#panel li{margin-bottom:.4em}
+#panel table{width:100%;border-collapse:collapse;margin-top:1em;font-size:.9rem}
+#panel th,#panel td{padding:.5rem;border-bottom:1px solid #0000001a}
+#panel code{background:#0000000d;padding:.2em .4em;border-radius:4px;font-family:monospace}
+.toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);
+       background:var(--toast);color:#fff;padding:.7rem 1rem;border-radius:.5rem;font-size:.85rem;
+       opacity:0;transition:.4s;z-index:10}
+@media(prefers-color-scheme:dark){
+ :root{--bg:#141414;--card:#222327;--txt:#ececec;--toast:#eeeeeed0;--warn:#f28b82;
+       --source:#63e6be;--target:#ffac70;--feeder:#c39bd3}
+ .card{border-color:transparent}.card.hot{border-color:#5ea1ff}
+ .btn.dun{color:#fff;background:#3c4043}
+ #panel{border-color:#ffffff1f}#panel h3{color:#8ab4f8}
+ #panel h4{border-bottom-color:#ffffff1f}#panel th,#panel td{border-bottom-color:#ffffff1f}
+ #panel code{background:#ffffff1a}
+}
+</style>
+</head>
+<body>
+<p><a href="../../index.html">Back to app index</a></p>
+<header>A Functorial Atlas for Pragmatic Programme Control</header>
+<section id="app">
+  <div id="searchWrap"><input id="searchInput" type="search" placeholder="Search categories…"></div>
+  <div class="btnbar" id="expBar"></div>
+  <div class="grid" id="catGrid"></div>
+  <div class="btnbar" id="funBar"></div>
+  <div id="panel"></div>
+</section>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+(()=>{
+// ------------------ GLOBAL MODE ------------------
+let exampleMode=false;
+
+// ------------------ DATA: CATEGORIES ------------------
+const CATS=[{id:'T',name:'Cat<sub>T</sub>: Tasks',obj:'Work‑package nodes',mor:'Precedence & refinement morphisms'},
+{id:'S',name:'Cat<sub>S</sub>: Schedule',obj:'Time intervals',mor:'Order/overlap cells (Double Category)'},
+{id:'R',name:'Cat<sub>R</sub>: Resources',obj:'Resource tokens',mor:'Flows & allocation spans (Bicategory)'},
+{id:'C',name:'Cat<sub>C</sub>: Costs',obj:'Cost entries',mor:'Accrual profunctor maps'},
+{id:'K',name:'Cat<sub>K</sub>: Risks',obj:'Risk lattice elements',mor:'Entailment & escalation (Heyting Algebra)',interesting:true},
+{id:'D',name:'Cat<sub>D</sub>: Deliverables',obj:'Value promises',mor:'Decomposition links',interesting:true},
+{id:'V',name:'Cat<sub>V</sub>: Verification',obj:'Test evidence',mor:'Coverage relations'},
+{id:'P',name:'Cat<sub>P</sub>: Stakeholders',obj:'Belief sheaf sections',mor:'Consistent updates (Topos)',interesting:true},
+{id:'O',name:'Cat<sub>O</sub>: Order',obj:'Project states',mor:'≤ precedence (Preorder)'},
+{id:'M',name:'Cat<sub>M</sub>: Models',obj:'Probability dist.',mor:'Stochastic push‑forwards'},
+{id:'Z',name:'Cat<sub>Z</sub>: Telemetry',obj:'Data streams',mor:'Timeline aggregations'},
+{id:'G',name:'Cat<sub>G</sub>: Goals',obj:'Strategic objectives',mor:'Strategic decomposition',interesting:true},
+{id:'A',name:'Cat<sub>A</sub>: Actors',obj:'People & roles',mor:'Reporting structure'},
+{id:'U',name:'Cat<sub>U</sub>: Quality',obj:'Quality KPIs',mor:'Trade‑off lattice'}];
+
+// ------------------ DATA: FUNCTORS ------------------
+const FUNS=[{id:'F',lab:'F: T → S',src:'T',tgt:'S',desc:'Schedule'},
+{id:'L',lab:'L: T → C',src:'T',tgt:'C',desc:'Costing'},
+{id:'Res',lab:'Res: T → R',src:'T',tgt:'R',desc:'Resource Allocation'},
+{id:'Q',lab:'Q: T → V',src:'T',tgt:'V',desc:'Verification Plan'},
+{id:'Ord',lab:'Ord: T → O',src:'T',tgt:'O',desc:'Milestone Extraction'},
+{id:'W',lab:'W: D → T',src:'D',tgt:'T',desc:'Work Breakdown'},
+{id:'Strat',lab:'Strat: G → D',src:'G',tgt:'D',desc:'Strategy‑to‑Scope'},
+{id:'J',lab:'J: T → P',src:'T',tgt:'P',desc:'Stakeholder Comms'},
+{id:'H',lab:'H: Kᵒᵖ → T',src:'K',tgt:'T',desc:'Risk Mitigation'},
+{id:'Ω',lab:'Ω: K → C',src:'K',tgt:'C',desc:'Contingency Cost'},
+{id:'Δ',lab:'Δ: T ⇢ T',src:'T',tgt:'T',desc:'Change Orders'},
+{id:'Φ',lab:'Φ: O → M',src:'O',tgt:'M',desc:'Probabilistic Forecast'},
+{id:'Tel',lab:'Tel: T → Z',src:'T',tgt:'Z',desc:'Telemetry Feed'},
+{id:'Assign',lab:'Assign: T → A',src:'T',tgt:'A',desc:'Team Assignment'},
+{id:'Qual',lab:'Qual: T → U',src:'T',tgt:'U',desc:'Quality Planning'}];
+
+// ------------------ SAMPLE PROJECT SNAPSHOT ------------------
+const EX_CAT_DATA={
+T:{objects:['T1: Design Wireframes','T2: Build Frontend','T3: Deploy to Cloud','T4: QA Testing'],
+   morphisms:['T1 → T2','T2 → T4','T3 → T4']},
+S:{objects:['S1: 1 Jul–5 Jul (Design)','S2: 6 Jul–15 Jul (Build)','S3: 10 Jul–12 Jul (Deploy)','S4: 16 Jul–18 Jul (Test)'],
+   morphisms:['S1 precedes S2','S2 overlaps S3','S3 precedes S4']},
+R:{objects:['R1: Designer 40 h','R2: FE Dev 80 h','R3: DevOps 24 h','R4: QA 24 h'],
+   morphisms:['Allocate R1 to T1','Allocate R2 to T2']},
+C:{objects:['C1: $2 k Design','C2: $6 k Build','C3: $1 k Deploy','C4: $2 k Test'],
+   morphisms:['C1 accrues 1 Jul–5 Jul','C2 accrues 6 Jul–15 Jul']},
+K:{objects:['K1: Scope Creep','K2: Server Outage'],
+   morphisms:['K1 escalates K2']},
+D:{objects:['D1: Responsive Microsite','D2: CI/CD Pipeline'],
+   morphisms:['D1 decomposes {T1,T2,T3,T4}','D2 decomposes {T3}']},
+V:{objects:['V1: Lighthouse ≥ 90','V2: All E2E Tests Pass'],
+   morphisms:['V2 verifies D1']},
+P:{objects:['P1: Client','P2: Project Manager','P3: Dev Team'],
+   morphisms:['Updates P2 → P1','Updates P3 → P2']},
+O:{objects:['O1: Design Approved','O2: Code Complete','O3: Site Live'],
+   morphisms:['O1 ≤ O2','O2 ≤ O3']},
+M:{objects:['M1: Completion N(15 d, σ 3 d)'],
+   morphisms:['PERT aggregation']},
+Z:{objects:['Z1: Git commit stream','Z2: Monitoring logs'],
+   morphisms:['Daily commit histogram']},
+G:{objects:['G1: Increase Leads','G2: Modern Brand Presence'],
+   morphisms:['G1 supports D1','G2 supports D1']},
+A:{objects:['A1: Alice (Designer)','A2: Bob (Developer)','A3: Charlie (DevOps)','A4: Dana (QA)'],
+   morphisms:['A1 reports to A2']},
+U:{objects:['U1: Page load < 2 s','U2: WCAG AA'],
+   morphisms:['Trade‑off U1 vs U2']}};
+
+const EX_FUN_DATA={
+F:[['T1','S1'],['T2','S2'],['T3','S3'],['T4','S4']],
+L:[['T1','C1'],['T2','C2'],['T3','C3'],['T4','C4']],
+Res:[['T1','R1'],['T2','R2'],['T3','R3'],['T4','R4']],
+Q:[['T4','V2']],
+Ord:[['T1','O1'],['T2','O2'],['T3','O2'],['T4','O3']],
+W:[['D1','{T1,T2,T3,T4}'],['D2','{T3}']],
+Strat:[['G1','D1'],['G2','D1']],
+J:[['T3','P1'],['T2','P2']],
+H:[['K1','T2'],['K2','T3']],
+Ω:[['K1','C2'],['K2','C3']],
+Δ:[['T2','T2′ (revised)']],
+Φ:[['O3','M1']],
+Tel:[['T2','Z1'],['T3','Z2']],
+Assign:[['T1','A1'],['T2','A2'],['T3','A3'],['T4','A4']],
+Qual:[['T2','U1'],['T4','U2']]};
+
+// ------------------ DATA: EXPLANATIONS (unchanged) ------------------
+const EXPS=[{id:'how-to-use',label:'How to Use',tone:'bright',
+ text:`<ul><li>Search or click a category; panels show theory <i>and</i>, if Example mode is on, live project data.</li><li>Functor buttons inside any panel jump along arrows.</li><li><b>Reset View</b> clears highlights.</li></ul>`},
+{id:'big-picture',label:'Big Picture',tone:'bright',
+ text:`This is an interactive map of a complex programme, designed to help a project director see how strategy, scope, schedule, cost, risk, people, and delivery evidence all connect — without getting lost in detail. Each box represents a familiar management view (tasks, risks, costs, stakeholders, etc.), and each link represents a disciplined way of translating one view into another, so that changes in one place reliably show up everywhere else they matter. The practical payoff is confidence: you can start from a board‑level goal and trace, step by step, how it drives work, spend, timing, risk exposure, and assurance, knowing the connections are consistent rather than ad‑hoc.`},
+{id:'what',label:'What is this?',tone:'bright',
+ text:`A compositional cockpit: categories model project facets, functors translate structure; toggling <b>Example</b> lets you see both blueprint and instantiation.`},
+{id:'functor',label:'What is a Functor?',tone:'dun',
+ text:`Structure‑preserving translation: objects and morphisms stay compatible so reasoning remains sound.`},
+{id:'critique',label:'Critique & Limitations',tone:'warn',
+ text:`Formalism is costly—small projects may prefer a spreadsheet; value scales with programme complexity.`},
+{id:'comps',label:'Productive Functor Chains',tone:'bright',
+ text:`Functors compose: <table><thead><tr><th>Chain</th><th>Interpretation</th><th>Pay‑off</th></tr></thead><tbody>
+ <tr><td><code>L ∘ Res ∘ W</code></td><td>Deliverable → Cost</td><td>Direct resource cost for any deliverable.</td></tr>
+ <tr><td><code>F ∘ H</code></td><td>Risk → Schedule Impact</td><td>Maps a risk to its timeline effect.</td></tr>
+ <tr><td><code>Qual ∘ Assign</code></td><td>Task → Quality Expectation</td><td>Links work to quality standards of assignees.</td></tr>
+ <tr><td><code>Φ ∘ Ord ∘ W</code></td><td>Deliverable → Prob. Forecast</td><td>Risk‑adjusted completion forecast.</td></tr>
+ <tr><td><code>L ∘ Res ∘ W ∘ Strat</code></td><td><b>Goal → Cost</b></td><td><b>Direct cost estimate for a strategic goal.</b></td></tr></tbody></table>`},
+{id:'F',summary:`<b>F: T → S</b> (Schedule)<br>Maps the task dependency graph into the double category of time intervals.`,tech:`Strict functor from precedence DAG into Int◁▢.`},
+{id:'L',summary:`<b>L: T → C</b> (Costing)<br>Assigns cost objects to tasks.`,tech:`Strong monoidal over (ℕ⁺,0).`},
+{id:'Res',summary:`<b>Res: T → R</b> (Resource Allocation)<br>Maps tasks to required resources.`,tech:`Cartesian functor over time.`},
+{id:'Q',summary:`<b>Q: T → V</b> (Verification Plan)<br>Links tasks to evidence for completion.`,tech:`Strict monoidal into evidence lattice.`},
+{id:'Ord',summary:`<b>Ord: T → O</b> (Milestone Extraction)<br>Simplifies task graph into milestone preorder.`,tech:`Factors through Cat(0,1).`},
+{id:'W',summary:`<b>W: D → T</b> (Work Breakdown)<br>Translates deliverables into concrete tasks; Kan extensions find implied work.`,tech:`Strong monoidal into Pack ≅ T.`},
+{id:'Strat',summary:`<b>Strat: G → D</b> (Strategy‑to‑Scope)<br>Aligns strategic goals with deliverables.`,tech:`Functor from goal preorder.`},
+{id:'J',summary:`<b>J: T → P</b> (Stakeholder Comms)<br>Keeps beliefs consistent across parties.`,tech:`Geometric morphism into Shv(Σ).`},
+{id:'H',summary:`<b>H: Kᵒᵖ → T</b> (Risk Mitigation)<br>Mitigation shrinks affected task subgraph.`,tech:`Contravariant via Heyting algebra.`},
+{id:'Ω',summary:`<b>Ω: K → C</b> (Contingency Cost)<br>Assigns EMV to risks.`,tech:`Kleisli lift over Dist.`},
+{id:'Δ',summary:`<b>Δ: T ⇢ T</b> (Change Orders)<br>Pseudo‑functor capturing change requests.`,tech:`2‑cells store diff patches.`},
+{id:'Φ',summary:`<b>Φ: O → M</b> (Probabilistic Forecast)<br>Lifts milestones into distributions.`,tech:`Enriched in Lawvere metric.`},
+{id:'Tel',summary:`<b>Tel: T → Z</b> (Telemetry Feed)<br>Connects tasks to live data streams.`,tech:`Lax monoidal with variance bounds.`},
+{id:'Assign',summary:`<b>Assign: T → A</b> (Team Assignment)<br>Formal RACI basis.`,tech:`Functor into actor category.`},
+{id:'Qual',summary:`<b>Qual: T → U</b> (Quality Planning)<br>Assigns quality KPIs to tasks.`,tech:`Functor into quality lattice.`}];
+
+// ------------------ UTILITIES ------------------
+const byId=id=>document.getElementById(id);
+const catGrid=byId('catGrid'),expBar=byId('expBar'),funBar=byId('funBar'),
+      panel=byId('panel'),searchInput=byId('searchInput'),toast=byId('toast');
+
+function showToast(msg){toast.textContent=msg;toast.style.opacity='1';setTimeout(()=>toast.style.opacity='0',2200);}
+
+// Simple Kan‑extension helper
+function proposeTasks(deliv){
+  const c=deliv.trim();return c?[`Analyse ${c}`,`Implement ${c}`,`Verify ${c}`]:[];
+}
+
+// ------------------ RENDERING ------------------
+function render(){
+  catGrid.innerHTML='';CATS.forEach(c=>{
+    const d=document.createElement('div');d.className='card';d.id=`cat_${c.id}`;
+    if(c.interesting)d.classList.add('interesting');
+    d.innerHTML=`<div class="title">${c.name}</div><p><b>Obj:</b> ${c.obj}</p><p><b>Mor:</b> ${c.mor}</p>`;
+    d.addEventListener('click',()=>selectCategory(c.id));catGrid.appendChild(d);
+  });
+  expBar.innerHTML='';
+  ['big-picture','how-to-use','what','functor','comps','critique'].forEach(id=>{
+    const e=EXPS.find(x=>x.id===id);
+    const b=document.createElement('button');b.className=`btn ${e.tone}`;b.textContent=e.label;
+    b.addEventListener('click',()=>showPanel(id,e.label));expBar.appendChild(b);
+  });
+  const exampleBtn=document.createElement('button');exampleBtn.className='btn bright';
+  exampleBtn.textContent='Example: Off';
+  exampleBtn.addEventListener('click',()=>{
+    exampleMode=!exampleMode;
+    exampleBtn.textContent='Example: '+(exampleMode?'On':'Off');
+    showToast('Example mode '+(exampleMode?'enabled':'disabled'));
+    resetView();
+  });
+  expBar.appendChild(exampleBtn);
+  const reset=document.createElement('button');
+  reset.className='btn dun';reset.textContent='Reset View';reset.addEventListener('click',resetView);
+  expBar.appendChild(reset);
+  funBar.innerHTML='';FUNS.forEach(f=>{
+    const b=document.createElement('button');b.className='btn accent';b.id=`fun_${f.id}`;
+    b.textContent=f.lab;b.title=f.desc;b.addEventListener('click',()=>selectFunctor(f.id));
+    funBar.appendChild(b);
+  });
+}
+
+// ------------------ SEARCH ------------------
+searchInput.addEventListener('input',()=>{
+  const q=searchInput.value.trim().toLowerCase();
+  document.querySelectorAll('.card').forEach(card=>{
+    card.style.display=!q||card.textContent.toLowerCase().includes(q)?'':'none';
+  });
+});
+
+// ------------------ INTERACTION ------------------
+function clearHighlights(){
+  document.querySelectorAll('.card').forEach(c=>c.classList.remove('hot','source','target','feeder'));
+  document.querySelectorAll('.btn.accent').forEach(b=>b.dataset.on='0');
+}
+function resetView(){
+  clearHighlights();panel.style.display='none';
+  document.querySelectorAll('#funBar .btn').forEach(b=>b.style.display='inline-block');
+}
+function selectCategory(catId){
+  clearHighlights();byId(`cat_${catId}`).classList.add('source');
+  const outs=FUNS.filter(f=>f.src===catId),ins=FUNS.filter(f=>f.tgt===catId);
+  outs.forEach(f=>byId(`cat_${f.tgt}`).classList.add('target'));
+  ins.forEach(f=>byId(`cat_${f.src}`).classList.add('feeder'));
+  const rel=[...outs,...ins].map(f=>f.id);
+  document.querySelectorAll('#funBar .btn').forEach(b=>{
+    b.style.display=rel.includes(b.id.replace('fun_',''))?'inline-block':'none';
+  });
+  const c=CATS.find(x=>x.id===catId);
+  let html=`<h3>${c.name}</h3><p><b>Objects:</b> ${c.obj}<br><b>Morphisms:</b> ${c.mor}</p>`;
+  if(outs.length){html+=`<h4>Outgoing Functors</h4><ul>`;outs.forEach(f=>html+=`<li><button class="btn accent" style="padding:.25rem .6rem;font-size:.8rem" data-fun="${f.id}">${f.lab}</button> – ${f.desc}</li>`);html+='</ul>'; }
+  if(ins.length){html+=`<h4>Incoming Functors</h4><ul>`;ins.forEach(f=>html+=`<li><button class="btn accent" style="padding:.25rem .6rem;font-size:.8rem" data-fun="${f.id}">${f.lab}</button> – ${f.desc}</li>`);html+='</ul>'; }
+  if(exampleMode&&EX_CAT_DATA[catId]){
+    const ex=EX_CAT_DATA[catId];
+    html+=`<h4>Example Objects</h4><ul>${ex.objects.map(o=>`<li>${o}</li>`).join('')}</ul>
+           <h4>Example Morphisms</h4><ul>${ex.morphisms.map(m=>`<li>${m}</li>`).join('')}</ul>`;
+  }
+  if(catId==='D'){
+    html+=`<h4>Kan‑Extension: Find Implied Tasks</h4>
+           <p>Kan‑extension helper for the deliverable‑to‑task functor <b>W</b>. Click <b>Cat D</b> to reveal an input plus <b>Suggest Tasks</b>. Type a deliverable description (e.g. “User Authentication Service”) and the helper immediately proposes the three canonical tasks a Kan‑extended <b>W</b> would surface: Analyse, Implement, Verify.</p>
+           <input id="delivInput" style="width:60%;padding:.4rem .6rem;margin-right:.5rem;border:1px solid #00000033;border-radius:6px;font-size:.9rem" placeholder="Describe deliverable…">
+           <button id="kanBtn" class="btn bright" style="vertical-align:top">Suggest Tasks</button>
+           <div id="kanOut"></div>`;
+  }
+  panel.innerHTML=html;panel.style.display='block';panel.scrollIntoView({behavior:'smooth',block:'center'});
+  panel.querySelectorAll('button[data-fun]').forEach(btn=>btn.addEventListener('click',()=>selectFunctor(btn.dataset.fun)));
+  if(catId==='D'){
+    byId('kanBtn').addEventListener('click',()=>{
+      const val=byId('delivInput').value;const tasks=proposeTasks(val);
+      if(!tasks.length){showToast('Enter a deliverable');return;}
+      byId('kanOut').innerHTML=`<ul>${tasks.map(t=>`<li>${t}</li>`).join('')}</ul>`;
+    });
+  }
+}
+function selectFunctor(funId){
+  resetView();clearHighlights();
+  const f=FUNS.find(x=>x.id===funId);
+  byId(`cat_${f.src}`).classList.add('hot');byId(`cat_${f.tgt}`).classList.add('hot');
+  byId(`fun_${f.id}`).dataset.on='1';showPanel(funId,f.lab);
+}
+function showPanel(id,title){
+  const exp=EXPS.find(x=>x.id===id)||{};
+  let html=`<h3>${title}</h3><p>${exp.summary||exp.text||''}</p>`;
+  if(exp.tech)html+=`<h4>Technical Detail</h4><p>${exp.tech}</p>`;
+  if(exampleMode&&EX_FUN_DATA[id]){
+    html+=`<h4>Example Mapping</h4><ul>${EX_FUN_DATA[id].map(p=>`<li>${p[0]} ↦ ${p[1]}</li>`).join('')}</ul>`;
+  }
+  panel.innerHTML=html;panel.style.display='block';panel.scrollIntoView({behavior:'smooth',block:'center'});
+}
+window.selectFunctor=selectFunctor;
+
+// ------------------ INITIALISE ------------------
+render();
+})();
+</script>
+</body>
+</html>
