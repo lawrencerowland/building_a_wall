@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Petri → SMC → WBS (Brick Wall)</title>
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100">
+  <!-- Toasts -->
+  <div id="toastHost" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+  <header class="sticky top-0 z-40 bg-slate-950/80 backdrop-blur border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center">
+          <span class="text-lg">🧱</span>
+        </div>
+        <div>
+          <div class="text-lg font-semibold tracking-tight">Petri → SMC → WBS explorer</div>
+          <div class="text-xs text-slate-400">Brick wall toy project • one net, many schedules</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btnHelp" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">Explain</button>
+        <button id="btnResetAll" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold">Reset</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- Left: Model + Markings -->
+    <section class="lg:col-span-5 space-y-6">
+      <div class="rounded-2xl bg-slate-900/50 border border-slate-800 p-4">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-base font-semibold">1) Petri net (physical feasibility)</h2>
+            <p class="text-sm text-slate-300 mt-1">
+              Places are <span class="font-medium">conditions/resources</span>; transitions are <span class="font-medium">tasks</span>.
+              Tokens are a <span class="font-medium">marking</span> (a world-state). We keep the net fixed.
+            </p>
+          </div>
+          <div class="text-xs text-slate-400 text-right">
+            <div class="font-medium">Legend</div>
+            <div class="mt-1 flex items-center gap-2 justify-end">
+              <span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-emerald-500"></span>Place</span>
+              <span class="inline-flex items-center gap-2"><span class="w-3 h-3 rounded bg-sky-500"></span>Transition</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden">
+          <svg id="netSvg" class="w-full" style="height: 420px;"></svg>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="rounded-2xl bg-slate-950 border border-slate-800 p-3">
+            <div class="text-xs text-slate-400">Enabled transitions</div>
+            <div id="enabledList" class="mt-2 flex flex-wrap gap-2"></div>
+          </div>
+          <div class="rounded-2xl bg-slate-950 border border-slate-800 p-3">
+            <div class="text-xs text-slate-400">Firing log</div>
+            <div id="fireLog" class="mt-2 text-sm text-slate-200 max-h-24 overflow-auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-slate-900/50 border border-slate-800 p-4">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-base font-semibold">2) Marking controls (schedule options)</h2>
+            <p class="text-sm text-slate-300 mt-1">
+              Change the <span class="font-medium">initial marking</span> to represent pre-staging or prior progress. This changes which plans exist and which tasks are redundant.
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <button id="btnPresetA" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">Baseline</button>
+            <button id="btnPresetB" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">Pre-staged</button>
+            <button id="btnPresetC" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">Foundation done</button>
+          </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4" id="markingControls"></div>
+
+        <div class="mt-4 flex flex-wrap items-center gap-2">
+          <button id="btnStep" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold">Fire one</button>
+          <button id="btnAuto" class="px-3 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-sm font-semibold">Auto-plan</button>
+          <button id="btnReach" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">Enumerate reachable</button>
+          <div class="ml-auto text-xs text-slate-400">Goal: <span class="font-medium text-slate-200">Done</span> token = 1</div>
+        </div>
+
+        <div class="mt-4 rounded-2xl bg-slate-950 border border-slate-800 p-3">
+          <div class="flex items-center justify-between">
+            <div class="text-xs text-slate-400">Reachable markings (bounded)</div>
+            <div class="text-xs text-slate-500">click a marking to treat it as a new “world”</div>
+          </div>
+          <div id="reachList" class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: SMC view + WBS -->
+    <section class="lg:col-span-7 space-y-6">
+      <div class="rounded-2xl bg-slate-900/50 border border-slate-800 p-4">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-base font-semibold">3) SMC view (what is actually “generated”)</h2>
+            <p class="text-sm text-slate-300 mt-1">
+              The net presents a <span class="font-medium">free commutative monoidal category</span> <span class="font-mono">F(P)</span>: objects are markings; morphisms are firing sequences.
+              <span class="font-medium">Changing the marking doesn’t change</span> <span class="font-mono">F(P)</span>; it changes the <span class="font-medium">chosen objects</span> and thus the relevant <span class="font-medium">reachable subcategory</span> (your “scenario SMC”).
+            </p>
+          </div>
+          <button id="btnExplainSMC" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">Why not “different SMCs”?</button>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-2xl bg-slate-950 border border-slate-800 p-4">
+            <div class="text-xs text-slate-400">Current planning problem</div>
+            <div class="mt-2 text-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-300">Source object</span>
+                <span id="smcSource" class="font-mono text-slate-100"></span>
+              </div>
+              <div class="mt-1 flex items-center justify-between">
+                <span class="text-slate-300">Goal object</span>
+                <span id="smcGoal" class="font-mono text-slate-100"></span>
+              </div>
+              <div class="mt-3 pt-3 border-t border-slate-800">
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-300">Reachable?</span>
+                  <span id="smcReach" class="text-sm font-semibold"></span>
+                </div>
+                <div class="mt-2 text-xs text-slate-400">
+                  Here “reachable” means: there exists a morphism <span class="font-mono">m0 → mGoal</span> in <span class="font-mono">F(P)</span>.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl bg-slate-950 border border-slate-800 p-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-xs text-slate-400">One exhibited morphism (a schedule)</div>
+                <div class="text-sm text-slate-300 mt-1">A linearized witness; concurrency lives in the tensor structure.</div>
+              </div>
+              <button id="btnNewWitness" class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold">Find witness</button>
+            </div>
+            <ol id="witnessSteps" class="mt-3 space-y-2 text-sm"></ol>
+          </div>
+        </div>
+
+        <div class="mt-4 rounded-2xl bg-slate-950 border border-slate-800 p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xs text-slate-400">Scenario category</div>
+              <div class="text-sm text-slate-300 mt-1">We display the reachable subcategory from the chosen marking as a tiny Hasse-ish view over tasks.</div>
+            </div>
+            <button id="btnRecomputeScenario" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">Recompute</button>
+          </div>
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="rounded-2xl bg-slate-900/40 border border-slate-800 p-3">
+              <div class="text-xs text-slate-400">Tasks available (ever enabled along some run)</div>
+              <div id="scenarioTasks" class="mt-2 flex flex-wrap gap-2"></div>
+            </div>
+            <div class="rounded-2xl bg-slate-900/40 border border-slate-800 p-3">
+              <div class="text-xs text-slate-400">Tasks redundant under this marking</div>
+              <div id="scenarioRedundant" class="mt-2 flex flex-wrap gap-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-slate-900/50 border border-slate-800 p-4">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="text-base font-semibold">4) Derived WBS options</h2>
+            <p class="text-sm text-slate-300 mt-1">
+              A WBS is not in the net; it is a <span class="font-medium">presentation choice</span>. Here we generate candidate WBS trees from (i) a chosen witness morphism and (ii) the marking (tasks already “done” become external or disappear).
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnWbsFromNet" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">WBS from dependencies</button>
+            <button id="btnWbsFromWitness" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold">WBS from witness</button>
+          </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-2xl bg-slate-950 border border-slate-800 p-4">
+            <div class="text-xs text-slate-400">WBS tree</div>
+            <div id="wbsTree" class="mt-3"></div>
+          </div>
+          <div class="rounded-2xl bg-slate-950 border border-slate-800 p-4">
+            <div class="text-xs text-slate-400">Task network extracted</div>
+            <div class="mt-3 rounded-xl bg-slate-900/40 border border-slate-800 p-3">
+              <div class="text-sm text-slate-200 font-medium">Edges (A → B means “A must finish before B starts”)</div>
+              <div id="taskEdges" class="mt-2 text-xs text-slate-300 max-h-64 overflow-auto"></div>
+            </div>
+            <div class="mt-3 text-xs text-slate-400">This is a thin “schedule network”; you could enrich it with durations (PERT) or costs later.</div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="text-xs text-slate-500 px-1">
+        <div class="prose prose-invert max-w-none">
+          <p>
+            Notes: The commutative-vs-symmetric distinction matters if you care about individual token identity. Σ-nets interpolate between collective and individual token philosophies.
+          </p>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <div id="modalBackdrop" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"></div>
+  <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-2xl rounded-2xl bg-slate-950 border border-slate-800 shadow-2xl">
+      <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+        <div id="modalTitle" class="text-sm font-semibold">Modal</div>
+        <button id="modalClose" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">Close</button>
+      </div>
+      <div id="modalBody" class="p-4 text-sm text-slate-200 leading-relaxed"></div>
+    </div>
+  </div>
+
+<script>
+// -----------------------------
+// Tiny UI helpers
+// -----------------------------
+function toast(msg, kind = 'info') {
+  const host = document.getElementById('toastHost');
+  const el = document.createElement('div');
+  const palette = {
+    info: 'bg-slate-900 border-slate-700',
+    ok: 'bg-emerald-900/30 border-emerald-700',
+    warn: 'bg-amber-900/30 border-amber-700',
+    err: 'bg-rose-900/30 border-rose-700'
+  };
+  el.className = `max-w-sm rounded-2xl border ${palette[kind] || palette.info} px-4 py-3 shadow-lg`;
+  el.innerHTML = `<div class="text-sm text-slate-100">${msg}</div>`;
+  host.appendChild(el);
+  setTimeout(() => { el.classList.add('opacity-0'); el.style.transition = 'opacity 300ms'; }, 2400);
+  setTimeout(() => { el.remove(); }, 2800);
+}
+
+function openModal(title, html) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalBackdrop').classList.remove('hidden');
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal() {
+  document.getElementById('modalBackdrop').classList.add('hidden');
+  document.getElementById('modal').classList.add('hidden');
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalBackdrop').addEventListener('click', closeModal);
+
+// -----------------------------
+// Petri net (brick wall)
+// -----------------------------
+const places = [
+  { id: 'auth', label: 'Authorized', kind: 'cond' },
+  { id: 'site', label: 'Site cleared', kind: 'cond' },
+  { id: 'mat', label: 'Materials ready', kind: 'res' },
+  { id: 'bricks', label: 'Bricks ready', kind: 'res' },
+  { id: 'found', label: 'Foundation ready', kind: 'cond' },
+  { id: 'mortar', label: 'Mortar ready', kind: 'res' },
+  { id: 'laid', label: 'Bricks laid', kind: 'cond' },
+  { id: 'wall', label: 'Wall built', kind: 'cond' },
+  { id: 'insp', label: 'Inspected', kind: 'cond' },
+  { id: 'done', label: 'Done', kind: 'cond' }
+];
+
+const transitions = [
+  { id: 'clear', label: 'Clear site', phase: 'Prep' },
+  { id: 'gather', label: 'Gather materials', phase: 'Prep' },
+  { id: 'foundation', label: 'Prepare foundation', phase: 'Foundation' },
+  { id: 'mix', label: 'Mix mortar', phase: 'Materials' },
+  { id: 'lay', label: 'Lay bricks', phase: 'Build' },
+  { id: 'build', label: 'Build wall', phase: 'Build' },
+  { id: 'inspect', label: 'Inspect', phase: 'Finish' },
+  { id: 'finish', label: 'Finish & tidy', phase: 'Finish' }
+];
+
+// Pre/Post arcs with unit weights. (Read-arcs are simulated by adding place to both pre and post.)
+const pre = {
+  clear: { auth: 1 },
+  gather: { auth: 1 },
+  foundation: { site: 1 },
+  mix: { mat: 1 },
+  lay: { found: 1, bricks: 1 },
+  build: { laid: 1, mortar: 1 },
+  inspect: { wall: 1 },
+  finish: { insp: 1 }
+};
+const post = {
+  clear: { auth: 1, site: 1 },
+  gather: { auth: 1, mat: 1, bricks: 1 },
+  foundation: { found: 1 },
+  mix: { mortar: 1 },
+  lay: { laid: 1 },
+  build: { wall: 1 },
+  inspect: { insp: 1 },
+  finish: { done: 1 }
+};
+
+const goal = { done: 1 };
+
+function emptyMarking() {
+  const m = {};
+  places.forEach(p => m[p.id] = 0);
+  return m;
+}
+
+const presets = {
+  A: (() => { // baseline
+    const m = emptyMarking();
+    m.auth = 1;
+    return m;
+  })(),
+  B: (() => { // pre-staged materials
+    const m = emptyMarking();
+    m.auth = 1;
+    m.mat = 1;
+    m.bricks = 1;
+    return m;
+  })(),
+  C: (() => { // foundation done too
+    const m = emptyMarking();
+    m.auth = 1;
+    m.mat = 1;
+    m.bricks = 1;
+    m.site = 1;
+    m.found = 1;
+    return m;
+  })()
+};
+
+let marking = structuredClone(presets.A);
+let history = [];
+let currentWitness = [];
+
+function markingKey(m) {
+  // sparse, stable ordering
+  return places.map(p => `${p.id}:${m[p.id] || 0}`).join('|');
+}
+
+function prettyObject(m) {
+  // show only nonzero places as multiset
+  const bits = places
+    .map(p => ({ id: p.id, label: p.label, n: m[p.id] || 0 }))
+    .filter(x => x.n > 0)
+    .map(x => x.n === 1 ? x.id : `${x.n}${x.id}`);
+  return bits.length ? bits.join(' ⊗ ') : 'I';
+}
+
+function enabledTransitions(m) {
+  return transitions.filter(t => {
+    const req = pre[t.id] || {};
+    return Object.entries(req).every(([pid, w]) => (m[pid] || 0) >= w);
+  });
+}
+
+function fireTransition(m, tid) {
+  const m2 = structuredClone(m);
+  const req = pre[tid] || {};
+  const add = post[tid] || {};
+  for (const [pid, w] of Object.entries(req)) m2[pid] -= w;
+  for (const [pid, w] of Object.entries(add)) m2[pid] = (m2[pid] || 0) + w;
+  return m2;
+}
+
+function isGoal(m) {
+  return Object.entries(goal).every(([pid, w]) => (m[pid] || 0) >= w);
+}
+
+function findWitnessBFS(start, limitStates = 4000) {
+  // BFS in marking graph, returns one shortest witness transition list to reach goal, else null
+  const q = [];
+  const seen = new Map();
+  const k0 = markingKey(start);
+  seen.set(k0, { prev: null, via: null, m: start });
+  q.push(start);
+  let explored = 0;
+
+  while (q.length) {
+    const cur = q.shift();
+    explored++;
+    if (isGoal(cur)) {
+      // reconstruct
+      const out = [];
+      let k = markingKey(cur);
+      while (seen.get(k).prev) {
+        const node = seen.get(k);
+        out.push(node.via);
+        k = node.prev;
+      }
+      out.reverse();
+      return { steps: out, explored };
+    }
+    if (explored > limitStates) return { steps: null, explored };
+
+    for (const t of enabledTransitions(cur)) {
+      const nxt = fireTransition(cur, t.id);
+      const k = markingKey(nxt);
+      if (!seen.has(k)) {
+        seen.set(k, { prev: markingKey(cur), via: t.id, m: nxt });
+        q.push(nxt);
+      }
+    }
+  }
+  return { steps: null, explored };
+}
+
+function enumerateReachable(start, maxStates = 80) {
+  // BFS enumeration of markings (bounded)
+  const out = [];
+  const q = [start];
+  const seen = new Set([markingKey(start)]);
+  while (q.length && out.length < maxStates) {
+    const cur = q.shift();
+    out.push(cur);
+    for (const t of enabledTransitions(cur)) {
+      const nxt = fireTransition(cur, t.id);
+      const k = markingKey(nxt);
+      if (!seen.has(k)) {
+        seen.add(k);
+        q.push(nxt);
+      }
+    }
+  }
+  return out;
+}
+
+// -----------------------------
+// Graph rendering (D3)
+// -----------------------------
+const svg = d3.select('#netSvg');
+let width = 900;
+let height = 420;
+
+function sizeSvg() {
+  const rect = document.getElementById('netSvg').getBoundingClientRect();
+  width = rect.width;
+  height = rect.height;
+  svg.attr('viewBox', `0 0 ${width} ${height}`);
+}
+window.addEventListener('resize', () => { sizeSvg(); restartSim(); renderAll(); });
+
+// Build bipartite nodes
+const nodeById = new Map();
+const nodes = [
+  ...places.map(p => ({ ...p, type: 'place' })),
+  ...transitions.map(t => ({ ...t, type: 'trans' }))
+];
+nodes.forEach(n => nodeById.set(n.id, n));
+
+const links = [];
+for (const t of transitions) {
+  for (const pid of Object.keys(pre[t.id] || {})) {
+    links.push({ source: pid, target: t.id, kind: 'pre' });
+  }
+  for (const pid of Object.keys(post[t.id] || {})) {
+    links.push({ source: t.id, target: pid, kind: 'post' });
+  }
+}
+
+let sim;
+let gLinks, gNodes, gLabels, gTokens;
+
+function restartSim() {
+  svg.selectAll('*').remove();
+
+  const root = svg.append('g');
+  const defs = svg.append('defs');
+  defs.append('marker')
+    .attr('id', 'arrow')
+    .attr('viewBox', '0 -5 10 10')
+    .attr('refX', 14)
+    .attr('refY', 0)
+    .attr('markerWidth', 6)
+    .attr('markerHeight', 6)
+    .attr('orient', 'auto')
+    .append('path')
+    .attr('d', 'M0,-5L10,0L0,5')
+    .attr('fill', '#64748b');
+
+  gLinks = root.append('g').attr('stroke', '#64748b').attr('stroke-width', 1.5).attr('opacity', 0.9);
+  gNodes = root.append('g');
+  gTokens = root.append('g');
+  gLabels = root.append('g');
+
+  const linkSel = gLinks.selectAll('line')
+    .data(links)
+    .enter()
+    .append('line')
+    .attr('marker-end', 'url(#arrow)')
+    .attr('stroke-dasharray', d => d.kind === 'pre' ? '3 3' : '');
+
+  const nodeSel = gNodes.selectAll('g')
+    .data(nodes)
+    .enter()
+    .append('g')
+    .call(d3.drag()
+      .on('start', (event, d) => {
+        if (!event.active) sim.alphaTarget(0.2).restart();
+        d.fx = d.x; d.fy = d.y;
+      })
+      .on('drag', (event, d) => { d.fx = event.x; d.fy = event.y; })
+      .on('end', (event, d) => {
+        if (!event.active) sim.alphaTarget(0);
+        d.fx = null; d.fy = null;
+      })
+    );
+
+  nodeSel.append('circle')
+    .attr('r', d => d.type === 'place' ? 18 : 16)
+    .attr('fill', d => d.type === 'place' ? '#10b981' : '#0ea5e9')
+    .attr('opacity', 0.95);
+
+  nodeSel.append('rect')
+    .attr('x', -16).attr('y', -12)
+    .attr('width', 32).attr('height', 24)
+    .attr('rx', 8)
+    .attr('fill', '#0ea5e9')
+    .attr('opacity', d => d.type === 'trans' ? 0.95 : 0)
+    .attr('pointer-events', 'none');
+
+  // Click to fire a transition
+  nodeSel.on('click', (event, d) => {
+    if (d.type !== 'trans') return;
+    const enabled = enabledTransitions(marking).some(t => t.id === d.id);
+    if (!enabled) {
+      toast(`Not enabled: ${d.label}`, 'warn');
+      return;
+    }
+    marking = fireTransition(marking, d.id);
+    history.push(d.id);
+    currentWitness = []; // invalidate
+    renderAll();
+    toast(`Fired: ${d.label}`, 'ok');
+  });
+
+  gLabels.selectAll('text')
+    .data(nodes)
+    .enter()
+    .append('text')
+    .text(d => d.label)
+    .attr('font-size', 11)
+    .attr('fill', '#e2e8f0')
+    .attr('text-anchor', 'middle')
+    .attr('dy', d => d.type === 'place' ? 36 : 34)
+    .attr('pointer-events', 'none');
+
+  sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(70).strength(0.55))
+    .force('charge', d3.forceManyBody().strength(-350))
+    .force('center', d3.forceCenter(width/2, height/2))
+    .force('collide', d3.forceCollide().radius(d => d.type === 'place' ? 36 : 34))
+    .on('tick', () => {
+      linkSel
+        .attr('x1', d => d.source.x)
+        .attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x)
+        .attr('y2', d => d.target.y);
+
+      nodeSel.attr('transform', d => `translate(${d.x},${d.y})`);
+
+      gLabels.selectAll('text')
+        .attr('x', d => d.x)
+        .attr('y', d => d.y);
+
+      renderTokens();
+    });
+}
+
+function renderTokens() {
+  // token dots per place
+  const tokenData = [];
+  for (const p of places) {
+    const n = Math.max(0, marking[p.id] || 0);
+    const node = nodeById.get(p.id);
+    for (let i=0; i<n; i++) {
+      tokenData.push({ pid: p.id, i, x: node.x, y: node.y });
+    }
+  }
+
+  const dots = gTokens.selectAll('circle').data(tokenData, d => `${d.pid}:${d.i}`);
+  dots.enter()
+    .append('circle')
+    .attr('r', 4)
+    .attr('fill', '#0f172a')
+    .attr('stroke', '#e2e8f0')
+    .attr('stroke-width', 1)
+    .merge(dots)
+    .attr('cx', d => d.x + (Math.cos(d.i * 1.9) * 8))
+    .attr('cy', d => d.y + (Math.sin(d.i * 1.9) * 8));
+  dots.exit().remove();
+}
+
+// -----------------------------
+// Marking controls
+// -----------------------------
+function buildMarkingControls() {
+  const host = document.getElementById('markingControls');
+  host.innerHTML = '';
+
+  const controlPlaces = ['auth','site','mat','bricks','found','mortar','laid','wall','insp','done'];
+
+  for (const pid of controlPlaces) {
+    const p = places.find(x => x.id === pid);
+    const wrap = document.createElement('div');
+    wrap.className = 'rounded-2xl bg-slate-950 border border-slate-800 p-3';
+
+    wrap.innerHTML = `
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm font-medium">${p.label}</div>
+          <div class="text-xs text-slate-400">place: <span class="font-mono">${p.id}</span></div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="dec px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700">−</button>
+          <div class="w-10 text-center font-mono" data-val="${pid}">${marking[pid]||0}</div>
+          <button class="inc px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700">+</button>
+        </div>
+      </div>
+      <input type="range" min="0" max="2" step="1" value="${marking[pid]||0}" data-slider="${pid}" class="mt-3 w-full" />
+    `;
+
+    host.appendChild(wrap);
+
+    const valEl = wrap.querySelector('[data-val]');
+    const slider = wrap.querySelector('[data-slider]');
+    const inc = wrap.querySelector('.inc');
+    const dec = wrap.querySelector('.dec');
+
+    function setVal(v) {
+      marking[pid] = Math.max(0, Math.min(6, v));
+      valEl.textContent = marking[pid];
+      slider.value = Math.min(2, marking[pid]);
+      renderAll();
+    }
+
+    slider.addEventListener('input', () => setVal(parseInt(slider.value, 10)));
+    inc.addEventListener('click', () => setVal((marking[pid]||0) + 1));
+    dec.addEventListener('click', () => setVal((marking[pid]||0) - 1));
+  }
+}
+
+// -----------------------------
+// WBS + Task network
+// -----------------------------
+function taskDependencyEdgesFromNet() {
+  // Edge if a place is produced by t1 and consumed by t2.
+  const prodBy = new Map();
+  const consBy = new Map();
+
+  transitions.forEach(t => {
+    for (const pid of Object.keys(post[t.id] || {})) {
+      if (!prodBy.has(pid)) prodBy.set(pid, []);
+      // ignore read-arc duplications: if pid also in pre[t], treat as read/permission, not produced
+      if ((pre[t.id] || {})[pid]) continue;
+      prodBy.get(pid).push(t.id);
+    }
+    for (const pid of Object.keys(pre[t.id] || {})) {
+      if (!consBy.has(pid)) consBy.set(pid, []);
+      // ignore read-arc on auth
+      if (pid === 'auth') continue;
+      consBy.get(pid).push(t.id);
+    }
+  });
+
+  const edges = [];
+  for (const [pid, prod] of prodBy.entries()) {
+    const cons = consBy.get(pid) || [];
+    for (const a of prod) for (const b of cons) edges.push([a,b, pid]);
+  }
+  // dedupe
+  const seen = new Set();
+  return edges.filter(([a,b,p]) => {
+    const k = `${a}->${b}`;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+
+function wbsFromPhases(tasks) {
+  // group by phase then list tasks
+  const by = new Map();
+  tasks.forEach(tid => {
+    const t = transitions.find(x => x.id === tid);
+    const phase = t?.phase || 'Other';
+    if (!by.has(phase)) by.set(phase, []);
+    by.get(phase).push(tid);
+  });
+  const phases = ['Prep','Foundation','Materials','Build','Finish','Other'];
+  const children = [];
+  for (const ph of phases) {
+    if (!by.has(ph)) continue;
+    children.push({ name: ph, children: by.get(ph).map(tid => ({ name: transitions.find(x=>x.id===tid).label, tid })) });
+  }
+  return { name: 'Build brick wall', children };
+}
+
+function renderWbsTree(tree) {
+  const host = document.getElementById('wbsTree');
+  host.innerHTML = '';
+
+  function nodeEl(node, depth=0) {
+    const wrap = document.createElement('div');
+    wrap.className = `pl-${Math.min(8, depth*2)} py-1`;
+    const hasKids = node.children && node.children.length;
+    const badge = node.tid ? `<span class="ml-2 text-[10px] px-2 py-1 rounded-full bg-slate-900 border border-slate-700 font-mono">${node.tid}</span>` : '';
+    wrap.innerHTML = `
+      <div class="flex items-center gap-2">
+        ${hasKids ? `<button class="toggle w-7 h-7 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700">▸</button>` : `<div class="w-7 h-7"></div>`}
+        <div class="text-sm text-slate-100">${node.name}${badge}</div>
+      </div>
+      <div class="children"></div>
+    `;
+
+    const childHost = wrap.querySelector('.children');
+    if (hasKids) {
+      let open = true;
+      const toggle = wrap.querySelector('.toggle');
+      const renderKids = () => {
+        childHost.innerHTML = '';
+        if (!open) return;
+        node.children.forEach(ch => childHost.appendChild(nodeEl(ch, depth+1)));
+      };
+      toggle.textContent = open ? '▾' : '▸';
+      toggle.addEventListener('click', () => {
+        open = !open;
+        toggle.textContent = open ? '▾' : '▸';
+        renderKids();
+      });
+      renderKids();
+    }
+
+    return wrap;
+  }
+
+  host.appendChild(nodeEl(tree, 0));
+}
+
+function renderTaskEdges(edges) {
+  const host = document.getElementById('taskEdges');
+  host.innerHTML = '';
+  if (!edges.length) {
+    host.innerHTML = '<div class="text-slate-400">(none)</div>';
+    return;
+  }
+  const ul = document.createElement('ul');
+  ul.className = 'space-y-1';
+  edges.forEach(([a,b,p]) => {
+    const la = transitions.find(x=>x.id===a)?.label || a;
+    const lb = transitions.find(x=>x.id===b)?.label || b;
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="font-mono text-slate-200">${a}</span> <span class="text-slate-500">(${la})</span> <span class="text-slate-400">→</span> <span class="font-mono text-slate-200">${b}</span> <span class="text-slate-500">(${lb})</span> <span class="text-slate-600">via ${p}</span>`;
+    ul.appendChild(li);
+  });
+  host.appendChild(ul);
+}
+
+// -----------------------------
+// Scenario analysis
+// -----------------------------
+function tasksEverEnabledFromStart(start) {
+  const reachable = enumerateReachable(start, 120);
+  const seenTasks = new Set();
+  reachable.forEach(m => enabledTransitions(m).forEach(t => seenTasks.add(t.id)));
+  return [...seenTasks];
+}
+
+function redundantTasksUnderMarking(start) {
+  // A simple notion: tasks whose postconditions are already satisfied at start (i.e., their main produced place already has token)
+  // This is crude but useful for the demo.
+  const redundant = [];
+  for (const t of transitions) {
+    const adds = post[t.id] || {};
+    // take "main" produced place as any that is not auth
+    const produced = Object.keys(adds).filter(pid => pid !== 'auth');
+    if (!produced.length) continue;
+    const allThere = produced.every(pid => (start[pid] || 0) >= (adds[pid] || 0));
+    if (allThere) redundant.push(t.id);
+  }
+  return redundant;
+}
+
+function pill(text, kind='slate') {
+  const styles = {
+    slate: 'bg-slate-900 border-slate-700 text-slate-200',
+    ok: 'bg-emerald-900/30 border-emerald-700 text-emerald-200',
+    warn: 'bg-amber-900/30 border-amber-700 text-amber-200',
+    info: 'bg-sky-900/30 border-sky-700 text-sky-200'
+  };
+  const el = document.createElement('span');
+  el.className = `inline-flex items-center px-2 py-1 rounded-full border text-xs ${styles[kind] || styles.slate}`;
+  el.textContent = text;
+  return el;
+}
+
+function renderScenario() {
+  const tasks = tasksEverEnabledFromStart(marking);
+  const redundant = redundantTasksUnderMarking(marking);
+
+  const taskHost = document.getElementById('scenarioTasks');
+  const redHost = document.getElementById('scenarioRedundant');
+  taskHost.innerHTML = '';
+  redHost.innerHTML = '';
+
+  tasks.sort().forEach(tid => {
+    const t = transitions.find(x=>x.id===tid);
+    taskHost.appendChild(pill(`${tid}`, 'info'));
+  });
+
+  if (!redundant.length) {
+    redHost.appendChild(pill('none', 'slate'));
+  } else {
+    redundant.sort().forEach(tid => redHost.appendChild(pill(`${tid}`, 'warn')));
+  }
+}
+
+// -----------------------------
+// Main render
+// -----------------------------
+function renderEnabled() {
+  const host = document.getElementById('enabledList');
+  host.innerHTML = '';
+  const enabled = enabledTransitions(marking);
+  if (!enabled.length) {
+    host.appendChild(pill('none', 'warn'));
+    return;
+  }
+  enabled.forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'px-2 py-1 rounded-full border text-xs bg-slate-900 border-slate-700 hover:bg-slate-800';
+    b.textContent = t.id;
+    b.addEventListener('click', () => {
+      marking = fireTransition(marking, t.id);
+      history.push(t.id);
+      currentWitness = [];
+      renderAll();
+      toast(`Fired: ${t.label}`, 'ok');
+    });
+    host.appendChild(b);
+  });
+}
+
+function renderLog() {
+  const host = document.getElementById('fireLog');
+  if (!history.length) {
+    host.innerHTML = '<span class="text-slate-500">(empty)</span>';
+    return;
+  }
+  host.innerHTML = history.map((tid, i) => {
+    const t = transitions.find(x=>x.id===tid);
+    return `<div><span class="text-slate-500">${String(i+1).padStart(2,'0')}</span> <span class="font-mono">${tid}</span> <span class="text-slate-400">—</span> ${t?.label || ''}</div>`;
+  }).join('');
+}
+
+function renderSMCPanel() {
+  document.getElementById('smcSource').textContent = prettyObject(marking);
+  document.getElementById('smcGoal').textContent = prettyObject(goal);
+
+  const w = findWitnessBFS(marking, 2000);
+  const reachEl = document.getElementById('smcReach');
+  if (w.steps) {
+    reachEl.textContent = 'Yes';
+    reachEl.className = 'text-emerald-300 font-semibold';
+  } else {
+    reachEl.textContent = 'No (within bound)';
+    reachEl.className = 'text-amber-300 font-semibold';
+  }
+}
+
+function renderWitness() {
+  const host = document.getElementById('witnessSteps');
+  host.innerHTML = '';
+  if (!currentWitness.length) {
+    host.innerHTML = '<li class="text-slate-400">(no witness cached — click “Find witness”)</li>';
+    return;
+  }
+  currentWitness.forEach((tid, idx) => {
+    const t = transitions.find(x=>x.id===tid);
+    const li = document.createElement('li');
+    li.className = 'rounded-xl bg-slate-900/40 border border-slate-800 p-2 flex items-center justify-between gap-3';
+    li.innerHTML = `
+      <div>
+        <div class="text-xs text-slate-400">step ${idx+1}</div>
+        <div class="text-sm"><span class="font-mono">${tid}</span> — ${t?.label || ''}</div>
+      </div>
+      <span class="text-xs px-2 py-1 rounded-full border bg-slate-950 border-slate-700 text-slate-300">${t?.phase || ''}</span>
+    `;
+    host.appendChild(li);
+  });
+}
+
+function renderReachable() {
+  const host = document.getElementById('reachList');
+  host.innerHTML = '';
+  const list = enumerateReachable(marking, 40);
+  list.forEach((m, idx) => {
+    const b = document.createElement('button');
+    b.className = 'text-left rounded-xl bg-slate-900/40 hover:bg-slate-900 border border-slate-800 p-3';
+    const ok = isGoal(m);
+    b.innerHTML = `
+      <div class="flex items-center justify-between">
+        <div class="text-xs text-slate-400">marking #${idx}</div>
+        <div class="text-xs ${ok ? 'text-emerald-300' : 'text-slate-500'}">${ok ? 'goal' : ''}</div>
+      </div>
+      <div class="mt-1 font-mono text-xs text-slate-200 break-all">${prettyObject(m)}</div>
+    `;
+    b.addEventListener('click', () => {
+      marking = structuredClone(m);
+      history = [];
+      currentWitness = [];
+      buildMarkingControls();
+      renderAll();
+      toast('Loaded marking as new start-state.', 'info');
+    });
+    host.appendChild(b);
+  });
+}
+
+function renderAll() {
+  renderEnabled();
+  renderLog();
+  renderSMCPanel();
+  renderWitness();
+  renderScenario();
+  renderTokens();
+}
+
+// -----------------------------
+// Button wiring
+// -----------------------------
+document.getElementById('btnPresetA').addEventListener('click', () => {
+  marking = structuredClone(presets.A);
+  history = [];
+  currentWitness = [];
+  buildMarkingControls();
+  renderAll();
+  toast('Preset: Baseline (only Authorized=1)', 'info');
+});
+
+document.getElementById('btnPresetB').addEventListener('click', () => {
+  marking = structuredClone(presets.B);
+  history = [];
+  currentWitness = [];
+  buildMarkingControls();
+  renderAll();
+  toast('Preset: Pre-staged (materials & bricks ready)', 'info');
+});
+
+document.getElementById('btnPresetC').addEventListener('click', () => {
+  marking = structuredClone(presets.C);
+  history = [];
+  currentWitness = [];
+  buildMarkingControls();
+  renderAll();
+  toast('Preset: Foundation done (skip early work)', 'info');
+});
+
+document.getElementById('btnResetAll').addEventListener('click', () => {
+  marking = structuredClone(presets.A);
+  history = [];
+  currentWitness = [];
+  buildMarkingControls();
+  renderAll();
+  toast('Reset everything.', 'ok');
+});
+
+document.getElementById('btnStep').addEventListener('click', () => {
+  const enabled = enabledTransitions(marking);
+  if (!enabled.length) {
+    toast('No enabled transitions from this marking.', 'warn');
+    return;
+  }
+  // choose the first enabled deterministically (toy)
+  const t = enabled[0];
+  marking = fireTransition(marking, t.id);
+  history.push(t.id);
+  currentWitness = [];
+  renderAll();
+  toast(`Fired: ${t.label}`, 'ok');
+});
+
+document.getElementById('btnAuto').addEventListener('click', () => {
+  const res = findWitnessBFS(marking, 2500);
+  if (!res.steps) {
+    toast(`No goal-reaching witness found (searched ~${res.explored} states).`, 'warn');
+    return;
+  }
+  currentWitness = res.steps;
+  renderAll();
+  toast(`Found witness with ${res.steps.length} steps (searched ~${res.explored}).`, 'ok');
+});
+
+document.getElementById('btnNewWitness').addEventListener('click', () => {
+  const res = findWitnessBFS(marking, 3000);
+  if (!res.steps) {
+    currentWitness = [];
+    renderAll();
+    toast(`No witness within bound (searched ~${res.explored}).`, 'warn');
+    return;
+  }
+  currentWitness = res.steps;
+  renderAll();
+  toast('Witness recomputed.', 'ok');
+});
+
+document.getElementById('btnReach').addEventListener('click', () => {
+  renderReachable();
+  toast('Enumerated reachable markings (bounded).', 'info');
+});
+
+document.getElementById('btnRecomputeScenario').addEventListener('click', () => {
+  renderScenario();
+  toast('Scenario recomputed.', 'info');
+});
+
+document.getElementById('btnWbsFromNet').addEventListener('click', () => {
+  const edges = taskDependencyEdgesFromNet();
+  renderTaskEdges(edges);
+
+  // tasks are all transitions except redundant ones under current marking
+  const redundant = new Set(redundantTasksUnderMarking(marking));
+  const tasks = transitions.map(t => t.id).filter(tid => !redundant.has(tid));
+  const tree = wbsFromPhases(tasks);
+  renderWbsTree(tree);
+
+  toast('WBS generated from net-dependencies (minus redundant tasks).', 'info');
+});
+
+document.getElementById('btnWbsFromWitness').addEventListener('click', () => {
+  if (!currentWitness.length) {
+    toast('No witness available: click “Find witness” first.', 'warn');
+    return;
+  }
+
+  // edges: net edges restricted to witness task-set
+  const set = new Set(currentWitness);
+  const edges = taskDependencyEdgesFromNet().filter(([a,b]) => set.has(a) && set.has(b));
+  renderTaskEdges(edges);
+
+  const tree = wbsFromPhases(currentWitness);
+  renderWbsTree(tree);
+  toast('WBS generated from witness schedule.', 'ok');
+});
+
+document.getElementById('btnHelp').addEventListener('click', () => {
+  openModal('What you should notice in this demo', `
+    <div class="prose prose-invert max-w-none">
+      <ul>
+        <li><strong>The net stays fixed.</strong> Only the marking changes. Think: pre-staging, prior progress, or alternative initial conditions.</li>
+        <li><strong>The free category F(P) stays fixed too.</strong> The objects of F(P) are markings; morphisms are firing sequences (executions).</li>
+        <li><strong>What varies is your planning problem.</strong> Changing the marking changes the source object <code>m0</code>, hence which morphisms <code>m0 → goal</code> exist and which tasks are redundant.</li>
+        <li><strong>WBS is a view.</strong> Here we generate a WBS by grouping tasks by phase, then pruning tasks made redundant by the chosen marking.</li>
+      </ul>
+      <p class="text-slate-300">Tip: click transitions directly in the diagram to fire them (only if enabled).</p>
+    </div>
+  `);
+});
+
+document.getElementById('btnExplainSMC').addEventListener('click', () => {
+  openModal('Correction: what changes with markings', `
+    <div class="prose prose-invert max-w-none">
+      <p>
+        A single Petri net <em>presents</em> one free (commutative) monoidal category <code>F(P)</code>.
+        Changing markings does <strong>not</strong> generate a different category in that strict sense; it picks a different <em>object</em> of <code>F(P)</code>.
+      </p>
+      <p>
+        What you <em>do</em> get is a different <em>scenario</em>: e.g. the full subcategory on objects reachable from your chosen marking, or a slice/coslice category around it.
+        Those are distinct categories (subcategories) and they correspond to distinct schedule spaces.
+      </p>
+      <p class="text-slate-300">
+        If you want genuinely different monoidal flavours from the same underlying net data, use the Σ-net / pre-net / Petri ladder: you change the <em>token philosophy</em> (commutative vs symmetric strict vs strict monoidal), not the marking.
+      </p>
+    </div>
+  `);
+});
+
+// -----------------------------
+// Boot
+// -----------------------------
+sizeSvg();
+restartSim();
+buildMarkingControls();
+renderAll();
+renderReachable();
+
+// start with a default WBS view
+(() => {
+  const edges = taskDependencyEdgesFromNet();
+  renderTaskEdges(edges);
+  const redundant = new Set(redundantTasksUnderMarking(marking));
+  const tasks = transitions.map(t => t.id).filter(tid => !redundant.has(tid));
+  renderWbsTree(wbsFromPhases(tasks));
+})();
+
+</script>
+</body>
+</html>
