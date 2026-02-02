@@ -4,3 +4,4 @@
 2,Wall wiring diagram (SMC/Operad),Interactive wiring diagram with guarded morphisms and diagnostics,Wiring diagrams,apps/wall-wiring-diagram-operad/index.html
 2,Construction as an Operad Algebra,"Interactive wiring diagrams, equality checks, and hybrid simulation for a wall-and-roof operad model",Compositional modeling,apps/construction-operad-algebra/index.html
 3,SysML wiring comparison,"Side-by-side SysML internal block diagram and categorical wiring diagram for wall + roof construction",Compositional modeling,apps/sysml-wiring-comparison/index.html
+4,Wall-to-roof wiring diagram (SMC),Interactive wiring diagram with categorical contracts and wiring-table inspector,Wiring diagrams,apps/wall-roof-wiring-smc/index.html
