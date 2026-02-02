@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wall-building wiring diagram (W)</title>
+  <link rel="stylesheet" href="../../common.css" />
+  <style>
+    :root {
+      --bg: #f7f7f8;
+      --panel: rgba(255,255,255,0.92);
+      --ink: #111;
+      --muted: #444;
+      --line: #cfcfd2;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--ink);
+      background: var(--bg);
+    }
+    #app {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    #canvasContainer {
+      position: relative;
+      flex: 1;
+      min-height: 380px;
+      border-bottom: 1px solid var(--line);
+      background: var(--bg);
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: default;
+    }
+    #hud {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      max-width: 980px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      font-size: 13px;
+      color: var(--muted);
+    }
+    #hud b { color: var(--ink); }
+    #controls {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      align-items: center;
+    }
+    button {
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    button:hover { background: #fafafa; }
+    label {
+      user-select: none;
+      cursor: pointer;
+    }
+    #tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(0,0,0,0.82);
+      color: white;
+      padding: 6px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      display: none;
+      max-width: 320px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #bottom {
+      padding: 14px 16px 24px 16px;
+      overflow: auto;
+      background: white;
+    }
+    h2, h3 {
+      margin: 14px 0 8px 0;
+    }
+    p {
+      margin: 8px 0;
+      color: var(--muted);
+      line-height: 1.35;
+      max-width: 980px;
+    }
+    pre {
+      background: #f3f3f5;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      overflow: auto;
+      max-width: 980px;
+      font-size: 12.5px;
+      line-height: 1.35;
+    }
+    .small {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      background: #eee;
+      border: 1px solid #ddd;
+      border-bottom-width: 2px;
+      padding: 1px 6px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #111;
+    }
+    .back-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .back-link {
+      display: inline-flex;
+      font-size: 0.95rem;
+      color: #0f172a;
+      text-decoration: none;
+    }
+    .back-link.secondary {
+      color: #1d4ed8;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="canvasContainer">
+      <canvas id="diagram"></canvas>
+
+      <div id="hud">
+        <div><b>Wall-building wiring diagram</b> in the category <span class="kbd">W</span> (labeled boxes & wiring diagrams). Drag boxes to rearrange; scroll to zoom; drag background to pan.</div>
+        <div id="controls">
+          <button id="resetBtn" title="Reset pan/zoom">Reset view</button>
+          <button id="exportBtn" title="Download the diagram JSON">Download JSON</button>
+          <label><input type="checkbox" id="showTypes" checked /> show port types</label>
+          <span class="small">Tip: hold <span class="kbd">Shift</span> while dragging to pan even when starting on a box.</span>
+        </div>
+      </div>
+
+      <div id="tooltip"></div>
+    </div>
+
+    <div id="bottom">
+      
+      <div class="back-links">
+        <a class="back-link" href="../../index.html">Back to app index</a>
+        <a class="back-link secondary" href="../../app-index.html">View app index list</a>
+      </div>
+      <h2>Formal morphisms (f_in, f_out)</h2>
+      <p class="small">
+        The mapping lines below tell you which wire feeds which port, matching the definition of wiring-diagram morphisms
+        <span class="kbd">(f_in, f_out)</span> in <span class="kbd">W</span>.
+      </p>
+
+      <h3>f_prep : (SetOut ⊗ MixMortar) → Prep</h3>
+      <pre id="morphPrep"></pre>
+
+      <h3>g_finish : (Prep ⊗ LayBricks) → BuildWall</h3>
+      <pre id="morphFinish"></pre>
+
+      <h3>f_wall = g_finish → (f_prep ⊗ id_LayBricks) : (SetOut ⊗ MixMortar ⊗ LayBricks) → BuildWall</h3>
+      <pre id="morphWall"></pre>
+
+      <h2>Diagram JSON</h2>
+      <p class="small">This is the same data structure used by the canvas renderer.</p>
+      <pre id="json"></pre>
+    </div>
+  </div>
+
+  <script>
+    // Embedded JSON data (generated by Python)
+    const diagramData = {
+  "schema": "wiring-diagram.v1",
+  "category": "W_Set (labeled boxes and wiring diagrams)",
+  "types": {
+    "BL": {
+      "label": "Bricklayer (labor)",
+      "kind": "resource"
+    },
+    "P": {
+      "label": "Pegs & string line kit",
+      "kind": "tool"
+    },
+    "D": {
+      "label": "Design drawing/spec",
+      "kind": "information"
+    },
+    "S": {
+      "label": "Sand",
+      "kind": "material"
+    },
+    "C": {
+      "label": "Cement",
+      "kind": "material"
+    },
+    "WATER": {
+      "label": "Water",
+      "kind": "material"
+    },
+    "M": {
+      "label": "Mortar",
+      "kind": "material"
+    },
+    "L": {
+      "label": "Set-out line (pegged)",
+      "kind": "state"
+    },
+    "B": {
+      "label": "Bricks",
+      "kind": "material"
+    },
+    "LIN": {
+      "label": "Lintels",
+      "kind": "material"
+    },
+    "WALL": {
+      "label": "Completed wall",
+      "kind": "scope"
+    }
+  },
+  "outer": {
+    "id": "build_wall",
+    "label": "Build wall (composed)",
+    "inputs": [
+      {
+        "id": "in_BL",
+        "type": "BL",
+        "label": "BL"
+      },
+      {
+        "id": "in_P",
+        "type": "P",
+        "label": "P"
+      },
+      {
+        "id": "in_D",
+        "type": "D",
+        "label": "D"
+      },
+      {
+        "id": "in_S",
+        "type": "S",
+        "label": "S"
+      },
+      {
+        "id": "in_C",
+        "type": "C",
+        "label": "C"
+      },
+      {
+        "id": "in_WATER",
+        "type": "WATER",
+        "label": "W"
+      },
+      {
+        "id": "in_B",
+        "type": "B",
+        "label": "B"
+      },
+      {
+        "id": "in_LIN",
+        "type": "LIN",
+        "label": "Lin"
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out_WALL",
+        "type": "WALL",
+        "label": "Wall"
+      },
+      {
+        "id": "out_BL",
+        "type": "BL",
+        "label": "BL"
+      },
+      {
+        "id": "out_P",
+        "type": "P",
+        "label": "P"
+      },
+      {
+        "id": "out_D",
+        "type": "D",
+        "label": "D"
+      }
+    ]
+  },
+  "boxes": [
+    {
+      "id": "set_out",
+      "label": "Set out line",
+      "inputs": [
+        {
+          "id": "in_BL",
+          "type": "BL",
+          "label": "BL"
+        },
+        {
+          "id": "in_P",
+          "type": "P",
+          "label": "P"
+        },
+        {
+          "id": "in_D",
+          "type": "D",
+          "label": "D"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "out_BL",
+          "type": "BL",
+          "label": "BL"
+        },
+        {
+          "id": "out_P",
+          "type": "P",
+          "label": "P"
+        },
+        {
+          "id": "out_D",
+          "type": "D",
+          "label": "D"
+        },
+        {
+          "id": "out_L",
+          "type": "L",
+          "label": "L"
+        }
+      ]
+    },
+    {
+      "id": "mix_mortar",
+      "label": "Mix mortar",
+      "inputs": [
+        {
+          "id": "in_BL",
+          "type": "BL",
+          "label": "BL"
+        },
+        {
+          "id": "in_S",
+          "type": "S",
+          "label": "S"
+        },
+        {
+          "id": "in_C",
+          "type": "C",
+          "label": "C"
+        },
+        {
+          "id": "in_WATER",
+          "type": "WATER",
+          "label": "W"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "out_BL",
+          "type": "BL",
+          "label": "BL"
+        },
+        {
+          "id": "out_M",
+          "type": "M",
+          "label": "M"
+        }
+      ]
+    },
+    {
+      "id": "lay_bricks",
+      "label": "Lay bricks / build wall",
+      "inputs": [
+        {
+          "id": "in_BL",
+          "type": "BL",
+          "label": "BL"
+        },
+        {
+          "id": "in_D",
+          "type": "D",
+          "label": "D"
+        },
+        {
+          "id": "in_L",
+          "type": "L",
+          "label": "L"
+        },
+        {
+          "id": "in_M",
+          "type": "M",
+          "label": "M"
+        },
+        {
+          "id": "in_B",
+          "type": "B",
+          "label": "B"
+        },
+        {
+          "id": "in_LIN",
+          "type": "LIN",
+          "label": "Lin"
+        }
+      ],
+      "outputs": [
+        {
+          "id": "out_WALL",
+          "type": "WALL",
+          "label": "Wall"
+        },
+        {
+          "id": "out_BL",
+          "type": "BL",
+          "label": "BL"
+        },
+        {
+          "id": "out_D",
+          "type": "D",
+          "label": "D"
+        }
+      ]
+    }
+  ],
+  "wires": [
+    {
+      "from": "outer.in.in_BL",
+      "to": "set_out.in.in_BL"
+    },
+    {
+      "from": "outer.in.in_P",
+      "to": "set_out.in.in_P"
+    },
+    {
+      "from": "outer.in.in_D",
+      "to": "set_out.in.in_D"
+    },
+    {
+      "from": "set_out.out.out_BL",
+      "to": "mix_mortar.in.in_BL"
+    },
+    {
+      "from": "outer.in.in_S",
+      "to": "mix_mortar.in.in_S"
+    },
+    {
+      "from": "outer.in.in_C",
+      "to": "mix_mortar.in.in_C"
+    },
+    {
+      "from": "outer.in.in_WATER",
+      "to": "mix_mortar.in.in_WATER"
+    },
+    {
+      "from": "mix_mortar.out.out_BL",
+      "to": "lay_bricks.in.in_BL"
+    },
+    {
+      "from": "set_out.out.out_D",
+      "to": "lay_bricks.in.in_D"
+    },
+    {
+      "from": "set_out.out.out_L",
+      "to": "lay_bricks.in.in_L"
+    },
+    {
+      "from": "mix_mortar.out.out_M",
+      "to": "lay_bricks.in.in_M"
+    },
+    {
+      "from": "outer.in.in_B",
+      "to": "lay_bricks.in.in_B"
+    },
+    {
+      "from": "outer.in.in_LIN",
+      "to": "lay_bricks.in.in_LIN"
+    },
+    {
+      "from": "lay_bricks.out.out_WALL",
+      "to": "outer.out.out_WALL"
+    },
+    {
+      "from": "lay_bricks.out.out_BL",
+      "to": "outer.out.out_BL"
+    },
+    {
+      "from": "set_out.out.out_P",
+      "to": "outer.out.out_P"
+    },
+    {
+      "from": "lay_bricks.out.out_D",
+      "to": "outer.out.out_D"
+    }
+  ],
+  "layout": {
+    "outer": {
+      "x": 50,
+      "y": 80,
+      "w": 900,
+      "h": 320
+    },
+    "boxes": {
+      "set_out": {
+        "x": 180,
+        "y": 120,
+        "w": 180,
+        "h": 140
+      },
+      "mix_mortar": {
+        "x": 420,
+        "y": 120,
+        "w": 180,
+        "h": 140
+      },
+      "lay_bricks": {
+        "x": 660,
+        "y": 105,
+        "w": 220,
+        "h": 170
+      }
+    }
+  },
+  "morphism": {
+    "name": "f_wall",
+    "domain": "SetOut ⊗ MixMortar ⊗ LayBricks",
+    "codomain": "BuildWall",
+    "f_in": {
+      "set_out.BL": "Yin.BL",
+      "set_out.P": "Yin.P",
+      "set_out.D": "Yin.D",
+      "mix_mortar.BL": "Xout.set_out.BL",
+      "mix_mortar.S": "Yin.S",
+      "mix_mortar.C": "Yin.C",
+      "mix_mortar.WATER": "Yin.WATER",
+      "lay_bricks.BL": "Xout.mix_mortar.BL",
+      "lay_bricks.D": "Xout.set_out.D",
+      "lay_bricks.L": "Xout.set_out.L",
+      "lay_bricks.M": "Xout.mix_mortar.M",
+      "lay_bricks.B": "Yin.B",
+      "lay_bricks.LIN": "Yin.LIN"
+    },
+    "f_out": {
+      "Yout.WALL": "Xout.lay_bricks.WALL",
+      "Yout.BL": "Xout.lay_bricks.BL",
+      "Yout.P": "Xout.set_out.P",
+      "Yout.D": "Xout.lay_bricks.D"
+    }
+  }
+};
+    const morphText = {
+  "f_prep": "f_prep = (f_prep_in, f_prep_out)\nf_prep_in: Xout×Prep_in → Xin\n  set_out.BL := Yin.BL\n  set_out.P := Yin.P\n  set_out.D := Yin.D\n  mix_mortar.BL := Xout.set_out.BL\n  mix_mortar.S := Yin.S\n  mix_mortar.C := Yin.C\n  mix_mortar.WATER := Yin.WATER\nf_prep_out: Xout → Prep_out\n  Yout.BL := Xout.mix_mortar.BL\n  Yout.P := Xout.set_out.P\n  Yout.D := Xout.set_out.D\n  Yout.L := Xout.set_out.L\n  Yout.M := Xout.mix_mortar.M",
+  "g_finish": "g_finish = (g_in, g_out)\ng_in: (Prep⊗LayBricks)_out×BuildWall_in → (Prep⊗LayBricks)_in\n  prep.BL := Yin.BL\n  prep.P := Yin.P\n  prep.D := Yin.D\n  prep.S := Yin.S\n  prep.C := Yin.C\n  prep.WATER := Yin.WATER\n  lay_bricks.BL := Xout.prep.BL\n  lay_bricks.D := Xout.prep.D\n  lay_bricks.L := Xout.prep.L\n  lay_bricks.M := Xout.prep.M\n  lay_bricks.B := Yin.B\n  lay_bricks.LIN := Yin.LIN\ng_out: (Prep⊗LayBricks)_out → BuildWall_out\n  Yout.WALL := Xout.lay_bricks.WALL\n  Yout.BL := Xout.lay_bricks.BL\n  Yout.P := Xout.prep.P\n  Yout.D := Xout.lay_bricks.D",
+  "f_wall": "f_wall = (f_in, f_out)\nf_in: (SetOut⊗MixMortar⊗LayBricks)_out×BuildWall_in → (SetOut⊗MixMortar⊗LayBricks)_in\n  set_out.BL := Yin.BL\n  set_out.P := Yin.P\n  set_out.D := Yin.D\n  mix_mortar.BL := Xout.set_out.BL\n  mix_mortar.S := Yin.S\n  mix_mortar.C := Yin.C\n  mix_mortar.WATER := Yin.WATER\n  lay_bricks.BL := Xout.mix_mortar.BL\n  lay_bricks.D := Xout.set_out.D\n  lay_bricks.L := Xout.set_out.L\n  lay_bricks.M := Xout.mix_mortar.M\n  lay_bricks.B := Yin.B\n  lay_bricks.LIN := Yin.LIN\nf_out: (SetOut⊗MixMortar⊗LayBricks)_out → BuildWall_out\n  Yout.WALL := Xout.lay_bricks.WALL\n  Yout.BL := Xout.lay_bricks.BL\n  Yout.P := Xout.set_out.P\n  Yout.D := Xout.lay_bricks.D"
+};
+  </script>
+
+  <script>
+    const canvas = document.getElementById('diagram');
+    const ctx = canvas.getContext('2d');
+    const tooltip = document.getElementById('tooltip');
+    const showTypesEl = document.getElementById('showTypes');
+
+    // Fill bottom panel
+    document.getElementById('morphPrep').textContent = morphText.f_prep;
+    document.getElementById('morphFinish').textContent = morphText.g_finish;
+    document.getElementById('morphWall').textContent = morphText.f_wall;
+    document.getElementById('json').textContent = JSON.stringify(diagramData, null, 2);
+
+    // View transform (world -> screen): screen = (world + pan) * zoom
+    let zoom = 1.0;
+    let panX = 0;
+    let panY = 0;
+
+    // Drag state
+    let dragMode = null; // 'box' | 'pan'
+    let dragBoxId = null;
+    let dragStart = null;
+
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
+      requestDraw();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function worldToScreen(pt) {
+      return {
+        x: (pt.x + panX) * zoom,
+        y: (pt.y + panY) * zoom
+      };
+    }
+    function screenToWorld(pt) {
+      return {
+        x: pt.x / zoom - panX,
+        y: pt.y / zoom - panY
+      };
+    }
+
+    function getOuterRect() {
+      return diagramData.layout.outer;
+    }
+
+    function getBoxRect(boxId) {
+      return diagramData.layout.boxes[boxId];
+    }
+
+    function getBox(boxId) {
+      return diagramData.boxes.find(b => b.id === boxId);
+    }
+
+    function portIndex(box, io, portId) {
+      const arr = io === 'in' ? box.inputs : box.outputs;
+      return arr.findIndex(p => p.id === portId);
+    }
+
+    function outerPortIndex(io, portId) {
+      const arr = io === 'in' ? diagramData.outer.inputs : diagramData.outer.outputs;
+      return arr.findIndex(p => p.id === portId);
+    }
+
+    function portPos(address) {
+      // address format: "box.io.portId" or "outer.io.portId"
+      const parts = address.split('.');
+      const boxId = parts[0];
+      const io = parts[1]; // 'in' or 'out'
+      const portId = parts.slice(2).join('.'); // in case dots appear (unlikely)
+      if (boxId === 'outer') {
+        const outer = getOuterRect();
+        const idx = outerPortIndex(io, portId);
+        const arr = io === 'in' ? diagramData.outer.inputs : diagramData.outer.outputs;
+        const n = Math.max(arr.length, 1);
+        const y = outer.y + (idx + 1) * (outer.h / (n + 1));
+        const x = (io === 'in') ? outer.x : (outer.x + outer.w);
+        return { x, y, label: arr[idx]?.label || portId, type: arr[idx]?.type || '' };
+      } else {
+        const rect = getBoxRect(boxId);
+        const box = getBox(boxId);
+        const idx = portIndex(box, io, portId);
+        const arr = io === 'in' ? box.inputs : box.outputs;
+        const n = Math.max(arr.length, 1);
+        const y = rect.y + (idx + 1) * (rect.h / (n + 1));
+        const x = (io === 'in') ? rect.x : (rect.x + rect.w);
+        return { x, y, label: arr[idx]?.label || portId, type: arr[idx]?.type || '' };
+      }
+    }
+
+    function drawRoundedRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function requestDraw() {
+      window.requestAnimationFrame(draw);
+    }
+
+    function draw() {
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+
+      // World to screen transform
+      ctx.save();
+      ctx.translate(0, 0);
+      ctx.scale(zoom, zoom);
+      ctx.translate(panX, panY);
+
+      // Outer boundary
+      const outer = getOuterRect();
+      ctx.lineWidth = 2 / zoom;
+      ctx.strokeStyle = '#8a8a94';
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      drawRoundedRect(outer.x, outer.y, outer.w, outer.h, 16);
+      ctx.fill();
+      ctx.stroke();
+
+      // Outer label
+      ctx.save();
+      ctx.fillStyle = '#111';
+      ctx.font = `${14/zoom}px system-ui`;
+      ctx.fillText(diagramData.outer.label, outer.x + 12, outer.y + 20);
+      ctx.restore();
+
+      // Wires
+      ctx.lineWidth = 2 / zoom;
+      ctx.strokeStyle = '#333';
+      diagramData.wires.forEach(w => {
+        const a = portPos(w.from);
+        const b = portPos(w.to);
+        const dx = Math.max(60, Math.abs(b.x - a.x) * 0.55);
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.bezierCurveTo(a.x + dx, a.y, b.x - dx, b.y, b.x, b.y);
+        ctx.stroke();
+      });
+
+      // Boxes
+      diagramData.boxes.forEach(box => {
+        const r = getBoxRect(box.id);
+        // box body
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = '#111';
+        ctx.lineWidth = 2 / zoom;
+        drawRoundedRect(r.x, r.y, r.w, r.h, 12);
+        ctx.fill();
+        ctx.stroke();
+
+        // title
+        ctx.fillStyle = '#111';
+        ctx.font = `${13/zoom}px system-ui`;
+        const title = box.label;
+        ctx.fillText(title, r.x + 10, r.y + 18);
+
+        // ports
+        const portRadius = 5 / zoom;
+
+        function drawPort(x,y,label,type,isIn) {
+          ctx.beginPath();
+          ctx.fillStyle = isIn ? '#0b62d6' : '#d67c00';
+          ctx.arc(x, y, portRadius, 0, Math.PI*2);
+          ctx.fill();
+
+          ctx.fillStyle = '#111';
+          ctx.font = `${11/zoom}px system-ui`;
+          const showTypes = showTypesEl.checked;
+          const txt = showTypes ? `${label} : ${type}` : `${label}`;
+          const pad = 6 / zoom;
+          if (isIn) {
+            ctx.textAlign = 'left';
+            ctx.fillText(txt, x + pad, y + 4/zoom);
+          } else {
+            ctx.textAlign = 'right';
+            ctx.fillText(txt, x - pad, y + 4/zoom);
+          }
+        }
+
+        // input ports
+        box.inputs.forEach((p, i) => {
+          const y = r.y + (i + 1) * (r.h / (box.inputs.length + 1));
+          const x = r.x;
+          drawPort(x, y, p.label || p.id, p.type, true);
+        });
+        // output ports
+        box.outputs.forEach((p, i) => {
+          const y = r.y + (i + 1) * (r.h / (box.outputs.length + 1));
+          const x = r.x + r.w;
+          drawPort(x, y, p.label || p.id, p.type, false);
+        });
+      });
+
+      // Outer ports (draw after boxes so they sit on boundary)
+      function drawOuterPorts(io) {
+        const arr = io === 'in' ? diagramData.outer.inputs : diagramData.outer.outputs;
+        const n = Math.max(arr.length, 1);
+        for (let i = 0; i < arr.length; i++) {
+          const p = arr[i];
+          const y = outer.y + (i + 1) * (outer.h / (n + 1));
+          const x = (io === 'in') ? outer.x : (outer.x + outer.w);
+          ctx.beginPath();
+          ctx.fillStyle = io === 'in' ? '#0b62d6' : '#d67c00';
+          ctx.arc(x, y, 6/zoom, 0, Math.PI*2);
+          ctx.fill();
+          ctx.fillStyle = '#111';
+          ctx.font = `${11/zoom}px system-ui`;
+          const showTypes = showTypesEl.checked;
+          const txt = showTypes ? `${p.label} : ${p.type}` : `${p.label}`;
+          const pad = 8/zoom;
+          if (io === 'in') {
+            ctx.textAlign = 'left';
+            ctx.fillText(txt, x + pad, y + 4/zoom);
+          } else {
+            ctx.textAlign = 'right';
+            ctx.fillText(txt, x - pad, y + 4/zoom);
+          }
+        }
+      }
+      drawOuterPorts('in');
+      drawOuterPorts('out');
+
+      ctx.restore();
+    }
+
+    function findBoxAt(worldPt) {
+      for (let i = diagramData.boxes.length - 1; i >= 0; i--) {
+        const b = diagramData.boxes[i];
+        const r = getBoxRect(b.id);
+        if (worldPt.x >= r.x && worldPt.x <= r.x + r.w && worldPt.y >= r.y && worldPt.y <= r.y + r.h) {
+          return b.id;
+        }
+      }
+      return null;
+    }
+
+    function setTooltip(text, screenX, screenY) {
+      if (!text) {
+        tooltip.style.display = 'none';
+        return;
+      }
+      tooltip.textContent = text;
+      tooltip.style.left = (screenX + 12) + 'px';
+      tooltip.style.top = (screenY + 12) + 'px';
+      tooltip.style.display = 'block';
+    }
+
+    canvas.addEventListener('mousemove', (ev) => {
+      const rect = canvas.getBoundingClientRect();
+      const screenPt = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+      const worldPt = screenToWorld(screenPt);
+
+      // hover tooltip for box
+      const boxId = findBoxAt(worldPt);
+      if (boxId) {
+        const box = getBox(boxId);
+        setTooltip(box.label, screenPt.x, screenPt.y);
+      } else {
+        setTooltip('', 0, 0);
+      }
+
+      // dragging
+      if (dragMode === 'box' && dragBoxId && dragStart) {
+        const r = getBoxRect(dragBoxId);
+        r.x = worldPt.x - dragStart.dx;
+        r.y = worldPt.y - dragStart.dy;
+        requestDraw();
+      } else if (dragMode === 'pan' && dragStart) {
+        const dx = (screenPt.x - dragStart.sx) / zoom;
+        const dy = (screenPt.y - dragStart.sy) / zoom;
+        panX = dragStart.panX + dx;
+        panY = dragStart.panY + dy;
+        requestDraw();
+      }
+    });
+
+    canvas.addEventListener('mousedown', (ev) => {
+      const rect = canvas.getBoundingClientRect();
+      const screenPt = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+      const worldPt = screenToWorld(screenPt);
+
+      const boxId = findBoxAt(worldPt);
+      const forcePan = ev.shiftKey || (ev.button === 1);
+      if (boxId && !forcePan) {
+        dragMode = 'box';
+        dragBoxId = boxId;
+        const r = getBoxRect(boxId);
+        dragStart = {
+          dx: worldPt.x - r.x,
+          dy: worldPt.y - r.y
+        };
+      } else {
+        dragMode = 'pan';
+        dragBoxId = null;
+        dragStart = {
+          sx: screenPt.x,
+          sy: screenPt.y,
+          panX: panX,
+          panY: panY
+        };
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      dragMode = null;
+      dragBoxId = null;
+      dragStart = null;
+    });
+
+    canvas.addEventListener('wheel', (ev) => {
+      ev.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const mouse = { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+      const before = screenToWorld(mouse);
+
+      const delta = Math.sign(ev.deltaY);
+      const factor = (delta > 0) ? 0.92 : 1.08;
+      zoom = Math.min(2.5, Math.max(0.5, zoom * factor));
+
+      const after = screenToWorld(mouse);
+      panX += (after.x - before.x);
+      panY += (after.y - before.y);
+      requestDraw();
+    }, { passive: false });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      zoom = 1.0;
+      panX = 0;
+      panY = 0;
+      requestDraw();
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(diagramData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'wall_wiring_diagram.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    showTypesEl.addEventListener('change', requestDraw);
+
+    // Initial render
+    resizeCanvas();
+    requestDraw();
+  </script>
+</body>
+</html>
