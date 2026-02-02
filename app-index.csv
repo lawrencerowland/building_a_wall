@@ -7,3 +7,4 @@
 6,Wall-to-roof wiring diagram (SMC),Interactive wiring diagram with categorical contracts and wiring-table inspector,Wiring diagrams,apps/wall-roof-wiring-smc/index.html
 7,Cliff shed WBS dual view,Interactive dual-category view mapping tasks to states for a cliffside shed build,Compositional modeling,apps/cliff-shed-wbs-state-dual-view/index.html
 8,Processes ↔ Plans: Shed-on-a-Cliff,Interactive category view that maps shed processes into task dependencies with a morphing split view,Compositional modeling,apps/processes-plans-shed-on-a-cliff-category-view/index.html
+9,Petri → SMC → WBS (Brick Wall),Explore how a Petri net maps into wiring diagrams and WBS schedules for a brick wall,Compositional modeling,apps/petri_to_wbs/index.html
