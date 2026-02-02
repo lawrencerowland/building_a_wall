@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Processes ↔ Plans — Shed-on-a-Cliff (Category View)</title>
+<link rel="stylesheet" href="../../common.css"/>
+<style>
+  /* =========================
+     Critical / Reset
+  ========================== */
+  :root{
+    --bg:#f8f9fa;
+    --panel:#ffffff;
+    --ink:#212529;
+    --muted:#6c757d;
+    --border:#dee2e6;
+
+    --state:#0d6efd;     /* objects (states) */
+    --process:#20c997;   /* morphisms (processes) */
+    --task:#f9c74f;      /* objects in dependency-category */
+    --edge:#6c757d;
+
+    --selected:#dc3545;
+    --ghost:#495057;
+  }
+  html,body{margin:0;padding:0;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  h1,h2,h3{margin:.3em 0;font-weight:650;line-height:1.2}
+  p{margin:.35em 0;line-height:1.4}
+  code,kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.95em}
+  button,input[type="range"]{font:inherit}
+  button{
+    cursor:pointer;border:1px solid var(--border);border-radius:.5rem;
+    padding:.45em .8em;background:var(--panel);color:var(--ink)
+  }
+  button.primary{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+  button:active{transform:translateY(1px)}
+  .min-h-64{min-height:16rem}
+
+  /* =========================
+     Layout
+  ========================== */
+  #app{display:flex;flex-direction:column;align-items:stretch;gap:1rem;padding:1rem;max-width:1200px;margin:0 auto}
+  header{display:flex;flex-direction:column;gap:.25rem}
+  .subtle{color:var(--muted);font-size:.95rem}
+
+  #controls{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+  #morphControls{
+    display:none; align-items:center; gap:.6rem; flex-wrap:wrap;
+    padding:.6rem;border:1px solid var(--border);border-radius:.75rem;background:var(--panel)
+  }
+  #morphControls .pill{font-size:.9rem;color:var(--muted)}
+  #morphControls input[type="range"]{width:min(42rem, 92vw)}
+  #main{
+    display:flex;gap:1rem;align-items:stretch;flex-wrap:wrap
+  }
+  #vizCard{
+    flex: 2 1 38rem;
+    border:1px solid var(--border);border-radius:1rem;background:var(--panel);
+    padding:.75rem;display:flex;flex-direction:column;gap:.5rem
+  }
+  #vizWrap{
+    width:100%;
+    border:1px solid var(--border);border-radius:.75rem;background:#fff;
+    height:60vh; min-height:18rem; /* reserves visible space */
+    overflow:hidden;
+    position:relative;
+  }
+  #viz{width:100%;height:100%}
+  #sideCard{
+    flex: 1 1 18rem;
+    border:1px solid var(--border);border-radius:1rem;background:var(--panel);
+    padding:.75rem;display:flex;flex-direction:column;gap:.75rem
+  }
+  details{border:1px solid var(--border);border-radius:.75rem;padding:.6rem;background:#fff}
+  details > summary{cursor:pointer;font-weight:650;color:var(--ink)}
+  .kv{display:grid;grid-template-columns: 9rem 1fr;gap:.25rem .6rem;font-size:.95rem}
+  .kv div:nth-child(odd){color:var(--muted)}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+  .hr{height:1px;background:var(--border);width:100%}
+
+  /* =========================
+     Toast (no alert())
+  ========================== */
+  .toast{
+    position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);
+    background:var(--selected);color:#fff;padding:.6em 1em;border-radius:.65rem;
+    box-shadow:0 2px 12px rgba(0,0,0,.18);z-index:999;
+    animation:toastIn .25s ease, toastOut .35s ease 3.2s forwards
+  }
+  @keyframes toastIn{from{opacity:0;transform:translate(-50%,.6rem)}to{opacity:1;transform:translate(-50%,0)}}
+  @keyframes toastOut{to{opacity:0}}
+  .hint{color:var(--muted);font-size:.9rem}
+
+  /* =========================
+     SVG Styles
+  ========================== */
+  svg text{user-select:none}
+  .edge{stroke:var(--edge);stroke-width:1.6;marker-end:url(#arrow)}
+  .edge.dashed{stroke-dasharray:4 4;opacity:.55}
+
+  .shape{cursor:pointer;transition:stroke-width .1s ease}
+  .shape.state{fill:var(--state)}
+  .shape.process{fill:var(--process)}
+  .shape.task{fill:var(--task)}
+  .shape.ghost{fill:var(--ghost);opacity:.18}
+  .shape.sel{stroke:var(--selected);stroke-width:3.2}
+  .shape:not(.sel){stroke:rgba(0,0,0,.12);stroke-width:1.2}
+
+  .label{fill:var(--ink);font-size:.78rem}
+  .label.small{font-size:.72rem}
+  .badge{
+    position:absolute;top:.6rem;right:.6rem;
+    background:rgba(255,255,255,.88);
+    border:1px solid var(--border);
+    padding:.35rem .55rem;border-radius:.6rem;
+    font-size:.85rem;color:var(--muted)
+  }
+
+  @media (max-width:700px){
+    #vizWrap{height:56vh}
+    .kv{grid-template-columns: 7.5rem 1fr}
+  }
+</style>
+</head>
+
+<body>
+<div class="page">
+  <nav class="site-nav">
+    <a href="../../index.html">Back to app index</a>
+  </nav>
+  <div id="app" class="min-h-64" data-timeout="3000">
+    <header>
+      <h1>Processes ↔ Plans: Shed-on-a-Cliff</h1>
+      <div class="subtle">
+        <span class="mono">Proc</span> (objects = <span class="mono">states</span>, morphisms = <span class="mono">processes</span>)
+        ⟶ build
+        <span class="mono">Dep</span> (objects = <span class="mono">tasks</span>, morphisms = <span class="mono">precedence</span>)
+      </div>
+    </header>
+
+    <div id="controls">
+      <button id="btnState" class="primary" title="Show Proc: states & processes">State View (Proc)</button>
+      <button id="btnTask"  title="Show Dep: tasks & precedence edges">Task View (Dep)</button>
+      <button id="btnSplit" title="Show both views with an animated morph">Side‑by‑Side + Morph</button>
+      <button id="btnTransform" title="Toggle between Proc and Dep">↔ Toggle</button>
+    </div>
+
+    <div id="morphControls" aria-hidden="true">
+      <span class="pill"><strong>Morph</strong> (process‑node ⟶ task‑node)</span>
+      <button id="btnPlay" title="Play / pause morph animation">Play</button>
+      <label class="pill mono" for="morphSlider">t</label>
+      <input id="morphSlider" type="range" min="0" max="1" step="0.01" value="0.0" />
+      <span id="morphVal" class="pill mono">0.00</span>
+    </div>
+
+    <div id="main">
+      <div id="vizCard">
+        <div class="hint">
+          Tap/click a node to see its categorical typing (domain/codomain) and its induced dependencies.
+        </div>
+        <div id="vizWrap">
+          <div id="viewBadge" class="badge">View: Proc</div>
+          <noscript>Interactive visualisation will appear here.</noscript>
+          <svg id="viz" role="img" aria-label="Project category views"></svg>
+        </div>
+        <div class="hint">
+          In <strong>Side‑by‑Side</strong>, the left panel is <span class="mono">Proc</span> and the right is <span class="mono">Dep</span>.
+          The slider animates a “ghost copy” of each process drifting from its position-as-morphism to its position-as-task.
+        </div>
+      </div>
+
+      <div id="sideCard">
+        <details open>
+          <summary>Categorical reading (what you are looking at)</summary>
+          <p>
+            <strong>Proc</strong> is the category where:
+          </p>
+          <ul>
+            <li><strong>Objects</strong> are project <em>states/resources</em> (blue).</li>
+            <li><strong>Morphisms</strong> are <em>processes</em> that transform those states (teal).</li>
+            <li><strong>Composition</strong> is “do this process, then that process”, when outputs match the next inputs.</li>
+            <li><strong>Monoidal product</strong> (not fully diagrammed) is parallel composition of independent processes.</li>
+          </ul>
+          <p>
+            <strong>Dep</strong> is a derived, thin category (poset-like) where:
+          </p>
+          <ul>
+            <li><strong>Objects</strong> are the <em>processes viewed as tasks</em> (yellow).</li>
+            <li><strong>Morphisms</strong> are <em>precedence relations</em> (edges) induced by composability in <span class="mono">Proc</span>.</li>
+            <li>Composition is transitive closure (if A ≺ B and B ≺ C then A ≺ C).</li>
+          </ul>
+          <p class="subtle">
+            This prototype builds <span class="mono">Dep</span> from <span class="mono">Proc</span> by checking “does output of process p feed an input of q?”.
+            Going back (from dependencies to full processes/states) is intentionally underdetermined.
+          </p>
+        </details>
+
+        <details open>
+          <summary>Selection</summary>
+          <div id="selection" class="kv">
+            <div>Selected</div><div class="mono">—</div>
+            <div>In Proc</div><div class="mono">—</div>
+            <div>In Dep</div><div class="mono">—</div>
+          </div>
+          <div class="hr"></div>
+          <div class="hint">
+            Tip: click a <strong>teal</strong> process in Proc (left) or a <strong>yellow</strong> task in Dep (right). In side‑by‑side, both will highlight.
+          </div>
+        </details>
+
+        <details>
+          <summary>Generated structure</summary>
+          <p class="hint">The typed morphisms in <span class="mono">Proc</span> and the precedence edges in <span class="mono">Dep</span> (computed from <span class="mono">Proc</span>).</p>
+          <div id="generated" class="mono" style="font-size:.86rem;white-space:pre-wrap;"></div>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================
+   Data: a slightly richer shed build (includes concurrency + merge)
+   ========================================================== */
+const model = {
+  states: [
+    { id: "Start" },
+    { id: "Ground Cleared" },
+    { id: "Footings Excavated" },
+    { id: "Concrete Poured" },
+    { id: "Materials Delivered" },
+    { id: "Platform Built" },
+    { id: "Framing Complete" },
+    { id: "Roofing Installed" },
+    { id: "Inspection Passed" }
+  ],
+  processes: [
+    { id: "Clear Ground",      from: ["Start"],                 to: ["Ground Cleared"] },
+    { id: "Order Materials",   from: ["Start"],                 to: ["Materials Delivered"] },
+    { id: "Dig Footings",      from: ["Ground Cleared"],        to: ["Footings Excavated"] },
+    { id: "Pour Concrete",     from: ["Footings Excavated"],    to: ["Concrete Poured"] },
+    { id: "Build Platform",    from: ["Concrete Poured","Materials Delivered"], to: ["Platform Built"] },
+    { id: "Frame Shed",        from: ["Platform Built"],        to: ["Framing Complete"] },
+    { id: "Install Roof",      from: ["Framing Complete"],      to: ["Roofing Installed"] },
+    { id: "Final Inspection",  from: ["Roofing Installed"],     to: ["Inspection Passed"] }
+  ]
+};
+
+/* ==========================================================
+   Category constructions
+   ========================================================== */
+
+/** Proc: objects = states; morphisms = processes with dom/cod (arrays) */
+function buildProcCategory(m){
+  const obj = m.states.map(s=>s.id);
+  const mor = m.processes.map(p=>({
+    id: p.id,
+    dom: [...p.from],
+    cod: [...p.to]
+  }));
+  return { name:"Proc", objects:obj, morphisms:mor };
+}
+
+/**
+ * Dep: objects = processes-as-tasks; morphisms = precedence (thin) induced by composability.
+ * Rule: p ≺ q iff cod(p) intersects dom(q).
+ */
+function buildDepCategory(procCat){
+  const tasks = procCat.morphisms.map(m=>m.id);
+
+  const byId = Object.fromEntries(procCat.morphisms.map(m=>[m.id,m]));
+  const edges = [];
+  for(const p of procCat.morphisms){
+    for(const q of procCat.morphisms){
+      if(p.id===q.id) continue;
+      const feeds = p.cod.some(s => q.dom.includes(s));
+      if(feeds) edges.push({from:p.id, to:q.id});
+    }
+  }
+  // thin it (unique edges)
+  const key = (a,b)=>a+"→"+b;
+  const uniq = [];
+  const seen = new Set();
+  for(const e of edges){
+    const k=key(e.from,e.to);
+    if(!seen.has(k)){ seen.add(k); uniq.push(e); }
+  }
+  return { name:"Dep", objects:tasks, morphisms:uniq, _procById:byId };
+}
+
+/* ==========================================================
+   Graph utilities
+   ========================================================== */
+function topoSort(nodes, edges){
+  const inDeg = new Map(nodes.map(n=>[n,0]));
+  const out = new Map(nodes.map(n=>[n,[]]));
+  edges.forEach(e=>{
+    if(!inDeg.has(e.to) || !out.has(e.from)) return;
+    inDeg.set(e.to, inDeg.get(e.to)+1);
+    out.get(e.from).push(e.to);
+  });
+  const q=[];
+  for(const [n,d] of inDeg.entries()) if(d===0) q.push(n);
+  const order=[];
+  while(q.length){
+    const n=q.shift();
+    order.push(n);
+    for(const t of out.get(n)){
+      inDeg.set(t, inDeg.get(t)-1);
+      if(inDeg.get(t)===0) q.push(t);
+    }
+  }
+  // if cycle, append remaining
+  if(order.length!==nodes.length){
+    const remaining = nodes.filter(n=>!order.includes(n));
+    return order.concat(remaining);
+  }
+  return order;
+}
+
+function longestPathLevels(order, edges){
+  const preds = new Map(order.map(n=>[n,[]]));
+  edges.forEach(e=>{
+    if(preds.has(e.to)) preds.get(e.to).push(e.from);
+  });
+  const level = new Map(order.map(n=>[n,0]));
+  for(const n of order){
+    let best=0;
+    for(const p of preds.get(n)){
+      best = Math.max(best, (level.get(p)||0)+1);
+    }
+    level.set(n, best);
+  }
+  return level;
+}
+
+/* ==========================================================
+   Layouts
+   ========================================================== */
+function layoutProc(procCat, rect){
+  // Build bipartite graph over states + processes
+  const S = procCat.objects.map(id=>"S:"+id);
+  const P = procCat.morphisms.map(m=>"P:"+m.id);
+  const nodes = [...S, ...P];
+
+  const edges = [];
+  for(const m of procCat.morphisms){
+    for(const s of m.dom) edges.push({from:"S:"+s, to:"P:"+m.id});
+    for(const t of m.cod) edges.push({from:"P:"+m.id, to:"S:"+t});
+  }
+
+  const order = topoSort(nodes, edges);
+  const lvl = longestPathLevels(order, edges);
+  const maxL = Math.max(...order.map(n=>lvl.get(n)||0), 0);
+
+  // group by level
+  const groups = Array.from({length:maxL+1}, ()=>[]);
+  for(const n of order){
+    groups[lvl.get(n)||0].push(n);
+  }
+
+  const marginX = Math.max(24, rect.w*0.04);
+  const marginY = Math.max(24, rect.h*0.08);
+  const usableW = rect.w - 2*marginX;
+  const usableH = rect.h - 2*marginY;
+
+  const pos = {};
+  groups.forEach((g, i)=>{
+    const x = rect.x + marginX + (maxL===0 ? usableW/2 : (i/maxL)*usableW);
+    const stepY = g.length>1 ? usableH/(g.length-1) : 0;
+    g.forEach((n, j)=>{
+      const y = rect.y + marginY + (g.length===1 ? usableH/2 : j*stepY);
+      pos[n] = {x, y};
+    });
+  });
+
+  // convenient maps
+  const statePos = {};
+  const procPos  = {};
+  for(const s of procCat.objects){
+    statePos[s] = pos["S:"+s];
+  }
+  for(const m of procCat.morphisms){
+    procPos[m.id] = pos["P:"+m.id];
+  }
+  return { nodes, edges, pos, statePos, procPos, rect };
+}
+
+function layoutDep(depCat, rect){
+  const nodes = depCat.objects.slice();
+  const edges = depCat.morphisms.slice();
+  const order = topoSort(nodes, edges);
+  const lvl = longestPathLevels(order, edges);
+  const maxL = Math.max(...order.map(n=>lvl.get(n)||0), 0);
+
+  const groups = Array.from({length:maxL+1}, ()=>[]);
+  for(const n of order){
+    groups[lvl.get(n)||0].push(n);
+  }
+
+  const marginX = Math.max(24, rect.w*0.06);
+  const marginY = Math.max(24, rect.h*0.10);
+  const usableW = rect.w - 2*marginX;
+  const usableH = rect.h - 2*marginY;
+
+  const pos = {};
+  groups.forEach((g,i)=>{
+    const x = rect.x + marginX + (maxL===0 ? usableW/2 : (i/maxL)*usableW);
+    const stepY = g.length>1 ? usableH/(g.length-1) : 0;
+    g.forEach((n,j)=>{
+      const y = rect.y + marginY + (g.length===1 ? usableH/2 : j*stepY);
+      pos[n]={x,y};
+    });
+  });
+
+  return { nodes, edges, pos, rect };
+}
+
+/* ==========================================================
+   SVG drawing
+   ========================================================== */
+const NS = "http://www.w3.org/2000/svg";
+function el(name, attrs={}, parent=null){
+  const n=document.createElementNS(NS,name);
+  for(const [k,v] of Object.entries(attrs)) n.setAttribute(k, v);
+  if(parent) parent.appendChild(n);
+  return n;
+}
+function clearSVG(svg){
+  // keep defs
+  const defs = svg.querySelector("defs");
+  svg.innerHTML="";
+  if(defs) svg.appendChild(defs);
+}
+
+function drawEdge(g, a, b, dashed=false){
+  const line = el("line", {
+    x1:a.x, y1:a.y, x2:b.x, y2:b.y,
+    class: "edge" + (dashed ? " dashed" : "")
+  }, g);
+  return line;
+}
+
+function drawLabel(g, x, y, text, small=false){
+  return el("text", {
+    x, y,
+    class: "label" + (small ? " small" : ""),
+    "text-anchor":"middle"
+  }, g).appendChild(document.createTextNode(text));
+}
+
+function roundedRect(g, cx, cy, w, h, r, cls, id, kind){
+  const rect = el("rect", {
+    x: cx - w/2, y: cy - h/2, width:w, height:h, rx:r, ry:r,
+    class: "shape " + cls,
+    "data-id": id,
+    "data-kind": kind
+  }, g);
+  return rect;
+}
+
+function circle(g, cx, cy, r, cls, id, kind){
+  const c = el("circle", {
+    cx, cy, r,
+    class: "shape " + cls,
+    "data-id": id,
+    "data-kind": kind
+  }, g);
+  return c;
+}
+
+function attachNodeHandler(shape, handler){
+  shape.addEventListener("click", (ev)=>{
+    ev.stopPropagation();
+    const id = shape.getAttribute("data-id");
+    const kind = shape.getAttribute("data-kind");
+    handler({id, kind});
+  });
+  // tap-equivalent for touch
+  shape.addEventListener("touchstart", (ev)=>{
+    ev.stopPropagation();
+    const id = shape.getAttribute("data-id");
+    const kind = shape.getAttribute("data-kind");
+    handler({id, kind});
+  }, {passive:true});
+}
+
+/* ==========================================================
+   App state
+   ========================================================== */
+const procCat = buildProcCategory(model);
+const depCat  = buildDepCategory(procCat);
+
+let mode = "state";              // "state" | "task" | "split"
+let selected = null;             // {id, kind}
+let morphT = 0.0;
+let playing = false;
+let rafId = null;
+
+/* ==========================================================
+   UI Helpers
+   ========================================================== */
+function toast(msg){
+  const t=document.createElement("div");
+  t.className="toast";
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 4200);
+}
+
+function formatTensor(list){
+  if(!list || list.length===0) return "I";
+  if(list.length===1) return list[0];
+  return list.join(" ⊗ ");
+}
+function procTyping(id){
+  const m = procCat.morphisms.find(x=>x.id===id);
+  if(!m) return "—";
+  return `${id} : ${formatTensor(m.dom)} → ${formatTensor(m.cod)}`;
+}
+
+function depsOf(id){
+  const direct = depCat.morphisms.filter(e=>e.to===id).map(e=>e.from);
+  if(direct.length===0) return "∅";
+  return direct.join(", ");
+}
+
+function succOf(id){
+  const direct = depCat.morphisms.filter(e=>e.from===id).map(e=>e.to);
+  if(direct.length===0) return "∅";
+  return direct.join(", ");
+}
+
+function updateSelectionPanel(){
+  const box = document.getElementById("selection");
+  const selId = selected ? selected.id : "—";
+
+  let inProc = "—";
+  let inDep  = "—";
+
+  if(selected){
+    if(selected.kind==="process" || selected.kind==="task"){
+      inProc = procTyping(selId);
+      inDep  = `deps(${selId}) = { ${depsOf(selId)} }`;
+    }else if(selected.kind==="state"){
+      inProc = `Object: ${selId}`;
+      // show which tasks produce/consume it
+      const producers = procCat.morphisms.filter(m=>m.cod.includes(selId)).map(m=>m.id);
+      const consumers = procCat.morphisms.filter(m=>m.dom.includes(selId)).map(m=>m.id);
+      inDep = `produced by: ${producers.length?producers.join(", "):"∅"}; used by: ${consumers.length?consumers.join(", "):"∅"}`;
+    }
+  }
+
+  // rebuild simple kv
+  box.innerHTML = "";
+  const rows = [
+    ["Selected", selId],
+    ["In Proc", inProc],
+    ["In Dep",  inDep]
+  ];
+  for(const [k,v] of rows){
+    const a=document.createElement("div"); a.textContent=k;
+    const b=document.createElement("div"); b.className="mono"; b.textContent=v;
+    box.appendChild(a); box.appendChild(b);
+  }
+}
+
+function updateGeneratedPanel(){
+  const out = [];
+  out.push("Proc morphisms (typed):");
+  for(const m of procCat.morphisms){
+    out.push("  " + procTyping(m.id));
+  }
+  out.push("");
+  out.push("Dep precedence edges (direct):");
+  for(const e of depCat.morphisms){
+    out.push("  " + e.from + " ≺ " + e.to);
+  }
+  document.getElementById("generated").textContent = out.join("\n");
+}
+
+/* ==========================================================
+   Rendering
+   ========================================================== */
+function render(){
+  const svg = document.getElementById("viz");
+  const wrap = document.getElementById("vizWrap");
+  const badge = document.getElementById("viewBadge");
+
+  const w = wrap.clientWidth || 800;
+  const h = wrap.clientHeight || 400;
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+
+  clearSVG(svg);
+
+  // defs (arrow marker)
+  const defs = el("defs", {}, svg);
+  defs.innerHTML = `
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="${getComputedStyle(document.documentElement).getPropertyValue('--edge') || '#6c757d'}"></path>
+    </marker>
+  `;
+
+  // click background to clear selection
+  svg.addEventListener("click", ()=>{ selected=null; updateSelectionPanel(); render(); }, {once:true});
+
+  const root = el("g", {}, svg);
+
+  // Determine rects
+  const pad = Math.max(14, w*0.015);
+  const fullRect = {x:pad, y:pad, w:w-2*pad, h:h-2*pad};
+  const leftRect = {x:pad, y:pad, w:(w-3*pad)/2, h:h-2*pad};
+  const rightRect= {x:leftRect.x + leftRect.w + pad, y:pad, w:(w-3*pad)/2, h:h-2*pad};
+
+  // layouts
+  const Lproc = layoutProc(procCat, mode==="split" ? leftRect : fullRect);
+  const Ldep  = layoutDep(depCat,  mode==="split" ? rightRect: fullRect);
+
+  // helper to mark selection classes
+  function isSel(id){ return selected && selected.id===id; }
+
+  // groups
+  const gProc = el("g", {}, root);
+  const gDep  = el("g", {}, root);
+  const gMorph= el("g", {}, root);
+  const gConn = el("g", {}, root);
+
+  // draw functions
+  function drawProcView(){
+    // edges
+    for(const e of Lproc.edges){
+      const a=Lproc.pos[e.from], b=Lproc.pos[e.to];
+      if(a&&b) drawEdge(gProc, a, b, false);
+    }
+    // nodes
+    const rState = Math.max(12, Math.min(20, Lproc.rect.w*0.03));
+    const procW = Math.max(70, Math.min(120, Lproc.rect.w*0.18));
+    const procH = Math.max(26, Math.min(34,  Lproc.rect.h*0.06));
+
+    // states
+    for(const s of procCat.objects){
+      const p=Lproc.statePos[s]; if(!p) continue;
+      const c = circle(gProc, p.x, p.y, rState, "state"+(isSel(s)?" sel":""), s, "state");
+      attachNodeHandler(c, (sel)=>{selected=sel; updateSelectionPanel(); render();});
+      drawLabel(gProc, p.x, p.y - rState - 8, s, true);
+    }
+    // processes
+    for(const m of procCat.morphisms){
+      const p=Lproc.procPos[m.id]; if(!p) continue;
+      const rr = roundedRect(gProc, p.x, p.y, procW, procH, 8, "process"+(isSel(m.id)?" sel":""), m.id, "process");
+      attachNodeHandler(rr, (sel)=>{selected=sel; updateSelectionPanel(); render();});
+      drawLabel(gProc, p.x, p.y - procH/2 - 8, m.id, true);
+    }
+  }
+
+  function drawDepView(){
+    // edges
+    for(const e of Ldep.edges){
+      const a=Ldep.pos[e.from], b=Ldep.pos[e.to];
+      if(a&&b) drawEdge(gDep, a, b, false);
+    }
+    // nodes
+    const rTask = Math.max(14, Math.min(22, Ldep.rect.w*0.035));
+    for(const t of depCat.objects){
+      const p=Ldep.pos[t]; if(!p) continue;
+      const c = circle(gDep, p.x, p.y, rTask, "task"+(isSel(t)?" sel":""), t, "task");
+      attachNodeHandler(c, (sel)=>{selected=sel; updateSelectionPanel(); render();});
+      drawLabel(gDep, p.x, p.y - rTask - 8, t, true);
+    }
+  }
+
+  function drawSplitConnectors(){
+    // dashed mapping lines from process node (left) to task node (right)
+    for(const m of procCat.morphisms){
+      const a=Lproc.procPos[m.id], b=Ldep.pos[m.id];
+      if(!a||!b) continue;
+      const dashed = drawEdge(gConn, a, b, true);
+      if(selected && selected.id===m.id){
+        dashed.style.opacity = "0.95";
+        dashed.style.strokeWidth = "2.6";
+      }
+    }
+  }
+
+  function drawMorphOverlay(){
+    // Ghost nodes that move from process-position to task-position as t varies
+    const t = morphT;
+    const procW = Math.max(70, Math.min(120, Lproc.rect.w*0.18));
+    const procH = Math.max(26, Math.min(34,  Lproc.rect.h*0.06));
+    const rTask = Math.max(14, Math.min(22, Ldep.rect.w*0.035));
+
+    for(const m of procCat.morphisms){
+      const a=Lproc.procPos[m.id], b=Ldep.pos[m.id];
+      if(!a||!b) continue;
+      const x = a.x + (b.x - a.x)*t;
+      const y = a.y + (b.y - a.y)*t;
+
+      // shape morph via opacity crossfade: rect (1-t), circle (t)
+      const rect = roundedRect(gMorph, x, y, procW, procH, 10, "process ghost"+(isSel(m.id)?" sel":""), m.id, "ghost");
+      rect.style.opacity = (1-t)*0.35 + 0.02;
+      rect.style.pointerEvents = "none";
+
+      const circ = circle(gMorph, x, y, rTask, "task ghost"+(isSel(m.id)?" sel":""), m.id, "ghost");
+      circ.style.opacity = (t)*0.45 + 0.02;
+      circ.style.pointerEvents = "none";
+    }
+  }
+
+  // apply mode
+  if(mode==="state"){
+    badge.textContent = "View: Proc";
+    gDep.style.display="none"; gMorph.style.display="none"; gConn.style.display="none";
+    drawProcView();
+  }else if(mode==="task"){
+    badge.textContent = "View: Dep";
+    gProc.style.display="none"; gMorph.style.display="none"; gConn.style.display="none";
+    drawDepView();
+  }else{
+    badge.textContent = "View: Proc | Dep";
+    drawProcView();
+    drawDepView();
+    drawSplitConnectors();
+    drawMorphOverlay();
+  }
+
+  // (re)wire controls visibility
+  const morphControls = document.getElementById("morphControls");
+  const isSplit = mode==="split";
+  morphControls.style.display = isSplit ? "flex" : "none";
+  morphControls.setAttribute("aria-hidden", isSplit ? "false" : "true");
+
+  // update selection panel (in case mode toggled)
+  updateSelectionPanel();
+}
+
+/* ==========================================================
+   Morph animation
+   ========================================================== */
+function setMorph(t){
+  morphT = Math.max(0, Math.min(1, t));
+  document.getElementById("morphSlider").value = String(morphT);
+  document.getElementById("morphVal").textContent = morphT.toFixed(2);
+  if(mode==="split") render();
+}
+
+function play(){
+  playing = !playing;
+  document.getElementById("btnPlay").textContent = playing ? "Pause" : "Play";
+  if(!playing){
+    if(rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    return;
+  }
+  const speed = 0.006; // per frame-ish
+  const step = ()=>{
+    if(!playing) return;
+    let t = morphT + speed;
+    if(t>=1){ t=1; playing=false; document.getElementById("btnPlay").textContent="Play"; }
+    setMorph(t);
+    if(playing) rafId=requestAnimationFrame(step);
+  };
+  rafId = requestAnimationFrame(step);
+}
+
+/* ==========================================================
+   Mode controls
+   ========================================================== */
+function setMode(m){
+  mode = m;
+  const bState=document.getElementById("btnState");
+  const bTask=document.getElementById("btnTask");
+  const bSplit=document.getElementById("btnSplit");
+  [bState,bTask,bSplit].forEach(b=>b.classList.remove("primary"));
+  if(m==="state") bState.classList.add("primary");
+  if(m==="task")  bTask.classList.add("primary");
+  if(m==="split") bSplit.classList.add("primary");
+
+  if(m!=="split"){ playing=false; document.getElementById("btnPlay").textContent="Play"; }
+  render();
+}
+
+/* ==========================================================
+   Robustness: fallback + watchdog
+   ========================================================== */
+function staticDiagram(svg){
+  // Minimal static fallback: a short legend + a line of tasks
+  const w=1000,h=400;
+  svg.setAttribute("viewBox",`0 0 ${w} ${h}`);
+  svg.innerHTML = `
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#6c757d"></path>
+      </marker>
+    </defs>
+    <text x="50%" y="14%" text-anchor="middle" fill="#dc3545" style="font-size:22px;font-weight:700">Static fallback</text>
+    <text x="50%" y="22%" text-anchor="middle" fill="#6c757d" style="font-size:14px">Proc (states→processes) and Dep (task precedence) could not initialise.</text>
+  `;
+  const g=document.createElementNS(NS,"g");
+  svg.appendChild(g);
+  const xs=[120,260,400,540,680,820];
+  const labels=["Clear","Dig","Pour","Platform","Frame","Roof"];
+  for(let i=0;i<labels.length;i++){
+    const cx=xs[i], cy=260;
+    const c=el("circle",{cx,cy,r:34,fill:"#f9c74f",stroke:"rgba(0,0,0,.12)","stroke-width":"2"},g);
+    el("text",{x:cx,y:cy-44,"text-anchor":"middle",fill:"#212529",style:"font-size:14px"},g).textContent=labels[i];
+    if(i<labels.length-1){
+      el("line",{x1:cx+34,y1:cy,x2:xs[i+1]-34,y2:cy,stroke:"#6c757d","stroke-width":"2","marker-end":"url(#arrow)"},g);
+    }
+  }
+}
+
+function fallback(reason){
+  console.error("Fallback:", reason);
+  toast("Interactive view failed: " + reason);
+  const svg=document.getElementById("viz");
+  staticDiagram(svg);
+  window.__canvasStatus = "fallback";
+  // also mark smoke so watchdog stops
+  document.getElementById("app").setAttribute("data-smoke","ok");
+  const smoke=document.createElement("div");
+  smoke.setAttribute("data-smoke","ok");
+  smoke.style.display="none";
+  document.getElementById("app").appendChild(smoke);
+}
+
+(function boot(){
+  try{
+    // initial content
+    updateGeneratedPanel();
+    updateSelectionPanel();
+
+    // hook controls
+    document.getElementById("btnState").addEventListener("click", ()=>setMode("state"));
+    document.getElementById("btnTask").addEventListener("click",  ()=>setMode("task"));
+    document.getElementById("btnSplit").addEventListener("click", ()=>setMode("split"));
+    document.getElementById("btnTransform").addEventListener("click", ()=>{
+      if(mode==="state"){ setMode("task"); return; }
+      if(mode==="task"){ setMode("state"); return; }
+      // if split, nudge morph
+      toast("Split mode: use slider/play to morph.");
+    });
+
+    document.getElementById("morphSlider").addEventListener("input", (e)=>{
+      playing=false; document.getElementById("btnPlay").textContent="Play";
+      setMorph(parseFloat(e.target.value));
+    });
+    document.getElementById("btnPlay").addEventListener("click", ()=>{
+      if(mode!=="split"){ toast("Switch to Side‑by‑Side to play morph."); return; }
+      play();
+    });
+
+    // render + resize
+    const onResize=()=>render();
+    window.addEventListener("resize", onResize);
+
+    // first render
+    setMode("state");
+
+    // smoke marker (main container + descendant sentinel)
+    document.getElementById("app").setAttribute("data-smoke","ok");
+    const sentinel=document.createElement("div");
+    sentinel.setAttribute("data-smoke","ok");
+    sentinel.style.display="none";
+    document.getElementById("app").appendChild(sentinel);
+
+    window.__canvasStatus = "ready";
+  }catch(e){
+    fallback(e && e.message ? e.message : String(e));
+  }
+})();
+
+/* ==========================================================
+   Watchdog: if no descendant [data-smoke="ok"] appears, fallback.
+   ========================================================== */
+(function watchdog(){
+  const container=document.getElementById("app");
+  const limit=parseInt(container.getAttribute("data-timeout")||"3000",10);
+  let elapsed=0;
+  const tick=()=>{
+    const ok = container.querySelector('[data-smoke="ok"]');
+    if(ok){ return; }
+    elapsed += 500;
+    if(elapsed >= limit){
+      fallback("timeout");
+      return;
+    }
+    setTimeout(tick, 500);
+  };
+  setTimeout(tick, 500);
+})();
+</script>
+</body>
+</html>

@@ -6,3 +6,4 @@
 5,SysML wiring comparison,"Side-by-side SysML internal block diagram and categorical wiring diagram for wall + roof construction",Compositional modeling,apps/sysml-wiring-comparison/index.html
 6,Wall-to-roof wiring diagram (SMC),Interactive wiring diagram with categorical contracts and wiring-table inspector,Wiring diagrams,apps/wall-roof-wiring-smc/index.html
 7,Cliff shed WBS dual view,Interactive dual-category view mapping tasks to states for a cliffside shed build,Compositional modeling,apps/cliff-shed-wbs-state-dual-view/index.html
+8,Processes ↔ Plans: Shed-on-a-Cliff,Interactive category view that maps shed processes into task dependencies with a morphing split view,Compositional modeling,apps/processes-plans-shed-on-a-cliff-category-view/index.html
