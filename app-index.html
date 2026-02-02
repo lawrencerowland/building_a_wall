@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>App Index</title>
+  <link rel="stylesheet" href="common.css" />
+  <style>
+    .table-wrap {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.75rem;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    th {
+      background: #f8fafc;
+      font-weight: 600;
+    }
+    .small {
+      font-size: 0.85rem;
+      color: #475569;
+    }
+    img {
+      width: 160px;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <nav class="site-nav">
+      <strong>Innovation Collaboration Hub</strong>
+      <a href="index.html">Home</a>
+    </nav>
+    <main class="section">
+      <h1>App Index</h1>
+      <p>Browse the available sandbox applications and jump directly into each experience.</p>
+      <div class="table-wrap">
+        <table aria-describedby="app-index-summary">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Preview</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Category</th>
+              <th>Link</th>
+            </tr>
+          </thead>
+          <tbody id="appRows"></tbody>
+        </table>
+      </div>
+      <p id="app-index-summary" class="small">Screenshots live in <code>pics/</code> and correspond to the numeric ID in the CSV. Missing images fall back to an inline placeholder.</p>
+    </main>
+  </div>
+
+  <script>
+    async function loadIndex() {
+      const response = await fetch('app-index.csv');
+      const text = await response.text();
+      const rows = parseCsv(text);
+      const body = document.getElementById('appRows');
+      rows.slice(1).forEach(row => {
+        const [id, name, description, category, path] = row;
+        const tr = document.createElement('tr');
+        const img = document.createElement('img');
+        img.src = `pics/${id}.png`;
+        img.alt = `${name} screenshot`;
+        img.addEventListener('error', () => {
+          img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(\n+            '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"160\" height=\"120\">' +\n+            '<rect width=\"100%\" height=\"100%\" fill=\"#f1f5f9\" />' +\n+            '<text x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" font-family=\"Inter, Arial\" font-size=\"12\" fill=\"#64748b\">No preview</text>' +\n+            '</svg>'\n+          );\n+        }, { once: true });
+
+        tr.innerHTML = `
+          <td>${id}</td>
+          <td></td>
+          <td>${name}</td>
+          <td>${description}</td>
+          <td>${category}</td>
+          <td><a href="${path}">Open app</a></td>
+        `;
+        tr.children[1].appendChild(img);
+        body.appendChild(tr);
+      });
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let current = [];
+      let field = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+        if (char === '"') {
+          if (inQuotes && next === '"') {
+            field += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          current.push(field);
+          field = '';
+        } else if ((char === '\n' || char === '\r') && !inQuotes) {
+          if (char === '\r' && next === '\n') {
+            i++;
+          }
+          if (field.length || current.length) {
+            current.push(field);
+            rows.push(current);
+          }
+          current = [];
+          field = '';
+        } else {
+          field += char;
+        }
+      }
+      if (field.length || current.length) {
+        current.push(field);
+        rows.push(current);
+      }
+      return rows;
+    }
+
+    loadIndex();
+  </script>
+</body>
+</html>
