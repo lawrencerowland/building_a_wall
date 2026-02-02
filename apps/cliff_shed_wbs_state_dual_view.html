@@ -1,0 +1,990 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Build a shed halfway up a cliff — Task vs State Categories (T and S)</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --panel-bg: #fafafa;
+    --text: #111;
+    --muted: #555;
+    --border: #ddd;
+    --edge: #666;
+    --edge-faint: rgba(0,0,0,0.18);
+    --selected: #d62728;
+    --prereq: #1f77b4;
+    --dependent: #2ca02c;
+    --enabled: #ff7f0e;
+    --instate-fill: #e8f5e9;
+    --enabled-fill: #fff3e0;
+  }
+  body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    color: var(--text);
+    background: var(--bg);
+  }
+  header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: #fff;
+  }
+  header h1 {
+    margin: 0 0 6px 0;
+    font-size: 18px;
+  }
+  header .sub {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .wrap {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+  }
+  .panel {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel-bg);
+    overflow: hidden;
+    min-width: 420px;
+  }
+  .panel header {
+    border-bottom: 1px solid var(--border);
+    padding: 10px 12px;
+    background: #fff;
+  }
+  .panel header h2 {
+    margin: 0;
+    font-size: 14px;
+  }
+  .panel header .hint {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    background: #fff;
+  }
+  .controls label {
+    font-size: 12px;
+    color: var(--muted);
+    user-select: none;
+  }
+  .controls input[type="checkbox"] {
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  .controls button {
+    font-size: 12px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .controls button:hover {
+    background: #f5f5f5;
+  }
+  svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: var(--panel-bg);
+  }
+  .muted { color: var(--muted); }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
+  }
+  details {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    padding: 8px 10px;
+  }
+  details > summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  details .content {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .content ul {
+    margin: 6px 0 0 18px;
+  }
+  .content li {
+    margin: 4px 0;
+  }
+  #info {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    padding: 10px 12px;
+  }
+  #info h3 {
+    margin: 0 0 6px 0;
+    font-size: 13px;
+  }
+  #info pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 8px 0 0 0;
+    font-size: 12px;
+    color: #222;
+  }
+
+  /* SVG styling */
+  .edge line {
+    stroke: var(--edge);
+    stroke-width: 1.2;
+    opacity: 0.9;
+  }
+  .edge.closure line {
+    stroke: var(--edge-faint);
+    stroke-dasharray: 5 4;
+    opacity: 0.55;
+  }
+  .hidden {
+    display: none;
+  }
+  .node circle {
+    fill: #fff;
+    stroke: #333;
+    stroke-width: 1.4;
+  }
+  .node text {
+    font-size: 11px;
+    font-weight: 600;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
+    fill: #111;
+  }
+
+  /* highlights */
+  .task-node.selected circle { stroke: var(--selected); stroke-width: 4; }
+  .task-node.prereq circle { stroke: var(--prereq); stroke-width: 3; }
+  .task-node.dependent circle { stroke: var(--dependent); stroke-width: 3; }
+  .task-node.in-state circle { fill: var(--instate-fill); }
+  .task-node.enabled circle { fill: var(--enabled-fill); stroke: var(--enabled); stroke-width: 3; }
+
+  .state-node.selected circle { stroke: var(--selected); stroke-width: 4; }
+  .state-node.F-highlight circle { stroke: var(--prereq); stroke-width: 4; }
+
+  .edge.highlight line { stroke: var(--selected); stroke-width: 3.4; opacity: 1; }
+  .edge.g-highlight line { stroke: var(--enabled); stroke-width: 4.2; opacity: 1; }
+  .edge.outgoing line { stroke: var(--dependent); stroke-width: 3.0; opacity: 1; }
+
+  .edge-label {
+    font-size: 10px;
+    fill: #444;
+    text-anchor: middle;
+    user-select: none;
+    pointer-events: none;
+  }
+  .edge-label.hidden {
+    display:none;
+  }
+  .edge-label.highlight {
+    fill: var(--selected);
+    font-weight: 700;
+  }
+
+  .legend {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend code {
+    background:#f3f3f3;
+    border:1px solid var(--border);
+    padding: 1px 4px;
+    border-radius: 6px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Build a shed halfway up a cliff: dual category view (tasks T vs states S)</h1>
+  <div class="sub">
+    A small storage/tool shed built on a prepared terrace halfway up a steep slope/cliff, with planned access (scaffold/rope) and anchoring.  <span class='muted'>Click nodes to explore the mapping.</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="panel" id="panelTasks">
+    <header>
+      <h2>Category T (tasks as objects, prerequisites as morphisms)</h2>
+      <div class="hint">Click a task to highlight its prerequisites/dependents and the induced state/transition on the right.</div>
+    </header>
+    <div class="controls">
+      <label><input type="checkbox" id="toggleTaskClosure"/>Show all morphisms in T (transitive closure)</label>
+      <button id="clearBtn1" title="Clear selection">Clear selection</button>
+    </div>
+    <svg viewBox="0 0 1250 430" id="svgTasks">
+      <defs>
+        <marker id="arrowTask" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#666"></path>
+        </marker>
+      </defs>
+      <g id="taskEdgesCover">
+        <g class='edge task-edge cover' data-from='PERM' data-to='SURV'><line x1='80.0' y1='60.0' x2='145.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='SAFETY' data-to='SURV'><line x1='73.8' y1='155.5' x2='151.2' y2='74.5' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='SURV' data-to='DES'><line x1='185.0' y1='60.0' x2='250.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='PERM' data-to='BOOK'><line x1='73.8' y1='74.5' x2='151.2' y2='155.5' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='SAFETY' data-to='BOOK'><line x1='80.0' y1='170.0' x2='145.0' y2='170.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='DES' data-to='ORDER'><line x1='290.0' y1='60.0' x2='355.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='BOOK' data-to='ACCESS'><line x1='185.0' y1='170.0' x2='250.0' y2='170.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='PERM' data-to='ACCESS'><line x1='77.7' y1='69.3' x2='252.3' y2='160.7' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='SAFETY' data-to='ACCESS'><line x1='80.0' y1='170.0' x2='250.0' y2='170.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='DES' data-to='ANCH'><line x1='290.0' y1='60.0' x2='460.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='ACCESS' data-to='ANCH'><line x1='287.7' y1='160.7' x2='462.3' y2='69.3' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='ORDER' data-to='ANCH'><line x1='395.0' y1='60.0' x2='460.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='ORDER' data-to='STAGE'><line x1='395.0' y1='60.0' x2='565.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='ACCESS' data-to='STAGE'><line x1='288.9' y1='163.4' x2='566.1' y2='66.6' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='ANCH' data-to='STAGE'><line x1='500.0' y1='60.0' x2='565.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='DES' data-to='TERR'><line x1='290.0' y1='60.0' x2='670.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='STAGE' data-to='TERR'><line x1='605.0' y1='60.0' x2='670.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='DES' data-to='FOUND'><line x1='290.0' y1='60.0' x2='775.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='TERR' data-to='FOUND'><line x1='710.0' y1='60.0' x2='775.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='STAGE' data-to='FOUND'><line x1='605.0' y1='60.0' x2='775.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='FOUND' data-to='FRAME'><line x1='815.0' y1='60.0' x2='880.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='FRAME' data-to='ROOF'><line x1='920.0' y1='60.0' x2='985.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='ROOF' data-to='CLAD'><line x1='1025.0' y1='60.0' x2='1090.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge cover' data-from='CLAD' data-to='HAND'><line x1='1130.0' y1='60.0' x2='1195.0' y2='60.0' class='task-edge-line cover-line' marker-end='url(#arrowTask)'></line></g>
+      </g>
+      <g id="taskEdgesClosure">
+        <g class='edge task-edge closure hidden' data-from='PERM' data-to='DES'><line x1='80.0' y1='60.0' x2='250.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='PERM' data-to='ORDER'><line x1='80.0' y1='60.0' x2='355.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='PERM' data-to='ANCH'><line x1='80.0' y1='60.0' x2='460.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='PERM' data-to='STAGE'><line x1='80.0' y1='60.0' x2='565.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='PERM' data-to='TERR'><line x1='80.0' y1='60.0' x2='670.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='PERM' data-to='FOUND'><line x1='80.0' y1='60.0' x2='775.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='PERM' data-to='FRAME'><line x1='80.0' y1='60.0' x2='880.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='PERM' data-to='ROOF'><line x1='80.0' y1='60.0' x2='985.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='PERM' data-to='CLAD'><line x1='80.0' y1='60.0' x2='1090.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='PERM' data-to='HAND'><line x1='80.0' y1='60.0' x2='1195.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SAFETY' data-to='DES'><line x1='77.7' y1='160.7' x2='252.3' y2='69.3' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SAFETY' data-to='ORDER'><line x1='78.9' y1='163.4' x2='356.1' y2='66.6' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SAFETY' data-to='ANCH'><line x1='79.3' y1='164.9' x2='460.7' y2='65.1' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SAFETY' data-to='STAGE'><line x1='79.6' y1='165.9' x2='565.4' y2='64.1' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SAFETY' data-to='TERR'><line x1='79.7' y1='166.6' x2='670.3' y2='63.4' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SAFETY' data-to='FOUND'><line x1='79.8' y1='167.0' x2='775.2' y2='63.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SAFETY' data-to='FRAME'><line x1='79.8' y1='167.4' x2='880.2' y2='62.6' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SAFETY' data-to='ROOF'><line x1='79.9' y1='167.7' x2='985.1' y2='62.3' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SAFETY' data-to='CLAD'><line x1='79.9' y1='167.9' x2='1090.1' y2='62.1' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SAFETY' data-to='HAND'><line x1='79.9' y1='168.1' x2='1195.1' y2='61.9' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SURV' data-to='ORDER'><line x1='185.0' y1='60.0' x2='355.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SURV' data-to='ANCH'><line x1='185.0' y1='60.0' x2='460.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SURV' data-to='STAGE'><line x1='185.0' y1='60.0' x2='565.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SURV' data-to='TERR'><line x1='185.0' y1='60.0' x2='670.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SURV' data-to='FOUND'><line x1='185.0' y1='60.0' x2='775.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SURV' data-to='FRAME'><line x1='185.0' y1='60.0' x2='880.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SURV' data-to='ROOF'><line x1='185.0' y1='60.0' x2='985.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SURV' data-to='CLAD'><line x1='185.0' y1='60.0' x2='1090.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='SURV' data-to='HAND'><line x1='185.0' y1='60.0' x2='1195.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='DES' data-to='STAGE'><line x1='290.0' y1='60.0' x2='565.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='DES' data-to='FRAME'><line x1='290.0' y1='60.0' x2='880.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='DES' data-to='ROOF'><line x1='290.0' y1='60.0' x2='985.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='DES' data-to='CLAD'><line x1='290.0' y1='60.0' x2='1090.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='DES' data-to='HAND'><line x1='290.0' y1='60.0' x2='1195.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='BOOK' data-to='ANCH'><line x1='183.9' y1='163.4' x2='461.1' y2='66.6' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='BOOK' data-to='STAGE'><line x1='184.3' y1='164.9' x2='565.7' y2='65.1' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='BOOK' data-to='TERR'><line x1='184.6' y1='165.9' x2='670.4' y2='64.1' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='BOOK' data-to='FOUND'><line x1='184.7' y1='166.6' x2='775.3' y2='63.4' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='BOOK' data-to='FRAME'><line x1='184.8' y1='167.0' x2='880.2' y2='63.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='BOOK' data-to='ROOF'><line x1='184.8' y1='167.4' x2='985.2' y2='62.6' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='BOOK' data-to='CLAD'><line x1='184.9' y1='167.7' x2='1090.1' y2='62.3' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='BOOK' data-to='HAND'><line x1='184.9' y1='167.9' x2='1195.1' y2='62.1' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ORDER' data-to='TERR'><line x1='395.0' y1='60.0' x2='670.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ORDER' data-to='FOUND'><line x1='395.0' y1='60.0' x2='775.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ORDER' data-to='FRAME'><line x1='395.0' y1='60.0' x2='880.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ORDER' data-to='ROOF'><line x1='395.0' y1='60.0' x2='985.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ORDER' data-to='CLAD'><line x1='395.0' y1='60.0' x2='1090.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ORDER' data-to='HAND'><line x1='395.0' y1='60.0' x2='1195.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ACCESS' data-to='TERR'><line x1='289.3' y1='164.9' x2='670.7' y2='65.1' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ACCESS' data-to='FOUND'><line x1='289.6' y1='165.9' x2='775.4' y2='64.1' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ACCESS' data-to='FRAME'><line x1='289.7' y1='166.6' x2='880.3' y2='63.4' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ACCESS' data-to='ROOF'><line x1='289.8' y1='167.0' x2='985.2' y2='63.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ACCESS' data-to='CLAD'><line x1='289.8' y1='167.4' x2='1090.2' y2='62.6' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ACCESS' data-to='HAND'><line x1='289.9' y1='167.7' x2='1195.1' y2='62.3' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ANCH' data-to='TERR'><line x1='500.0' y1='60.0' x2='670.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ANCH' data-to='FOUND'><line x1='500.0' y1='60.0' x2='775.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ANCH' data-to='FRAME'><line x1='500.0' y1='60.0' x2='880.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ANCH' data-to='ROOF'><line x1='500.0' y1='60.0' x2='985.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ANCH' data-to='CLAD'><line x1='500.0' y1='60.0' x2='1090.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ANCH' data-to='HAND'><line x1='500.0' y1='60.0' x2='1195.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='STAGE' data-to='FRAME'><line x1='605.0' y1='60.0' x2='880.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='STAGE' data-to='ROOF'><line x1='605.0' y1='60.0' x2='985.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='STAGE' data-to='CLAD'><line x1='605.0' y1='60.0' x2='1090.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='STAGE' data-to='HAND'><line x1='605.0' y1='60.0' x2='1195.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='TERR' data-to='FRAME'><line x1='710.0' y1='60.0' x2='880.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='TERR' data-to='ROOF'><line x1='710.0' y1='60.0' x2='985.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='TERR' data-to='CLAD'><line x1='710.0' y1='60.0' x2='1090.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='TERR' data-to='HAND'><line x1='710.0' y1='60.0' x2='1195.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='FOUND' data-to='ROOF'><line x1='815.0' y1='60.0' x2='985.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='FOUND' data-to='CLAD'><line x1='815.0' y1='60.0' x2='1090.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='FOUND' data-to='HAND'><line x1='815.0' y1='60.0' x2='1195.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='FRAME' data-to='CLAD'><line x1='920.0' y1='60.0' x2='1090.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='FRAME' data-to='HAND'><line x1='920.0' y1='60.0' x2='1195.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+<g class='edge task-edge closure hidden' data-from='ROOF' data-to='HAND'><line x1='1025.0' y1='60.0' x2='1195.0' y2='60.0' class='task-edge-line closure-line' marker-end='url(#arrowTask)'></line></g>
+      </g>
+      <g id="taskNodes">
+        <g class='node task-node' data-id='PERM' transform='translate(60.0,60.0)'><circle r='20'></circle><text class='node-label'>PERM</text><title>PERM: Permissions &amp; stakeholder sign-off — Landowner permission / access agreement; planning/HOA checks if needed.</title></g>
+<g class='node task-node' data-id='SAFETY' transform='translate(60.0,170.0)'><circle r='20'></circle><text class='node-label'>SAFETY</text><title>SAFETY: Risk assessment + method statement (RAMS) — Working-at-height risk assessment, rescue plan, PPE plan, toolbox talk prep.</title></g>
+<g class='node task-node' data-id='SURV' transform='translate(165.0,60.0)'><circle r='20'></circle><text class='node-label'>SURV</text><title>SURV: Site survey &amp; geotech sanity-check — Measure location, slope, drainage; basic ground/rock check for anchors &amp; footings.</title></g>
+<g class='node task-node' data-id='DES' transform='translate(270.0,60.0)'><circle r='20'></circle><text class='node-label'>DES</text><title>DES: Design + bill of materials — Shed design sized for site; choose foundation/anchoring scheme; produce BOM and cut list.</title></g>
+<g class='node task-node' data-id='BOOK' transform='translate(165.0,170.0)'><circle r='20'></circle><text class='node-label'>BOOK</text><title>BOOK: Book/hire access &amp; lifting setup — Line up scaffold/rope-access contractor, edge protection, hauling/lifting kit.</title></g>
+<g class='node task-node' data-id='ORDER' transform='translate(375.0,60.0)'><circle r='20'></circle><text class='node-label'>ORDER</text><title>ORDER: Order building materials + anchors — Order timber, fixings, roofing, cladding, anchors; arrange deliveries.</title></g>
+<g class='node task-node' data-id='ACCESS' transform='translate(270.0,170.0)'><circle r='20'></circle><text class='node-label'>ACCESS</text><title>ACCESS: Mobilise and set up safe access — Set up scaffold/rope access, edge protection, exclusion zone, material handling plan.</title></g>
+<g class='node task-node' data-id='ANCH' transform='translate(480.0,60.0)'><circle r='20'></circle><text class='node-label'>ANCH</text><title>ANCH: Install &amp; proof-test anchors/lifelines — Install temporary/permanent anchors for fall protection and for tying-in structure.</title></g>
+<g class='node task-node' data-id='STAGE' transform='translate(585.0,60.0)'><circle r='20'></circle><text class='node-label'>STAGE</text><title>STAGE: Haul and stage materials on site — Transport materials to the cliff location (hand-carry/rope haul) and stage safely.</title></g>
+<g class='node task-node' data-id='TERR' transform='translate(690.0,60.0)'><circle r='20'></circle><text class='node-label'>TERR</text><title>TERR: Prepare terrace + erosion control — Cut/level bench; install drainage/erosion control and any retaining elements.</title></g>
+<g class='node task-node' data-id='FOUND' transform='translate(795.0,60.0)'><circle r='20'></circle><text class='node-label'>FOUND</text><title>FOUND: Install foundations/footings — Install piers/footings/ground screws; set posts or base; allow cure time if needed.</title></g>
+<g class='node task-node' data-id='FRAME' transform='translate(900.0,60.0)'><circle r='20'></circle><text class='node-label'>FRAME</text><title>FRAME: Frame the shed &amp; tie-in — Build floor/walls; fix to foundations; tie structure to anchors as designed.</title></g>
+<g class='node task-node' data-id='ROOF' transform='translate(1005.0,60.0)'><circle r='20'></circle><text class='node-label'>ROOF</text><title>ROOF: Roof &amp; waterproofing — Roof framing, sheathing, membrane, flashing so the structure is weather-tight.</title></g>
+<g class='node task-node' data-id='CLAD' transform='translate(1110.0,60.0)'><circle r='20'></circle><text class='node-label'>CLAD</text><title>CLAD: Cladding + doors/windows — External cladding, door, any glazing/vents; weather-seal details.</title></g>
+<g class='node task-node' data-id='HAND' transform='translate(1215.0,60.0)'><circle r='20'></circle><text class='node-label'>HAND</text><title>HAND: Final inspection &amp; handover — Snagging, safety check, clean-up, documentation/photos, handover to owner.</title></g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="panel" id="panelStates">
+    <header>
+      <h2>Category S (states as objects, inclusions as morphisms)</h2>
+      <div class="hint">Click a state to see completed tasks (green) and enabled next tasks (orange) on the left.</div>
+    </header>
+    <div class="controls">
+      <label><input type="checkbox" id="toggleStateClosure"/>Show all morphisms in S (all inclusions)</label>
+      <label><input type="checkbox" id="toggleEdgeLabels" checked/>Show step labels (which task is added)</label>
+      <button id="clearBtn2" title="Clear selection">Clear selection</button>
+    </div>
+    <svg viewBox="0 0 900 820" id="svgStates">
+      <defs>
+        <marker id="arrowState" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#666"></path>
+        </marker>
+      </defs>
+      <g id="stateEdgesCover">
+        <g class='edge state-edge cover' data-from='S0' data-to='S1' data-task='PERM' data-eid='0_1_PERM'><line x1='434.1' y1='52.1' x2='85.9' y2='97.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S0' data-to='S2' data-task='SAFETY' data-eid='0_2_SAFETY'><line x1='465.9' y1='52.1' x2='814.1' y2='97.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S1' data-to='S3' data-task='SAFETY' data-eid='1_3_SAFETY'><line x1='85.9' y1='102.1' x2='434.1' y2='147.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S2' data-to='S3' data-task='PERM' data-eid='2_3_PERM'><line x1='814.1' y1='102.1' x2='465.9' y2='147.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S3' data-to='S4' data-task='SURV' data-eid='3_4_SURV'><line x1='434.1' y1='152.1' x2='85.9' y2='197.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S3' data-to='S5' data-task='BOOK' data-eid='3_5_BOOK'><line x1='465.9' y1='152.1' x2='814.1' y2='197.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S4' data-to='S7' data-task='DES' data-eid='4_7_DES'><line x1='85.9' y1='202.1' x2='434.1' y2='247.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S4' data-to='S6' data-task='BOOK' data-eid='4_6_BOOK'><line x1='70.0' y1='216.0' x2='70.0' y2='234.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S5' data-to='S6' data-task='SURV' data-eid='5_6_SURV'><line x1='814.0' y1='201.1' x2='86.0' y2='248.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S5' data-to='S8' data-task='ACCESS' data-eid='5_8_ACCESS'><line x1='830.0' y1='216.0' x2='830.0' y2='234.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S6' data-to='S9' data-task='DES' data-eid='6_9_DES'><line x1='70.0' y1='266.0' x2='70.0' y2='284.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S6' data-to='S10' data-task='ACCESS' data-eid='6_10_ACCESS'><line x1='85.9' y1='252.1' x2='434.1' y2='297.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S7' data-to='S9' data-task='BOOK' data-eid='7_9_BOOK'><line x1='434.1' y1='252.1' x2='85.9' y2='297.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S7' data-to='S11' data-task='ORDER' data-eid='7_11_ORDER'><line x1='465.9' y1='252.1' x2='814.1' y2='297.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S8' data-to='S10' data-task='SURV' data-eid='8_10_SURV'><line x1='814.1' y1='252.1' x2='465.9' y2='297.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S9' data-to='S13' data-task='ORDER' data-eid='9_13_ORDER'><line x1='86.0' y1='301.1' x2='814.0' y2='348.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S9' data-to='S12' data-task='ACCESS' data-eid='9_12_ACCESS'><line x1='70.0' y1='316.0' x2='70.0' y2='334.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S10' data-to='S12' data-task='DES' data-eid='10_12_DES'><line x1='434.1' y1='302.1' x2='85.9' y2='347.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S11' data-to='S13' data-task='BOOK' data-eid='11_13_BOOK'><line x1='830.0' y1='316.0' x2='830.0' y2='334.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S12' data-to='S14' data-task='ORDER' data-eid='12_14_ORDER'><line x1='85.9' y1='352.1' x2='434.1' y2='397.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S13' data-to='S14' data-task='ACCESS' data-eid='13_14_ACCESS'><line x1='814.1' y1='352.1' x2='465.9' y2='397.9' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S14' data-to='S15' data-task='ANCH' data-eid='14_15_ANCH'><line x1='450.0' y1='416.0' x2='450.0' y2='434.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S15' data-to='S16' data-task='STAGE' data-eid='15_16_STAGE'><line x1='450.0' y1='466.0' x2='450.0' y2='484.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S16' data-to='S17' data-task='TERR' data-eid='16_17_TERR'><line x1='450.0' y1='516.0' x2='450.0' y2='534.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S17' data-to='S18' data-task='FOUND' data-eid='17_18_FOUND'><line x1='450.0' y1='566.0' x2='450.0' y2='584.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S18' data-to='S19' data-task='FRAME' data-eid='18_19_FRAME'><line x1='450.0' y1='616.0' x2='450.0' y2='634.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S19' data-to='S20' data-task='ROOF' data-eid='19_20_ROOF'><line x1='450.0' y1='666.0' x2='450.0' y2='684.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S20' data-to='S21' data-task='CLAD' data-eid='20_21_CLAD'><line x1='450.0' y1='716.0' x2='450.0' y2='734.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge cover' data-from='S21' data-to='S22' data-task='HAND' data-eid='21_22_HAND'><line x1='450.0' y1='766.0' x2='450.0' y2='784.0' class='state-edge-line cover-line' marker-end='url(#arrowState)'></line></g>
+      </g>
+      <g id="stateEdgesClosure">
+        <g class='edge state-edge closure hidden' data-from='S0' data-to='S3'><line x1='450.0' y1='66.0' x2='450.0' y2='134.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S4'><line x1='435.1' y1='55.9' x2='84.9' y2='194.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S5'><line x1='464.9' y1='55.9' x2='815.1' y2='194.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S6'><line x1='435.8' y1='57.5' x2='84.2' y2='242.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S7'><line x1='450.0' y1='66.0' x2='450.0' y2='234.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S8'><line x1='464.2' y1='57.5' x2='815.8' y2='242.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S9'><line x1='436.6' y1='58.8' x2='83.4' y2='291.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S10'><line x1='450.0' y1='66.0' x2='450.0' y2='284.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S11'><line x1='463.4' y1='58.8' x2='816.6' y2='291.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S12'><line x1='437.4' y1='59.9' x2='82.6' y2='340.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S13'><line x1='462.6' y1='59.9' x2='817.4' y2='340.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S14'><line x1='450.0' y1='66.0' x2='450.0' y2='384.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S15'><line x1='450.0' y1='66.0' x2='450.0' y2='434.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S16'><line x1='450.0' y1='66.0' x2='450.0' y2='484.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S17'><line x1='450.0' y1='66.0' x2='450.0' y2='534.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S18'><line x1='450.0' y1='66.0' x2='450.0' y2='584.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S19'><line x1='450.0' y1='66.0' x2='450.0' y2='634.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S20'><line x1='450.0' y1='66.0' x2='450.0' y2='684.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S21'><line x1='450.0' y1='66.0' x2='450.0' y2='734.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S0' data-to='S22'><line x1='450.0' y1='66.0' x2='450.0' y2='784.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S4'><line x1='70.0' y1='116.0' x2='70.0' y2='184.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S5'><line x1='85.9' y1='102.1' x2='814.1' y2='197.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S6'><line x1='70.0' y1='116.0' x2='70.0' y2='234.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S7'><line x1='84.9' y1='105.9' x2='435.1' y2='244.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S8'><line x1='85.7' y1='103.1' x2='814.3' y2='246.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S9'><line x1='70.0' y1='116.0' x2='70.0' y2='284.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S10'><line x1='84.2' y1='107.5' x2='435.8' y2='292.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S11'><line x1='85.5' y1='104.1' x2='814.5' y2='295.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S12'><line x1='70.0' y1='116.0' x2='70.0' y2='334.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S13'><line x1='85.2' y1='105.0' x2='814.8' y2='345.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S14'><line x1='82.6' y1='109.9' x2='437.4' y2='390.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S15'><line x1='81.8' y1='110.8' x2='438.2' y2='439.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S16'><line x1='81.0' y1='111.6' x2='439.0' y2='488.4' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S17'><line x1='80.3' y1='112.2' x2='439.7' y2='537.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S18'><line x1='79.7' y1='112.7' x2='440.3' y2='587.3' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S19'><line x1='79.1' y1='113.2' x2='440.9' y2='636.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S20'><line x1='78.6' y1='113.5' x2='441.4' y2='686.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S21'><line x1='78.1' y1='113.8' x2='441.9' y2='736.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S1' data-to='S22'><line x1='77.6' y1='114.1' x2='442.4' y2='785.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S4'><line x1='814.1' y1='102.1' x2='85.9' y2='197.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S5'><line x1='830.0' y1='116.0' x2='830.0' y2='184.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S6'><line x1='814.3' y1='103.1' x2='85.7' y2='246.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S7'><line x1='815.1' y1='105.9' x2='464.9' y2='244.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S8'><line x1='830.0' y1='116.0' x2='830.0' y2='234.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S9'><line x1='814.5' y1='104.1' x2='85.5' y2='295.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S10'><line x1='815.8' y1='107.5' x2='464.2' y2='292.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S11'><line x1='830.0' y1='116.0' x2='830.0' y2='284.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S12'><line x1='814.8' y1='105.0' x2='85.2' y2='345.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S13'><line x1='830.0' y1='116.0' x2='830.0' y2='334.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S14'><line x1='817.4' y1='109.9' x2='462.6' y2='390.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S15'><line x1='818.2' y1='110.8' x2='461.8' y2='439.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S16'><line x1='819.0' y1='111.6' x2='461.0' y2='488.4' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S17'><line x1='819.7' y1='112.2' x2='460.3' y2='537.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S18'><line x1='820.3' y1='112.7' x2='459.7' y2='587.3' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S19'><line x1='820.9' y1='113.2' x2='459.1' y2='636.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S20'><line x1='821.4' y1='113.5' x2='458.6' y2='686.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S21'><line x1='821.9' y1='113.8' x2='458.1' y2='736.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S2' data-to='S22'><line x1='822.4' y1='114.1' x2='457.6' y2='785.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S6'><line x1='434.5' y1='154.1' x2='85.5' y2='245.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S7'><line x1='450.0' y1='166.0' x2='450.0' y2='234.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S8'><line x1='465.5' y1='154.1' x2='814.5' y2='245.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S9'><line x1='435.1' y1='155.9' x2='84.9' y2='294.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S10'><line x1='450.0' y1='166.0' x2='450.0' y2='284.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S11'><line x1='464.9' y1='155.9' x2='815.1' y2='294.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S12'><line x1='435.8' y1='157.5' x2='84.2' y2='342.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S13'><line x1='464.2' y1='157.5' x2='815.8' y2='342.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S14'><line x1='450.0' y1='166.0' x2='450.0' y2='384.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S15'><line x1='450.0' y1='166.0' x2='450.0' y2='434.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S16'><line x1='450.0' y1='166.0' x2='450.0' y2='484.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S17'><line x1='450.0' y1='166.0' x2='450.0' y2='534.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S18'><line x1='450.0' y1='166.0' x2='450.0' y2='584.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S19'><line x1='450.0' y1='166.0' x2='450.0' y2='634.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S20'><line x1='450.0' y1='166.0' x2='450.0' y2='684.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S21'><line x1='450.0' y1='166.0' x2='450.0' y2='734.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S3' data-to='S22'><line x1='450.0' y1='166.0' x2='450.0' y2='784.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S9'><line x1='70.0' y1='216.0' x2='70.0' y2='284.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S10'><line x1='85.5' y1='204.1' x2='434.5' y2='295.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S11'><line x1='85.9' y1='202.1' x2='814.1' y2='297.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S12'><line x1='70.0' y1='216.0' x2='70.0' y2='334.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S13'><line x1='85.7' y1='203.1' x2='814.3' y2='346.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S14'><line x1='84.2' y1='207.5' x2='435.8' y2='392.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S15'><line x1='83.4' y1='208.8' x2='436.6' y2='441.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S16'><line x1='82.6' y1='209.9' x2='437.4' y2='490.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S17'><line x1='81.8' y1='210.8' x2='438.2' y2='539.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S18'><line x1='81.0' y1='211.6' x2='439.0' y2='588.4' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S19'><line x1='80.3' y1='212.2' x2='439.7' y2='637.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S20'><line x1='79.7' y1='212.7' x2='440.3' y2='687.3' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S21'><line x1='79.1' y1='213.2' x2='440.9' y2='736.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S4' data-to='S22'><line x1='78.6' y1='213.5' x2='441.4' y2='786.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S9'><line x1='814.1' y1='202.1' x2='85.9' y2='297.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S10'><line x1='814.5' y1='204.1' x2='465.5' y2='295.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S12'><line x1='814.3' y1='203.1' x2='85.7' y2='346.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S13'><line x1='830.0' y1='216.0' x2='830.0' y2='334.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S14'><line x1='815.8' y1='207.5' x2='464.2' y2='392.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S15'><line x1='816.6' y1='208.8' x2='463.4' y2='441.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S16'><line x1='817.4' y1='209.9' x2='462.6' y2='490.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S17'><line x1='818.2' y1='210.8' x2='461.8' y2='539.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S18'><line x1='819.0' y1='211.6' x2='461.0' y2='588.4' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S19'><line x1='819.7' y1='212.2' x2='460.3' y2='637.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S20'><line x1='820.3' y1='212.7' x2='459.7' y2='687.3' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S21'><line x1='820.9' y1='213.2' x2='459.1' y2='736.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S5' data-to='S22'><line x1='821.4' y1='213.5' x2='458.6' y2='786.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S6' data-to='S12'><line x1='70.0' y1='266.0' x2='70.0' y2='334.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S6' data-to='S13'><line x1='85.9' y1='252.1' x2='814.1' y2='347.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S6' data-to='S14'><line x1='84.9' y1='255.9' x2='435.1' y2='394.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S6' data-to='S15'><line x1='84.2' y1='257.5' x2='435.8' y2='442.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S6' data-to='S16'><line x1='83.4' y1='258.8' x2='436.6' y2='491.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S6' data-to='S17'><line x1='82.6' y1='259.9' x2='437.4' y2='540.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S6' data-to='S18'><line x1='81.8' y1='260.8' x2='438.2' y2='589.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S6' data-to='S19'><line x1='81.0' y1='261.6' x2='439.0' y2='638.4' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S6' data-to='S20'><line x1='80.3' y1='262.2' x2='439.7' y2='687.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S6' data-to='S21'><line x1='79.7' y1='262.7' x2='440.3' y2='737.3' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S6' data-to='S22'><line x1='79.1' y1='263.2' x2='440.9' y2='786.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S7' data-to='S12'><line x1='434.5' y1='254.1' x2='85.5' y2='345.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S7' data-to='S13'><line x1='465.5' y1='254.1' x2='814.5' y2='345.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S7' data-to='S14'><line x1='450.0' y1='266.0' x2='450.0' y2='384.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S7' data-to='S15'><line x1='450.0' y1='266.0' x2='450.0' y2='434.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S7' data-to='S16'><line x1='450.0' y1='266.0' x2='450.0' y2='484.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S7' data-to='S17'><line x1='450.0' y1='266.0' x2='450.0' y2='534.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S7' data-to='S18'><line x1='450.0' y1='266.0' x2='450.0' y2='584.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S7' data-to='S19'><line x1='450.0' y1='266.0' x2='450.0' y2='634.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S7' data-to='S20'><line x1='450.0' y1='266.0' x2='450.0' y2='684.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S7' data-to='S21'><line x1='450.0' y1='266.0' x2='450.0' y2='734.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S7' data-to='S22'><line x1='450.0' y1='266.0' x2='450.0' y2='784.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S8' data-to='S12'><line x1='814.1' y1='252.1' x2='85.9' y2='347.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S8' data-to='S14'><line x1='815.1' y1='255.9' x2='464.9' y2='394.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S8' data-to='S15'><line x1='815.8' y1='257.5' x2='464.2' y2='442.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S8' data-to='S16'><line x1='816.6' y1='258.8' x2='463.4' y2='491.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S8' data-to='S17'><line x1='817.4' y1='259.9' x2='462.6' y2='540.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S8' data-to='S18'><line x1='818.2' y1='260.8' x2='461.8' y2='589.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S8' data-to='S19'><line x1='819.0' y1='261.6' x2='461.0' y2='638.4' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S8' data-to='S20'><line x1='819.7' y1='262.2' x2='460.3' y2='687.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S8' data-to='S21'><line x1='820.3' y1='262.7' x2='459.7' y2='737.3' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S8' data-to='S22'><line x1='820.9' y1='263.2' x2='459.1' y2='786.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S9' data-to='S14'><line x1='85.5' y1='304.1' x2='434.5' y2='395.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S9' data-to='S15'><line x1='84.9' y1='305.9' x2='435.1' y2='444.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S9' data-to='S16'><line x1='84.2' y1='307.5' x2='435.8' y2='492.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S9' data-to='S17'><line x1='83.4' y1='308.8' x2='436.6' y2='541.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S9' data-to='S18'><line x1='82.6' y1='309.9' x2='437.4' y2='590.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S9' data-to='S19'><line x1='81.8' y1='310.8' x2='438.2' y2='639.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S9' data-to='S20'><line x1='81.0' y1='311.6' x2='439.0' y2='688.4' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S9' data-to='S21'><line x1='80.3' y1='312.2' x2='439.7' y2='737.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S9' data-to='S22'><line x1='79.7' y1='312.7' x2='440.3' y2='787.3' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S10' data-to='S14'><line x1='450.0' y1='316.0' x2='450.0' y2='384.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S10' data-to='S15'><line x1='450.0' y1='316.0' x2='450.0' y2='434.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S10' data-to='S16'><line x1='450.0' y1='316.0' x2='450.0' y2='484.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S10' data-to='S17'><line x1='450.0' y1='316.0' x2='450.0' y2='534.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S10' data-to='S18'><line x1='450.0' y1='316.0' x2='450.0' y2='584.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S10' data-to='S19'><line x1='450.0' y1='316.0' x2='450.0' y2='634.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S10' data-to='S20'><line x1='450.0' y1='316.0' x2='450.0' y2='684.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S10' data-to='S21'><line x1='450.0' y1='316.0' x2='450.0' y2='734.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S10' data-to='S22'><line x1='450.0' y1='316.0' x2='450.0' y2='784.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S11' data-to='S14'><line x1='814.5' y1='304.1' x2='465.5' y2='395.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S11' data-to='S15'><line x1='815.1' y1='305.9' x2='464.9' y2='444.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S11' data-to='S16'><line x1='815.8' y1='307.5' x2='464.2' y2='492.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S11' data-to='S17'><line x1='816.6' y1='308.8' x2='463.4' y2='541.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S11' data-to='S18'><line x1='817.4' y1='309.9' x2='462.6' y2='590.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S11' data-to='S19'><line x1='818.2' y1='310.8' x2='461.8' y2='639.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S11' data-to='S20'><line x1='819.0' y1='311.6' x2='461.0' y2='688.4' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S11' data-to='S21'><line x1='819.7' y1='312.2' x2='460.3' y2='737.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S11' data-to='S22'><line x1='820.3' y1='312.7' x2='459.7' y2='787.3' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S12' data-to='S15'><line x1='85.5' y1='354.1' x2='434.5' y2='445.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S12' data-to='S16'><line x1='84.9' y1='355.9' x2='435.1' y2='494.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S12' data-to='S17'><line x1='84.2' y1='357.5' x2='435.8' y2='542.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S12' data-to='S18'><line x1='83.4' y1='358.8' x2='436.6' y2='591.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S12' data-to='S19'><line x1='82.6' y1='359.9' x2='437.4' y2='640.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S12' data-to='S20'><line x1='81.8' y1='360.8' x2='438.2' y2='689.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S12' data-to='S21'><line x1='81.0' y1='361.6' x2='439.0' y2='738.4' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S12' data-to='S22'><line x1='80.3' y1='362.2' x2='439.7' y2='787.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S13' data-to='S15'><line x1='814.5' y1='354.1' x2='465.5' y2='445.9' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S13' data-to='S16'><line x1='815.1' y1='355.9' x2='464.9' y2='494.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S13' data-to='S17'><line x1='815.8' y1='357.5' x2='464.2' y2='542.5' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S13' data-to='S18'><line x1='816.6' y1='358.8' x2='463.4' y2='591.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S13' data-to='S19'><line x1='817.4' y1='359.9' x2='462.6' y2='640.1' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S13' data-to='S20'><line x1='818.2' y1='360.8' x2='461.8' y2='689.2' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S13' data-to='S21'><line x1='819.0' y1='361.6' x2='461.0' y2='738.4' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S13' data-to='S22'><line x1='819.7' y1='362.2' x2='460.3' y2='787.8' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S14' data-to='S16'><line x1='450.0' y1='416.0' x2='450.0' y2='484.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S14' data-to='S17'><line x1='450.0' y1='416.0' x2='450.0' y2='534.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S14' data-to='S18'><line x1='450.0' y1='416.0' x2='450.0' y2='584.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S14' data-to='S19'><line x1='450.0' y1='416.0' x2='450.0' y2='634.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S14' data-to='S20'><line x1='450.0' y1='416.0' x2='450.0' y2='684.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S14' data-to='S21'><line x1='450.0' y1='416.0' x2='450.0' y2='734.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S14' data-to='S22'><line x1='450.0' y1='416.0' x2='450.0' y2='784.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S15' data-to='S17'><line x1='450.0' y1='466.0' x2='450.0' y2='534.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S15' data-to='S18'><line x1='450.0' y1='466.0' x2='450.0' y2='584.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S15' data-to='S19'><line x1='450.0' y1='466.0' x2='450.0' y2='634.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S15' data-to='S20'><line x1='450.0' y1='466.0' x2='450.0' y2='684.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S15' data-to='S21'><line x1='450.0' y1='466.0' x2='450.0' y2='734.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S15' data-to='S22'><line x1='450.0' y1='466.0' x2='450.0' y2='784.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S16' data-to='S18'><line x1='450.0' y1='516.0' x2='450.0' y2='584.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S16' data-to='S19'><line x1='450.0' y1='516.0' x2='450.0' y2='634.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S16' data-to='S20'><line x1='450.0' y1='516.0' x2='450.0' y2='684.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S16' data-to='S21'><line x1='450.0' y1='516.0' x2='450.0' y2='734.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S16' data-to='S22'><line x1='450.0' y1='516.0' x2='450.0' y2='784.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S17' data-to='S19'><line x1='450.0' y1='566.0' x2='450.0' y2='634.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S17' data-to='S20'><line x1='450.0' y1='566.0' x2='450.0' y2='684.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S17' data-to='S21'><line x1='450.0' y1='566.0' x2='450.0' y2='734.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S17' data-to='S22'><line x1='450.0' y1='566.0' x2='450.0' y2='784.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S18' data-to='S20'><line x1='450.0' y1='616.0' x2='450.0' y2='684.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S18' data-to='S21'><line x1='450.0' y1='616.0' x2='450.0' y2='734.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S18' data-to='S22'><line x1='450.0' y1='616.0' x2='450.0' y2='784.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S19' data-to='S21'><line x1='450.0' y1='666.0' x2='450.0' y2='734.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S19' data-to='S22'><line x1='450.0' y1='666.0' x2='450.0' y2='784.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+<g class='edge state-edge closure hidden' data-from='S20' data-to='S22'><line x1='450.0' y1='716.0' x2='450.0' y2='784.0' class='state-edge-line closure-line' marker-end='url(#arrowState)'></line></g>
+      </g>
+      <g id="stateEdgeLabels">
+        <text class='edge-label state-edge-label' data-eid='0_1_PERM' x='260.0' y='71.0'>PERM</text>
+<text class='edge-label state-edge-label' data-eid='0_2_SAFETY' x='640.0' y='71.0'>SAFETY</text>
+<text class='edge-label state-edge-label' data-eid='1_3_SAFETY' x='260.0' y='121.0'>SAFETY</text>
+<text class='edge-label state-edge-label' data-eid='2_3_PERM' x='640.0' y='121.0'>PERM</text>
+<text class='edge-label state-edge-label' data-eid='3_4_SURV' x='260.0' y='171.0'>SURV</text>
+<text class='edge-label state-edge-label' data-eid='3_5_BOOK' x='640.0' y='171.0'>BOOK</text>
+<text class='edge-label state-edge-label' data-eid='4_7_DES' x='260.0' y='221.0'>DES</text>
+<text class='edge-label state-edge-label' data-eid='4_6_BOOK' x='70.0' y='221.0'>BOOK</text>
+<text class='edge-label state-edge-label' data-eid='5_6_SURV' x='450.0' y='221.0'>SURV</text>
+<text class='edge-label state-edge-label' data-eid='5_8_ACCESS' x='830.0' y='221.0'>ACCESS</text>
+<text class='edge-label state-edge-label' data-eid='6_9_DES' x='70.0' y='271.0'>DES</text>
+<text class='edge-label state-edge-label' data-eid='6_10_ACCESS' x='260.0' y='271.0'>ACCESS</text>
+<text class='edge-label state-edge-label' data-eid='7_9_BOOK' x='260.0' y='271.0'>BOOK</text>
+<text class='edge-label state-edge-label' data-eid='7_11_ORDER' x='640.0' y='271.0'>ORDER</text>
+<text class='edge-label state-edge-label' data-eid='8_10_SURV' x='640.0' y='271.0'>SURV</text>
+<text class='edge-label state-edge-label' data-eid='9_13_ORDER' x='450.0' y='321.0'>ORDER</text>
+<text class='edge-label state-edge-label' data-eid='9_12_ACCESS' x='70.0' y='321.0'>ACCESS</text>
+<text class='edge-label state-edge-label' data-eid='10_12_DES' x='260.0' y='321.0'>DES</text>
+<text class='edge-label state-edge-label' data-eid='11_13_BOOK' x='830.0' y='321.0'>BOOK</text>
+<text class='edge-label state-edge-label' data-eid='12_14_ORDER' x='260.0' y='371.0'>ORDER</text>
+<text class='edge-label state-edge-label' data-eid='13_14_ACCESS' x='640.0' y='371.0'>ACCESS</text>
+<text class='edge-label state-edge-label' data-eid='14_15_ANCH' x='450.0' y='421.0'>ANCH</text>
+<text class='edge-label state-edge-label' data-eid='15_16_STAGE' x='450.0' y='471.0'>STAGE</text>
+<text class='edge-label state-edge-label' data-eid='16_17_TERR' x='450.0' y='521.0'>TERR</text>
+<text class='edge-label state-edge-label' data-eid='17_18_FOUND' x='450.0' y='571.0'>FOUND</text>
+<text class='edge-label state-edge-label' data-eid='18_19_FRAME' x='450.0' y='621.0'>FRAME</text>
+<text class='edge-label state-edge-label' data-eid='19_20_ROOF' x='450.0' y='671.0'>ROOF</text>
+<text class='edge-label state-edge-label' data-eid='20_21_CLAD' x='450.0' y='721.0'>CLAD</text>
+<text class='edge-label state-edge-label' data-eid='21_22_HAND' x='450.0' y='771.0'>HAND</text>
+      </g>
+      <g id="stateNodes">
+        <g class='node state-node' data-id='S0' data-index='0' transform='translate(450.0,50.0)'><circle r='16'></circle><text class='node-label'>S0</text><title>S0 (|I|=0): {}</title></g>
+<g class='node state-node' data-id='S1' data-index='1' transform='translate(70.0,100.0)'><circle r='16'></circle><text class='node-label'>S1</text><title>S1 (|I|=1): {PERM}</title></g>
+<g class='node state-node' data-id='S2' data-index='2' transform='translate(830.0,100.0)'><circle r='16'></circle><text class='node-label'>S2</text><title>S2 (|I|=1): {SAFETY}</title></g>
+<g class='node state-node' data-id='S3' data-index='3' transform='translate(450.0,150.0)'><circle r='16'></circle><text class='node-label'>S3</text><title>S3 (|I|=2): {PERM, SAFETY}</title></g>
+<g class='node state-node' data-id='S4' data-index='4' transform='translate(70.0,200.0)'><circle r='16'></circle><text class='node-label'>S4</text><title>S4 (|I|=3): {PERM, SAFETY, SURV}</title></g>
+<g class='node state-node' data-id='S5' data-index='5' transform='translate(830.0,200.0)'><circle r='16'></circle><text class='node-label'>S5</text><title>S5 (|I|=3): {PERM, SAFETY, BOOK}</title></g>
+<g class='node state-node' data-id='S6' data-index='6' transform='translate(70.0,250.0)'><circle r='16'></circle><text class='node-label'>S6</text><title>S6 (|I|=4): {PERM, SAFETY, SURV, BOOK}</title></g>
+<g class='node state-node' data-id='S7' data-index='7' transform='translate(450.0,250.0)'><circle r='16'></circle><text class='node-label'>S7</text><title>S7 (|I|=4): {PERM, SAFETY, SURV, DES}</title></g>
+<g class='node state-node' data-id='S8' data-index='8' transform='translate(830.0,250.0)'><circle r='16'></circle><text class='node-label'>S8</text><title>S8 (|I|=4): {PERM, SAFETY, BOOK, ACCESS}</title></g>
+<g class='node state-node' data-id='S9' data-index='9' transform='translate(70.0,300.0)'><circle r='16'></circle><text class='node-label'>S9</text><title>S9 (|I|=5): {PERM, SAFETY, SURV, BOOK, DES}</title></g>
+<g class='node state-node' data-id='S10' data-index='10' transform='translate(450.0,300.0)'><circle r='16'></circle><text class='node-label'>S10</text><title>S10 (|I|=5): {PERM, SAFETY, SURV, BOOK, ACCESS}</title></g>
+<g class='node state-node' data-id='S11' data-index='11' transform='translate(830.0,300.0)'><circle r='16'></circle><text class='node-label'>S11</text><title>S11 (|I|=5): {PERM, SAFETY, SURV, DES, ORDER}</title></g>
+<g class='node state-node' data-id='S12' data-index='12' transform='translate(70.0,350.0)'><circle r='16'></circle><text class='node-label'>S12</text><title>S12 (|I|=6): {PERM, SAFETY, SURV, BOOK, DES, ACCESS}</title></g>
+<g class='node state-node' data-id='S13' data-index='13' transform='translate(830.0,350.0)'><circle r='16'></circle><text class='node-label'>S13</text><title>S13 (|I|=6): {PERM, SAFETY, SURV, BOOK, DES, ORDER}</title></g>
+<g class='node state-node' data-id='S14' data-index='14' transform='translate(450.0,400.0)'><circle r='16'></circle><text class='node-label'>S14</text><title>S14 (|I|=7): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER}</title></g>
+<g class='node state-node' data-id='S15' data-index='15' transform='translate(450.0,450.0)'><circle r='16'></circle><text class='node-label'>S15</text><title>S15 (|I|=8): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH}</title></g>
+<g class='node state-node' data-id='S16' data-index='16' transform='translate(450.0,500.0)'><circle r='16'></circle><text class='node-label'>S16</text><title>S16 (|I|=9): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE}</title></g>
+<g class='node state-node' data-id='S17' data-index='17' transform='translate(450.0,550.0)'><circle r='16'></circle><text class='node-label'>S17</text><title>S17 (|I|=10): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR}</title></g>
+<g class='node state-node' data-id='S18' data-index='18' transform='translate(450.0,600.0)'><circle r='16'></circle><text class='node-label'>S18</text><title>S18 (|I|=11): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND}</title></g>
+<g class='node state-node' data-id='S19' data-index='19' transform='translate(450.0,650.0)'><circle r='16'></circle><text class='node-label'>S19</text><title>S19 (|I|=12): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND, FRAME}</title></g>
+<g class='node state-node' data-id='S20' data-index='20' transform='translate(450.0,700.0)'><circle r='16'></circle><text class='node-label'>S20</text><title>S20 (|I|=13): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND, FRAME, ROOF}</title></g>
+<g class='node state-node' data-id='S21' data-index='21' transform='translate(450.0,750.0)'><circle r='16'></circle><text class='node-label'>S21</text><title>S21 (|I|=14): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND, FRAME, ROOF, CLAD}</title></g>
+<g class='node state-node' data-id='S22' data-index='22' transform='translate(450.0,800.0)'><circle r='16'></circle><text class='node-label'>S22</text><title>S22 (|I|=15): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND, FRAME, ROOF, CLAD, HAND}</title></g>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<div class="grid">
+  <div id="info">
+    <h3>Inspector</h3>
+    <div class="legend">
+      Tips: click a <b>task</b> (left) or a <b>state</b> (right).  
+      Task click shows <code>F(task)</code> (a state node) and <code>G(task)</code> (an earliest-enabling transition edge).  
+      Toggle “all morphisms” to reveal transitive closure arrows (can get visually dense).
+    </div>
+    <pre id="infoText">Nothing selected.</pre>
+  </div>
+
+  <details>
+    <summary>Explainer: what are T, S, F, and G here?</summary>
+    <div class="content">
+      <p><b>T</b> is a thin category built from an acyclic prerequisite relation (a poset): objects are tasks, and there is a unique morphism <code>x→y</code> iff <code>x ≤ y</code> (“x is a prerequisite of y”).</p>
+      <p><b>S</b> is the thin category of <i>down-closed</i> completion states (aka ideals/downsets): objects are sets of completed tasks that respect prerequisites; morphisms are inclusions <code>I⊆J</code>.</p>
+      <p><b>F: T→S</b> sends each task <code>x</code> to its principal ideal <code>↓x</code>: the minimal completed-state that “entails x”.</p>
+      <p><b>G: T→Arr(S)</b> sends each task to an <i>arrow-object</i> (a transition) in the arrow category: <code>pre(x) → pre(x)∪{x}</code>, where <code>pre(x)=↓x\{x}</code>.</p>
+      <p class="muted">This is why we don’t need a 2-functor to map “tasks as objects” to “tasks as transitions”: we keep it well-typed by targeting <code>Arr(S)</code>.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Project data: tasks (E) and cover prerequisites</summary>
+    <div class="content">
+      <p><b>Task set E</b> (objects of T):</p>
+      <ul><li><b>PERM</b>: Permissions &amp; stakeholder sign-off — <span class='muted'>Landowner permission / access agreement; planning/HOA checks if needed.</span></li>
+<li><b>SAFETY</b>: Risk assessment + method statement (RAMS) — <span class='muted'>Working-at-height risk assessment, rescue plan, PPE plan, toolbox talk prep.</span></li>
+<li><b>SURV</b>: Site survey &amp; geotech sanity-check — <span class='muted'>Measure location, slope, drainage; basic ground/rock check for anchors &amp; footings.</span></li>
+<li><b>DES</b>: Design + bill of materials — <span class='muted'>Shed design sized for site; choose foundation/anchoring scheme; produce BOM and cut list.</span></li>
+<li><b>BOOK</b>: Book/hire access &amp; lifting setup — <span class='muted'>Line up scaffold/rope-access contractor, edge protection, hauling/lifting kit.</span></li>
+<li><b>ORDER</b>: Order building materials + anchors — <span class='muted'>Order timber, fixings, roofing, cladding, anchors; arrange deliveries.</span></li>
+<li><b>ACCESS</b>: Mobilise and set up safe access — <span class='muted'>Set up scaffold/rope access, edge protection, exclusion zone, material handling plan.</span></li>
+<li><b>ANCH</b>: Install &amp; proof-test anchors/lifelines — <span class='muted'>Install temporary/permanent anchors for fall protection and for tying-in structure.</span></li>
+<li><b>STAGE</b>: Haul and stage materials on site — <span class='muted'>Transport materials to the cliff location (hand-carry/rope haul) and stage safely.</span></li>
+<li><b>TERR</b>: Prepare terrace + erosion control — <span class='muted'>Cut/level bench; install drainage/erosion control and any retaining elements.</span></li>
+<li><b>FOUND</b>: Install foundations/footings — <span class='muted'>Install piers/footings/ground screws; set posts or base; allow cure time if needed.</span></li>
+<li><b>FRAME</b>: Frame the shed &amp; tie-in — <span class='muted'>Build floor/walls; fix to foundations; tie structure to anchors as designed.</span></li>
+<li><b>ROOF</b>: Roof &amp; waterproofing — <span class='muted'>Roof framing, sheathing, membrane, flashing so the structure is weather-tight.</span></li>
+<li><b>CLAD</b>: Cladding + doors/windows — <span class='muted'>External cladding, door, any glazing/vents; weather-seal details.</span></li>
+<li><b>HAND</b>: Final inspection &amp; handover — <span class='muted'>Snagging, safety check, clean-up, documentation/photos, handover to owner.</span></li></ul>
+      <p style="margin-top:10px"><b>Cover relations</b> (Hasse edges; the transitive closure gives all morphisms in T):</p>
+      <ul><li><code>PERM</code> &le; <code>SURV</code> <span class='muted'>(precedes)</span></li>
+<li><code>SAFETY</code> &le; <code>SURV</code> <span class='muted'>(precedes)</span></li>
+<li><code>SURV</code> &le; <code>DES</code> <span class='muted'>(precedes)</span></li>
+<li><code>PERM</code> &le; <code>BOOK</code> <span class='muted'>(precedes)</span></li>
+<li><code>SAFETY</code> &le; <code>BOOK</code> <span class='muted'>(precedes)</span></li>
+<li><code>DES</code> &le; <code>ORDER</code> <span class='muted'>(precedes)</span></li>
+<li><code>BOOK</code> &le; <code>ACCESS</code> <span class='muted'>(precedes)</span></li>
+<li><code>PERM</code> &le; <code>ACCESS</code> <span class='muted'>(precedes)</span></li>
+<li><code>SAFETY</code> &le; <code>ACCESS</code> <span class='muted'>(precedes)</span></li>
+<li><code>DES</code> &le; <code>ANCH</code> <span class='muted'>(precedes)</span></li>
+<li><code>ACCESS</code> &le; <code>ANCH</code> <span class='muted'>(precedes)</span></li>
+<li><code>ORDER</code> &le; <code>ANCH</code> <span class='muted'>(precedes)</span></li>
+<li><code>ORDER</code> &le; <code>STAGE</code> <span class='muted'>(precedes)</span></li>
+<li><code>ACCESS</code> &le; <code>STAGE</code> <span class='muted'>(precedes)</span></li>
+<li><code>ANCH</code> &le; <code>STAGE</code> <span class='muted'>(precedes)</span></li>
+<li><code>DES</code> &le; <code>TERR</code> <span class='muted'>(precedes)</span></li>
+<li><code>STAGE</code> &le; <code>TERR</code> <span class='muted'>(precedes)</span></li>
+<li><code>DES</code> &le; <code>FOUND</code> <span class='muted'>(precedes)</span></li>
+<li><code>TERR</code> &le; <code>FOUND</code> <span class='muted'>(precedes)</span></li>
+<li><code>STAGE</code> &le; <code>FOUND</code> <span class='muted'>(precedes)</span></li>
+<li><code>FOUND</code> &le; <code>FRAME</code> <span class='muted'>(precedes)</span></li>
+<li><code>FRAME</code> &le; <code>ROOF</code> <span class='muted'>(precedes)</span></li>
+<li><code>ROOF</code> &le; <code>CLAD</code> <span class='muted'>(precedes)</span></li>
+<li><code>CLAD</code> &le; <code>HAND</code> <span class='muted'>(precedes)</span></li></ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Project data: all states (objects of S)</summary>
+    <div class="content">
+      <p>Each state is a down-closed set of completed tasks. There are <b>23</b> states for this dependency structure.</p>
+      <ul><li><b>S0</b> (|I|=0): {}</li>
+<li><b>S1</b> (|I|=1): {PERM}</li>
+<li><b>S2</b> (|I|=1): {SAFETY}</li>
+<li><b>S3</b> (|I|=2): {PERM, SAFETY}</li>
+<li><b>S4</b> (|I|=3): {PERM, SAFETY, SURV}</li>
+<li><b>S5</b> (|I|=3): {PERM, SAFETY, BOOK}</li>
+<li><b>S6</b> (|I|=4): {PERM, SAFETY, SURV, BOOK}</li>
+<li><b>S7</b> (|I|=4): {PERM, SAFETY, SURV, DES}</li>
+<li><b>S8</b> (|I|=4): {PERM, SAFETY, BOOK, ACCESS}</li>
+<li><b>S9</b> (|I|=5): {PERM, SAFETY, SURV, BOOK, DES}</li>
+<li><b>S10</b> (|I|=5): {PERM, SAFETY, SURV, BOOK, ACCESS}</li>
+<li><b>S11</b> (|I|=5): {PERM, SAFETY, SURV, DES, ORDER}</li>
+<li><b>S12</b> (|I|=6): {PERM, SAFETY, SURV, BOOK, DES, ACCESS}</li>
+<li><b>S13</b> (|I|=6): {PERM, SAFETY, SURV, BOOK, DES, ORDER}</li>
+<li><b>S14</b> (|I|=7): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER}</li>
+<li><b>S15</b> (|I|=8): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH}</li>
+<li><b>S16</b> (|I|=9): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE}</li>
+<li><b>S17</b> (|I|=10): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR}</li>
+<li><b>S18</b> (|I|=11): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND}</li>
+<li><b>S19</b> (|I|=12): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND, FRAME}</li>
+<li><b>S20</b> (|I|=13): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND, FRAME, ROOF}</li>
+<li><b>S21</b> (|I|=14): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND, FRAME, ROOF, CLAD}</li>
+<li><b>S22</b> (|I|=15): {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND, FRAME, ROOF, CLAD, HAND}</li></ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Functor tables: F and G on this scenario</summary>
+    <div class="content">
+      <p><b>F</b> maps each task to its principal-ideal state:</p>
+      <ul><li><b>F(PERM)</b> = S1 = ↓PERM = {PERM}</li>
+<li><b>F(SAFETY)</b> = S2 = ↓SAFETY = {SAFETY}</li>
+<li><b>F(SURV)</b> = S4 = ↓SURV = {PERM, SAFETY, SURV}</li>
+<li><b>F(DES)</b> = S7 = ↓DES = {PERM, SAFETY, SURV, DES}</li>
+<li><b>F(BOOK)</b> = S5 = ↓BOOK = {PERM, SAFETY, BOOK}</li>
+<li><b>F(ORDER)</b> = S11 = ↓ORDER = {PERM, SAFETY, SURV, DES, ORDER}</li>
+<li><b>F(ACCESS)</b> = S8 = ↓ACCESS = {PERM, SAFETY, BOOK, ACCESS}</li>
+<li><b>F(ANCH)</b> = S15 = ↓ANCH = {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH}</li>
+<li><b>F(STAGE)</b> = S16 = ↓STAGE = {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE}</li>
+<li><b>F(TERR)</b> = S17 = ↓TERR = {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR}</li>
+<li><b>F(FOUND)</b> = S18 = ↓FOUND = {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND}</li>
+<li><b>F(FRAME)</b> = S19 = ↓FRAME = {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND, FRAME}</li>
+<li><b>F(ROOF)</b> = S20 = ↓ROOF = {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND, FRAME, ROOF}</li>
+<li><b>F(CLAD)</b> = S21 = ↓CLAD = {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND, FRAME, ROOF, CLAD}</li>
+<li><b>F(HAND)</b> = S22 = ↓HAND = {PERM, SAFETY, SURV, BOOK, DES, ACCESS, ORDER, ANCH, STAGE, TERR, FOUND, FRAME, ROOF, CLAD, HAND}</li></ul>
+      <p style="margin-top:10px"><b>G</b> maps each task to its canonical “add-that-task-when-just-enabled” transition (as an object in <code>Arr(S)</code>):</p>
+      <ul><li><b>G(PERM)</b>: S0 → S1 <span class='muted'>(adds <code>PERM</code>)</span></li>
+<li><b>G(SAFETY)</b>: S0 → S2 <span class='muted'>(adds <code>SAFETY</code>)</span></li>
+<li><b>G(SURV)</b>: S3 → S4 <span class='muted'>(adds <code>SURV</code>)</span></li>
+<li><b>G(DES)</b>: S4 → S7 <span class='muted'>(adds <code>DES</code>)</span></li>
+<li><b>G(BOOK)</b>: S3 → S5 <span class='muted'>(adds <code>BOOK</code>)</span></li>
+<li><b>G(ORDER)</b>: S7 → S11 <span class='muted'>(adds <code>ORDER</code>)</span></li>
+<li><b>G(ACCESS)</b>: S5 → S8 <span class='muted'>(adds <code>ACCESS</code>)</span></li>
+<li><b>G(ANCH)</b>: S14 → S15 <span class='muted'>(adds <code>ANCH</code>)</span></li>
+<li><b>G(STAGE)</b>: S15 → S16 <span class='muted'>(adds <code>STAGE</code>)</span></li>
+<li><b>G(TERR)</b>: S16 → S17 <span class='muted'>(adds <code>TERR</code>)</span></li>
+<li><b>G(FOUND)</b>: S17 → S18 <span class='muted'>(adds <code>FOUND</code>)</span></li>
+<li><b>G(FRAME)</b>: S18 → S19 <span class='muted'>(adds <code>FRAME</code>)</span></li>
+<li><b>G(ROOF)</b>: S19 → S20 <span class='muted'>(adds <code>ROOF</code>)</span></li>
+<li><b>G(CLAD)</b>: S20 → S21 <span class='muted'>(adds <code>CLAD</code>)</span></li>
+<li><b>G(HAND)</b>: S21 → S22 <span class='muted'>(adds <code>HAND</code>)</span></li></ul>
+    </div>
+  </details>
+</div>
+
+<script>
+const DATA = {"scenario": {"name": "Build a shed halfway up a cliff", "one_liner": "A small storage/tool shed built on a prepared terrace halfway up a steep slope/cliff, with planned access (scaffold/rope) and anchoring.", "assumptions": ["Toy model: captures prerequisite structure (who must come before whom), not durations, costs, weather windows, or rework loops.", "All on-cliff work is assumed to be done by competent people using appropriate fall protection; engage qualified professionals where required.", "Dependencies are modeled as an acyclic prerequisite poset so states can be represented as down-closed sets."]}, "tasks": [{"id": "PERM", "name": "Permissions & stakeholder sign-off", "desc": "Landowner permission / access agreement; planning/HOA checks if needed.", "phase": "Initiation", "level": 0, "pos": {"x": 60, "y": 60}, "prereqs": [], "dependents": ["SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR", "FOUND", "FRAME", "ROOF", "CLAD", "HAND"]}, {"id": "SAFETY", "name": "Risk assessment + method statement (RAMS)", "desc": "Working-at-height risk assessment, rescue plan, PPE plan, toolbox talk prep.", "phase": "Safety & compliance", "level": 0, "pos": {"x": 60, "y": 170}, "prereqs": [], "dependents": ["SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR", "FOUND", "FRAME", "ROOF", "CLAD", "HAND"]}, {"id": "SURV", "name": "Site survey & geotech sanity-check", "desc": "Measure location, slope, drainage; basic ground/rock check for anchors & footings.", "phase": "Survey", "level": 1, "pos": {"x": 165, "y": 60}, "prereqs": ["PERM", "SAFETY"], "dependents": ["DES", "ORDER", "ANCH", "STAGE", "TERR", "FOUND", "FRAME", "ROOF", "CLAD", "HAND"]}, {"id": "DES", "name": "Design + bill of materials", "desc": "Shed design sized for site; choose foundation/anchoring scheme; produce BOM and cut list.", "phase": "Design", "level": 2, "pos": {"x": 270, "y": 60}, "prereqs": ["PERM", "SAFETY", "SURV"], "dependents": ["ORDER", "ANCH", "STAGE", "TERR", "FOUND", "FRAME", "ROOF", "CLAD", "HAND"]}, {"id": "BOOK", "name": "Book/hire access & lifting setup", "desc": "Line up scaffold/rope-access contractor, edge protection, hauling/lifting kit.", "phase": "Logistics", "level": 1, "pos": {"x": 165, "y": 170}, "prereqs": ["PERM", "SAFETY"], "dependents": ["ACCESS", "ANCH", "STAGE", "TERR", "FOUND", "FRAME", "ROOF", "CLAD", "HAND"]}, {"id": "ORDER", "name": "Order building materials + anchors", "desc": "Order timber, fixings, roofing, cladding, anchors; arrange deliveries.", "phase": "Procurement", "level": 3, "pos": {"x": 375, "y": 60}, "prereqs": ["PERM", "SAFETY", "SURV", "DES"], "dependents": ["ANCH", "STAGE", "TERR", "FOUND", "FRAME", "ROOF", "CLAD", "HAND"]}, {"id": "ACCESS", "name": "Mobilise and set up safe access", "desc": "Set up scaffold/rope access, edge protection, exclusion zone, material handling plan.", "phase": "Access setup", "level": 2, "pos": {"x": 270, "y": 170}, "prereqs": ["PERM", "SAFETY", "BOOK"], "dependents": ["ANCH", "STAGE", "TERR", "FOUND", "FRAME", "ROOF", "CLAD", "HAND"]}, {"id": "ANCH", "name": "Install & proof-test anchors/lifelines", "desc": "Install temporary/permanent anchors for fall protection and for tying-in structure.", "phase": "Access setup", "level": 4, "pos": {"x": 480, "y": 60}, "prereqs": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER"], "dependents": ["STAGE", "TERR", "FOUND", "FRAME", "ROOF", "CLAD", "HAND"]}, {"id": "STAGE", "name": "Haul and stage materials on site", "desc": "Transport materials to the cliff location (hand-carry/rope haul) and stage safely.", "phase": "Logistics", "level": 5, "pos": {"x": 585, "y": 60}, "prereqs": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH"], "dependents": ["TERR", "FOUND", "FRAME", "ROOF", "CLAD", "HAND"]}, {"id": "TERR", "name": "Prepare terrace + erosion control", "desc": "Cut/level bench; install drainage/erosion control and any retaining elements.", "phase": "Groundworks", "level": 6, "pos": {"x": 690, "y": 60}, "prereqs": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE"], "dependents": ["FOUND", "FRAME", "ROOF", "CLAD", "HAND"]}, {"id": "FOUND", "name": "Install foundations/footings", "desc": "Install piers/footings/ground screws; set posts or base; allow cure time if needed.", "phase": "Groundworks", "level": 7, "pos": {"x": 795, "y": 60}, "prereqs": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR"], "dependents": ["FRAME", "ROOF", "CLAD", "HAND"]}, {"id": "FRAME", "name": "Frame the shed & tie-in", "desc": "Build floor/walls; fix to foundations; tie structure to anchors as designed.", "phase": "Build", "level": 8, "pos": {"x": 900, "y": 60}, "prereqs": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR", "FOUND"], "dependents": ["ROOF", "CLAD", "HAND"]}, {"id": "ROOF", "name": "Roof & waterproofing", "desc": "Roof framing, sheathing, membrane, flashing so the structure is weather-tight.", "phase": "Build", "level": 9, "pos": {"x": 1005, "y": 60}, "prereqs": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR", "FOUND", "FRAME"], "dependents": ["CLAD", "HAND"]}, {"id": "CLAD", "name": "Cladding + doors/windows", "desc": "External cladding, door, any glazing/vents; weather-seal details.", "phase": "Build", "level": 10, "pos": {"x": 1110, "y": 60}, "prereqs": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR", "FOUND", "FRAME", "ROOF"], "dependents": ["HAND"]}, {"id": "HAND", "name": "Final inspection & handover", "desc": "Snagging, safety check, clean-up, documentation/photos, handover to owner.", "phase": "Closeout", "level": 11, "pos": {"x": 1215, "y": 60}, "prereqs": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR", "FOUND", "FRAME", "ROOF", "CLAD"], "dependents": []}], "task_edges_cover": [{"from": "PERM", "to": "SURV"}, {"from": "SAFETY", "to": "SURV"}, {"from": "SURV", "to": "DES"}, {"from": "PERM", "to": "BOOK"}, {"from": "SAFETY", "to": "BOOK"}, {"from": "DES", "to": "ORDER"}, {"from": "BOOK", "to": "ACCESS"}, {"from": "PERM", "to": "ACCESS"}, {"from": "SAFETY", "to": "ACCESS"}, {"from": "DES", "to": "ANCH"}, {"from": "ACCESS", "to": "ANCH"}, {"from": "ORDER", "to": "ANCH"}, {"from": "ORDER", "to": "STAGE"}, {"from": "ACCESS", "to": "STAGE"}, {"from": "ANCH", "to": "STAGE"}, {"from": "DES", "to": "TERR"}, {"from": "STAGE", "to": "TERR"}, {"from": "DES", "to": "FOUND"}, {"from": "TERR", "to": "FOUND"}, {"from": "STAGE", "to": "FOUND"}, {"from": "FOUND", "to": "FRAME"}, {"from": "FRAME", "to": "ROOF"}, {"from": "ROOF", "to": "CLAD"}, {"from": "CLAD", "to": "HAND"}], "task_edges_closure": [{"from": "PERM", "to": "SURV"}, {"from": "PERM", "to": "DES"}, {"from": "PERM", "to": "BOOK"}, {"from": "PERM", "to": "ORDER"}, {"from": "PERM", "to": "ACCESS"}, {"from": "PERM", "to": "ANCH"}, {"from": "PERM", "to": "STAGE"}, {"from": "PERM", "to": "TERR"}, {"from": "PERM", "to": "FOUND"}, {"from": "PERM", "to": "FRAME"}, {"from": "PERM", "to": "ROOF"}, {"from": "PERM", "to": "CLAD"}, {"from": "PERM", "to": "HAND"}, {"from": "SAFETY", "to": "SURV"}, {"from": "SAFETY", "to": "DES"}, {"from": "SAFETY", "to": "BOOK"}, {"from": "SAFETY", "to": "ORDER"}, {"from": "SAFETY", "to": "ACCESS"}, {"from": "SAFETY", "to": "ANCH"}, {"from": "SAFETY", "to": "STAGE"}, {"from": "SAFETY", "to": "TERR"}, {"from": "SAFETY", "to": "FOUND"}, {"from": "SAFETY", "to": "FRAME"}, {"from": "SAFETY", "to": "ROOF"}, {"from": "SAFETY", "to": "CLAD"}, {"from": "SAFETY", "to": "HAND"}, {"from": "SURV", "to": "DES"}, {"from": "SURV", "to": "ORDER"}, {"from": "SURV", "to": "ANCH"}, {"from": "SURV", "to": "STAGE"}, {"from": "SURV", "to": "TERR"}, {"from": "SURV", "to": "FOUND"}, {"from": "SURV", "to": "FRAME"}, {"from": "SURV", "to": "ROOF"}, {"from": "SURV", "to": "CLAD"}, {"from": "SURV", "to": "HAND"}, {"from": "DES", "to": "ORDER"}, {"from": "DES", "to": "ANCH"}, {"from": "DES", "to": "STAGE"}, {"from": "DES", "to": "TERR"}, {"from": "DES", "to": "FOUND"}, {"from": "DES", "to": "FRAME"}, {"from": "DES", "to": "ROOF"}, {"from": "DES", "to": "CLAD"}, {"from": "DES", "to": "HAND"}, {"from": "BOOK", "to": "ACCESS"}, {"from": "BOOK", "to": "ANCH"}, {"from": "BOOK", "to": "STAGE"}, {"from": "BOOK", "to": "TERR"}, {"from": "BOOK", "to": "FOUND"}, {"from": "BOOK", "to": "FRAME"}, {"from": "BOOK", "to": "ROOF"}, {"from": "BOOK", "to": "CLAD"}, {"from": "BOOK", "to": "HAND"}, {"from": "ORDER", "to": "ANCH"}, {"from": "ORDER", "to": "STAGE"}, {"from": "ORDER", "to": "TERR"}, {"from": "ORDER", "to": "FOUND"}, {"from": "ORDER", "to": "FRAME"}, {"from": "ORDER", "to": "ROOF"}, {"from": "ORDER", "to": "CLAD"}, {"from": "ORDER", "to": "HAND"}, {"from": "ACCESS", "to": "ANCH"}, {"from": "ACCESS", "to": "STAGE"}, {"from": "ACCESS", "to": "TERR"}, {"from": "ACCESS", "to": "FOUND"}, {"from": "ACCESS", "to": "FRAME"}, {"from": "ACCESS", "to": "ROOF"}, {"from": "ACCESS", "to": "CLAD"}, {"from": "ACCESS", "to": "HAND"}, {"from": "ANCH", "to": "STAGE"}, {"from": "ANCH", "to": "TERR"}, {"from": "ANCH", "to": "FOUND"}, {"from": "ANCH", "to": "FRAME"}, {"from": "ANCH", "to": "ROOF"}, {"from": "ANCH", "to": "CLAD"}, {"from": "ANCH", "to": "HAND"}, {"from": "STAGE", "to": "TERR"}, {"from": "STAGE", "to": "FOUND"}, {"from": "STAGE", "to": "FRAME"}, {"from": "STAGE", "to": "ROOF"}, {"from": "STAGE", "to": "CLAD"}, {"from": "STAGE", "to": "HAND"}, {"from": "TERR", "to": "FOUND"}, {"from": "TERR", "to": "FRAME"}, {"from": "TERR", "to": "ROOF"}, {"from": "TERR", "to": "CLAD"}, {"from": "TERR", "to": "HAND"}, {"from": "FOUND", "to": "FRAME"}, {"from": "FOUND", "to": "ROOF"}, {"from": "FOUND", "to": "CLAD"}, {"from": "FOUND", "to": "HAND"}, {"from": "FRAME", "to": "ROOF"}, {"from": "FRAME", "to": "CLAD"}, {"from": "FRAME", "to": "HAND"}, {"from": "ROOF", "to": "CLAD"}, {"from": "ROOF", "to": "HAND"}, {"from": "CLAD", "to": "HAND"}], "states": [{"id": "S0", "index": 0, "mask": 0, "size": 0, "completed": [], "pos": {"x": 450.0, "y": 50}, "enabled": ["PERM", "SAFETY"]}, {"id": "S1", "index": 1, "mask": 1, "size": 1, "completed": ["PERM"], "pos": {"x": 70.0, "y": 100}, "enabled": ["SAFETY"]}, {"id": "S2", "index": 2, "mask": 2, "size": 1, "completed": ["SAFETY"], "pos": {"x": 830.0, "y": 100}, "enabled": ["PERM"]}, {"id": "S3", "index": 3, "mask": 3, "size": 2, "completed": ["PERM", "SAFETY"], "pos": {"x": 450.0, "y": 150}, "enabled": ["SURV", "BOOK"]}, {"id": "S4", "index": 4, "mask": 7, "size": 3, "completed": ["PERM", "SAFETY", "SURV"], "pos": {"x": 70.0, "y": 200}, "enabled": ["DES", "BOOK"]}, {"id": "S5", "index": 5, "mask": 11, "size": 3, "completed": ["PERM", "SAFETY", "BOOK"], "pos": {"x": 830.0, "y": 200}, "enabled": ["SURV", "ACCESS"]}, {"id": "S6", "index": 6, "mask": 15, "size": 4, "completed": ["PERM", "SAFETY", "SURV", "BOOK"], "pos": {"x": 70.0, "y": 250}, "enabled": ["DES", "ACCESS"]}, {"id": "S7", "index": 7, "mask": 23, "size": 4, "completed": ["PERM", "SAFETY", "SURV", "DES"], "pos": {"x": 450.0, "y": 250}, "enabled": ["BOOK", "ORDER"]}, {"id": "S8", "index": 8, "mask": 43, "size": 4, "completed": ["PERM", "SAFETY", "BOOK", "ACCESS"], "pos": {"x": 830.0, "y": 250}, "enabled": ["SURV"]}, {"id": "S9", "index": 9, "mask": 31, "size": 5, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "DES"], "pos": {"x": 70.0, "y": 300}, "enabled": ["ORDER", "ACCESS"]}, {"id": "S10", "index": 10, "mask": 47, "size": 5, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "ACCESS"], "pos": {"x": 450.0, "y": 300}, "enabled": ["DES"]}, {"id": "S11", "index": 11, "mask": 87, "size": 5, "completed": ["PERM", "SAFETY", "SURV", "DES", "ORDER"], "pos": {"x": 830.0, "y": 300}, "enabled": ["BOOK"]}, {"id": "S12", "index": 12, "mask": 63, "size": 6, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS"], "pos": {"x": 70.0, "y": 350}, "enabled": ["ORDER"]}, {"id": "S13", "index": 13, "mask": 95, "size": 6, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ORDER"], "pos": {"x": 830.0, "y": 350}, "enabled": ["ACCESS"]}, {"id": "S14", "index": 14, "mask": 127, "size": 7, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER"], "pos": {"x": 450.0, "y": 400}, "enabled": ["ANCH"]}, {"id": "S15", "index": 15, "mask": 255, "size": 8, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH"], "pos": {"x": 450.0, "y": 450}, "enabled": ["STAGE"]}, {"id": "S16", "index": 16, "mask": 511, "size": 9, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE"], "pos": {"x": 450.0, "y": 500}, "enabled": ["TERR"]}, {"id": "S17", "index": 17, "mask": 1023, "size": 10, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR"], "pos": {"x": 450.0, "y": 550}, "enabled": ["FOUND"]}, {"id": "S18", "index": 18, "mask": 2047, "size": 11, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR", "FOUND"], "pos": {"x": 450.0, "y": 600}, "enabled": ["FRAME"]}, {"id": "S19", "index": 19, "mask": 4095, "size": 12, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR", "FOUND", "FRAME"], "pos": {"x": 450.0, "y": 650}, "enabled": ["ROOF"]}, {"id": "S20", "index": 20, "mask": 8191, "size": 13, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR", "FOUND", "FRAME", "ROOF"], "pos": {"x": 450.0, "y": 700}, "enabled": ["CLAD"]}, {"id": "S21", "index": 21, "mask": 16383, "size": 14, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR", "FOUND", "FRAME", "ROOF", "CLAD"], "pos": {"x": 450.0, "y": 750}, "enabled": ["HAND"]}, {"id": "S22", "index": 22, "mask": 32767, "size": 15, "completed": ["PERM", "SAFETY", "SURV", "BOOK", "DES", "ACCESS", "ORDER", "ANCH", "STAGE", "TERR", "FOUND", "FRAME", "ROOF", "CLAD", "HAND"], "pos": {"x": 450.0, "y": 800}, "enabled": []}], "state_edges_cover": [{"from": "S0", "to": "S1", "task": "PERM"}, {"from": "S0", "to": "S2", "task": "SAFETY"}, {"from": "S1", "to": "S3", "task": "SAFETY"}, {"from": "S2", "to": "S3", "task": "PERM"}, {"from": "S3", "to": "S4", "task": "SURV"}, {"from": "S3", "to": "S5", "task": "BOOK"}, {"from": "S4", "to": "S7", "task": "DES"}, {"from": "S4", "to": "S6", "task": "BOOK"}, {"from": "S5", "to": "S6", "task": "SURV"}, {"from": "S5", "to": "S8", "task": "ACCESS"}, {"from": "S6", "to": "S9", "task": "DES"}, {"from": "S6", "to": "S10", "task": "ACCESS"}, {"from": "S7", "to": "S9", "task": "BOOK"}, {"from": "S7", "to": "S11", "task": "ORDER"}, {"from": "S8", "to": "S10", "task": "SURV"}, {"from": "S9", "to": "S13", "task": "ORDER"}, {"from": "S9", "to": "S12", "task": "ACCESS"}, {"from": "S10", "to": "S12", "task": "DES"}, {"from": "S11", "to": "S13", "task": "BOOK"}, {"from": "S12", "to": "S14", "task": "ORDER"}, {"from": "S13", "to": "S14", "task": "ACCESS"}, {"from": "S14", "to": "S15", "task": "ANCH"}, {"from": "S15", "to": "S16", "task": "STAGE"}, {"from": "S16", "to": "S17", "task": "TERR"}, {"from": "S17", "to": "S18", "task": "FOUND"}, {"from": "S18", "to": "S19", "task": "FRAME"}, {"from": "S19", "to": "S20", "task": "ROOF"}, {"from": "S20", "to": "S21", "task": "CLAD"}, {"from": "S21", "to": "S22", "task": "HAND"}], "state_edges_closure": [{"from": "S0", "to": "S1"}, {"from": "S0", "to": "S2"}, {"from": "S0", "to": "S3"}, {"from": "S0", "to": "S4"}, {"from": "S0", "to": "S5"}, {"from": "S0", "to": "S6"}, {"from": "S0", "to": "S7"}, {"from": "S0", "to": "S8"}, {"from": "S0", "to": "S9"}, {"from": "S0", "to": "S10"}, {"from": "S0", "to": "S11"}, {"from": "S0", "to": "S12"}, {"from": "S0", "to": "S13"}, {"from": "S0", "to": "S14"}, {"from": "S0", "to": "S15"}, {"from": "S0", "to": "S16"}, {"from": "S0", "to": "S17"}, {"from": "S0", "to": "S18"}, {"from": "S0", "to": "S19"}, {"from": "S0", "to": "S20"}, {"from": "S0", "to": "S21"}, {"from": "S0", "to": "S22"}, {"from": "S1", "to": "S3"}, {"from": "S1", "to": "S4"}, {"from": "S1", "to": "S5"}, {"from": "S1", "to": "S6"}, {"from": "S1", "to": "S7"}, {"from": "S1", "to": "S8"}, {"from": "S1", "to": "S9"}, {"from": "S1", "to": "S10"}, {"from": "S1", "to": "S11"}, {"from": "S1", "to": "S12"}, {"from": "S1", "to": "S13"}, {"from": "S1", "to": "S14"}, {"from": "S1", "to": "S15"}, {"from": "S1", "to": "S16"}, {"from": "S1", "to": "S17"}, {"from": "S1", "to": "S18"}, {"from": "S1", "to": "S19"}, {"from": "S1", "to": "S20"}, {"from": "S1", "to": "S21"}, {"from": "S1", "to": "S22"}, {"from": "S2", "to": "S3"}, {"from": "S2", "to": "S4"}, {"from": "S2", "to": "S5"}, {"from": "S2", "to": "S6"}, {"from": "S2", "to": "S7"}, {"from": "S2", "to": "S8"}, {"from": "S2", "to": "S9"}, {"from": "S2", "to": "S10"}, {"from": "S2", "to": "S11"}, {"from": "S2", "to": "S12"}, {"from": "S2", "to": "S13"}, {"from": "S2", "to": "S14"}, {"from": "S2", "to": "S15"}, {"from": "S2", "to": "S16"}, {"from": "S2", "to": "S17"}, {"from": "S2", "to": "S18"}, {"from": "S2", "to": "S19"}, {"from": "S2", "to": "S20"}, {"from": "S2", "to": "S21"}, {"from": "S2", "to": "S22"}, {"from": "S3", "to": "S4"}, {"from": "S3", "to": "S5"}, {"from": "S3", "to": "S6"}, {"from": "S3", "to": "S7"}, {"from": "S3", "to": "S8"}, {"from": "S3", "to": "S9"}, {"from": "S3", "to": "S10"}, {"from": "S3", "to": "S11"}, {"from": "S3", "to": "S12"}, {"from": "S3", "to": "S13"}, {"from": "S3", "to": "S14"}, {"from": "S3", "to": "S15"}, {"from": "S3", "to": "S16"}, {"from": "S3", "to": "S17"}, {"from": "S3", "to": "S18"}, {"from": "S3", "to": "S19"}, {"from": "S3", "to": "S20"}, {"from": "S3", "to": "S21"}, {"from": "S3", "to": "S22"}, {"from": "S4", "to": "S6"}, {"from": "S4", "to": "S7"}, {"from": "S4", "to": "S9"}, {"from": "S4", "to": "S10"}, {"from": "S4", "to": "S11"}, {"from": "S4", "to": "S12"}, {"from": "S4", "to": "S13"}, {"from": "S4", "to": "S14"}, {"from": "S4", "to": "S15"}, {"from": "S4", "to": "S16"}, {"from": "S4", "to": "S17"}, {"from": "S4", "to": "S18"}, {"from": "S4", "to": "S19"}, {"from": "S4", "to": "S20"}, {"from": "S4", "to": "S21"}, {"from": "S4", "to": "S22"}, {"from": "S5", "to": "S6"}, {"from": "S5", "to": "S8"}, {"from": "S5", "to": "S9"}, {"from": "S5", "to": "S10"}, {"from": "S5", "to": "S12"}, {"from": "S5", "to": "S13"}, {"from": "S5", "to": "S14"}, {"from": "S5", "to": "S15"}, {"from": "S5", "to": "S16"}, {"from": "S5", "to": "S17"}, {"from": "S5", "to": "S18"}, {"from": "S5", "to": "S19"}, {"from": "S5", "to": "S20"}, {"from": "S5", "to": "S21"}, {"from": "S5", "to": "S22"}, {"from": "S6", "to": "S9"}, {"from": "S6", "to": "S10"}, {"from": "S6", "to": "S12"}, {"from": "S6", "to": "S13"}, {"from": "S6", "to": "S14"}, {"from": "S6", "to": "S15"}, {"from": "S6", "to": "S16"}, {"from": "S6", "to": "S17"}, {"from": "S6", "to": "S18"}, {"from": "S6", "to": "S19"}, {"from": "S6", "to": "S20"}, {"from": "S6", "to": "S21"}, {"from": "S6", "to": "S22"}, {"from": "S7", "to": "S9"}, {"from": "S7", "to": "S11"}, {"from": "S7", "to": "S12"}, {"from": "S7", "to": "S13"}, {"from": "S7", "to": "S14"}, {"from": "S7", "to": "S15"}, {"from": "S7", "to": "S16"}, {"from": "S7", "to": "S17"}, {"from": "S7", "to": "S18"}, {"from": "S7", "to": "S19"}, {"from": "S7", "to": "S20"}, {"from": "S7", "to": "S21"}, {"from": "S7", "to": "S22"}, {"from": "S8", "to": "S10"}, {"from": "S8", "to": "S12"}, {"from": "S8", "to": "S14"}, {"from": "S8", "to": "S15"}, {"from": "S8", "to": "S16"}, {"from": "S8", "to": "S17"}, {"from": "S8", "to": "S18"}, {"from": "S8", "to": "S19"}, {"from": "S8", "to": "S20"}, {"from": "S8", "to": "S21"}, {"from": "S8", "to": "S22"}, {"from": "S9", "to": "S12"}, {"from": "S9", "to": "S13"}, {"from": "S9", "to": "S14"}, {"from": "S9", "to": "S15"}, {"from": "S9", "to": "S16"}, {"from": "S9", "to": "S17"}, {"from": "S9", "to": "S18"}, {"from": "S9", "to": "S19"}, {"from": "S9", "to": "S20"}, {"from": "S9", "to": "S21"}, {"from": "S9", "to": "S22"}, {"from": "S10", "to": "S12"}, {"from": "S10", "to": "S14"}, {"from": "S10", "to": "S15"}, {"from": "S10", "to": "S16"}, {"from": "S10", "to": "S17"}, {"from": "S10", "to": "S18"}, {"from": "S10", "to": "S19"}, {"from": "S10", "to": "S20"}, {"from": "S10", "to": "S21"}, {"from": "S10", "to": "S22"}, {"from": "S11", "to": "S13"}, {"from": "S11", "to": "S14"}, {"from": "S11", "to": "S15"}, {"from": "S11", "to": "S16"}, {"from": "S11", "to": "S17"}, {"from": "S11", "to": "S18"}, {"from": "S11", "to": "S19"}, {"from": "S11", "to": "S20"}, {"from": "S11", "to": "S21"}, {"from": "S11", "to": "S22"}, {"from": "S12", "to": "S14"}, {"from": "S12", "to": "S15"}, {"from": "S12", "to": "S16"}, {"from": "S12", "to": "S17"}, {"from": "S12", "to": "S18"}, {"from": "S12", "to": "S19"}, {"from": "S12", "to": "S20"}, {"from": "S12", "to": "S21"}, {"from": "S12", "to": "S22"}, {"from": "S13", "to": "S14"}, {"from": "S13", "to": "S15"}, {"from": "S13", "to": "S16"}, {"from": "S13", "to": "S17"}, {"from": "S13", "to": "S18"}, {"from": "S13", "to": "S19"}, {"from": "S13", "to": "S20"}, {"from": "S13", "to": "S21"}, {"from": "S13", "to": "S22"}, {"from": "S14", "to": "S15"}, {"from": "S14", "to": "S16"}, {"from": "S14", "to": "S17"}, {"from": "S14", "to": "S18"}, {"from": "S14", "to": "S19"}, {"from": "S14", "to": "S20"}, {"from": "S14", "to": "S21"}, {"from": "S14", "to": "S22"}, {"from": "S15", "to": "S16"}, {"from": "S15", "to": "S17"}, {"from": "S15", "to": "S18"}, {"from": "S15", "to": "S19"}, {"from": "S15", "to": "S20"}, {"from": "S15", "to": "S21"}, {"from": "S15", "to": "S22"}, {"from": "S16", "to": "S17"}, {"from": "S16", "to": "S18"}, {"from": "S16", "to": "S19"}, {"from": "S16", "to": "S20"}, {"from": "S16", "to": "S21"}, {"from": "S16", "to": "S22"}, {"from": "S17", "to": "S18"}, {"from": "S17", "to": "S19"}, {"from": "S17", "to": "S20"}, {"from": "S17", "to": "S21"}, {"from": "S17", "to": "S22"}, {"from": "S18", "to": "S19"}, {"from": "S18", "to": "S20"}, {"from": "S18", "to": "S21"}, {"from": "S18", "to": "S22"}, {"from": "S19", "to": "S20"}, {"from": "S19", "to": "S21"}, {"from": "S19", "to": "S22"}, {"from": "S20", "to": "S21"}, {"from": "S20", "to": "S22"}, {"from": "S21", "to": "S22"}], "F": {"PERM": "S1", "SAFETY": "S2", "SURV": "S4", "DES": "S7", "BOOK": "S5", "ORDER": "S11", "ACCESS": "S8", "ANCH": "S15", "STAGE": "S16", "TERR": "S17", "FOUND": "S18", "FRAME": "S19", "ROOF": "S20", "CLAD": "S21", "HAND": "S22"}, "G": {"PERM": {"from": "S0", "to": "S1"}, "SAFETY": {"from": "S0", "to": "S2"}, "SURV": {"from": "S3", "to": "S4"}, "DES": {"from": "S4", "to": "S7"}, "BOOK": {"from": "S3", "to": "S5"}, "ORDER": {"from": "S7", "to": "S11"}, "ACCESS": {"from": "S5", "to": "S8"}, "ANCH": {"from": "S14", "to": "S15"}, "STAGE": {"from": "S15", "to": "S16"}, "TERR": {"from": "S16", "to": "S17"}, "FOUND": {"from": "S17", "to": "S18"}, "FRAME": {"from": "S18", "to": "S19"}, "ROOF": {"from": "S19", "to": "S20"}, "CLAD": {"from": "S20", "to": "S21"}, "HAND": {"from": "S21", "to": "S22"}}, "meta": {"generated_utc": "2026-02-02T15:50:46.697873Z", "n_tasks": 15, "n_states": 23, "n_task_edges_cover": 24, "n_task_edges_closure": 98, "n_state_edges_cover": 29, "n_state_edges_closure": 234}};
+
+function byId(id) { return document.getElementById(id); }
+function q(sel) { return document.querySelector(sel); }
+function qa(sel) { return Array.from(document.querySelectorAll(sel)); }
+
+function clearAll() {
+  qa('.task-node').forEach(n => n.classList.remove('selected','prereq','dependent','in-state','enabled'));
+  qa('.state-node').forEach(n => n.classList.remove('selected','F-highlight'));
+  qa('.edge').forEach(e => e.classList.remove('highlight','g-highlight','outgoing'));
+  qa('.edge-label').forEach(l => l.classList.remove('highlight'));
+  byId('infoText').textContent = 'Nothing selected.';
+}
+
+function taskById(tid) {
+  return DATA.tasks.find(t => t.id === tid);
+}
+function stateById(sid) {
+  return DATA.states.find(s => s.id === sid);
+}
+
+function selectTask(tid) {
+  clearAll();
+  const node = q('.task-node[data-id="' + tid + '"]');
+  if (node) node.classList.add('selected');
+
+  const t = taskById(tid);
+  if (!t) return;
+
+  // prereqs and dependents in T
+  t.prereqs.forEach(p => {
+    const pn = q('.task-node[data-id="' + p + '"]');
+    if (pn) pn.classList.add('prereq');
+  });
+  t.dependents.forEach(d => {
+    const dn = q('.task-node[data-id="' + d + '"]');
+    if (dn) dn.classList.add('dependent');
+  });
+
+  // highlight direct incident cover edges in task view
+  qa('.task-edge.cover').forEach(e => {
+    const fr = e.getAttribute('data-from');
+    const to = e.getAttribute('data-to');
+    if (fr === tid || to === tid) e.classList.add('highlight');
+  });
+
+  // F and G on the state side
+  const Fsid = DATA.F[tid];
+  const Fnode = q('.state-node[data-id="' + Fsid + '"]');
+  if (Fnode) Fnode.classList.add('F-highlight');
+
+  const g = DATA.G[tid];
+  if (g) {
+    // this should coincide with a cover edge labeled tid
+    const gEdge = q('.state-edge.cover[data-from="' + g.from + '"][data-to="' + g.to + '"][data-task="' + tid + '"]');
+    if (gEdge) gEdge.classList.add('g-highlight');
+
+    // highlight corresponding label (by eid)
+    if (gEdge) {
+      const eid = gEdge.getAttribute('data-eid');
+      const lab = q('.state-edge-label[data-eid="' + eid + '"]');
+      if (lab) lab.classList.add('highlight');
+    }
+  }
+
+  const preState = stateById(g.from);
+  const downState = stateById(Fsid);
+
+  const lines = [];
+  lines.push('Selected task: ' + tid + ' — ' + t.name);
+  lines.push('');
+  lines.push('Description: ' + t.desc);
+  lines.push('');
+  lines.push('Prerequisites (≤ in T): ' + (t.prereqs.length ? t.prereqs.join(', ') : '(none)'));
+  lines.push('Dependents (≥ in T): ' + (t.dependents.length ? t.dependents.join(', ') : '(none)'));
+  lines.push('');
+  lines.push('F(' + tid + ') = ' + Fsid + ' = ↓' + tid + ' = { ' + downState.completed.join(', ') + ' }');
+  lines.push('G(' + tid + ') = (' + g.from + ' → ' + g.to + ') adds ' + tid);
+  lines.push('  pre(' + tid + ') = { ' + preState.completed.join(', ') + ' }');
+  byId('infoText').textContent = lines.join('\n');
+}
+
+function selectState(sid) {
+  clearAll();
+  const sn = q('.state-node[data-id="' + sid + '"]');
+  if (sn) sn.classList.add('selected');
+
+  const st = stateById(sid);
+  if (!st) return;
+
+  // Completed tasks (in-state)
+  st.completed.forEach(tid => {
+    const tn = q('.task-node[data-id="' + tid + '"]');
+    if (tn) tn.classList.add('in-state');
+  });
+
+  // Enabled tasks (next possible steps)
+  st.enabled.forEach(tid => {
+    const tn = q('.task-node[data-id="' + tid + '"]');
+    if (tn) tn.classList.add('enabled');
+  });
+
+  // Outgoing cover edges
+  qa('.state-edge.cover[data-from="' + sid + '"]').forEach(e => {
+    e.classList.add('outgoing');
+    const eid = e.getAttribute('data-eid');
+    const lab = q('.state-edge-label[data-eid="' + eid + '"]');
+    if (lab) lab.classList.add('highlight');
+  });
+
+  const lines = [];
+  lines.push('Selected state: ' + sid + '  (|I|=' + st.size + ')');
+  lines.push('');
+  lines.push('Completed tasks I = { ' + (st.completed.join(', ') || '') + ' }');
+  lines.push('');
+  lines.push('Enabled next tasks = { ' + (st.enabled.join(', ') || '') + ' }');
+  lines.push('');
+  lines.push('Outgoing one-step transitions (cover edges in S):');
+  const outgoing = DATA.state_edges_cover.filter(e => e.from === sid)
+    .map(e => '  ' + sid + ' --[' + e.task + ']--> ' + e.to);
+  lines.push(outgoing.length ? outgoing.join('\n') : '  (none)');
+  byId('infoText').textContent = lines.join('\n');
+}
+
+function attachHandlers() {
+  // task nodes
+  qa('.task-node').forEach(n => {
+    n.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      selectTask(n.getAttribute('data-id'));
+    });
+  });
+
+  // state nodes
+  qa('.state-node').forEach(n => {
+    n.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      selectState(n.getAttribute('data-id'));
+    });
+  });
+
+  // clear if click background
+  byId('svgTasks').addEventListener('click', (ev) => {
+    if (ev.target.tagName.toLowerCase() === 'svg') clearAll();
+  });
+  byId('svgStates').addEventListener('click', (ev) => {
+    if (ev.target.tagName.toLowerCase() === 'svg') clearAll();
+  });
+
+  byId('clearBtn1').addEventListener('click', clearAll);
+  byId('clearBtn2').addEventListener('click', clearAll);
+
+  // toggles
+  byId('toggleTaskClosure').addEventListener('change', (ev) => {
+    const on = ev.target.checked;
+    qa('.task-edge.closure').forEach(e => e.classList.toggle('hidden', !on));
+  });
+  byId('toggleStateClosure').addEventListener('change', (ev) => {
+    const on = ev.target.checked;
+    qa('.state-edge.closure').forEach(e => e.classList.toggle('hidden', !on));
+  });
+  byId('toggleEdgeLabels').addEventListener('change', (ev) => {
+    const on = ev.target.checked;
+    qa('.state-edge-label').forEach(l => l.classList.toggle('hidden', !on));
+  });
+}
+
+attachHandlers();
+</script>
+</body>
+</html>
