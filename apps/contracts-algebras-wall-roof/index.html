@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contracts-as-Algebras for Wall + Roof Safety (Wiring Diagram)</title>
+  <link rel="stylesheet" href="../../common.css" />
+  <style>
+    :root{
+      --bg: #0b0c10;
+      --panel: #12141b;
+      --panel2:#0f1117;
+      --text: #e9eef7;
+      --muted:#b8c1d6;
+      --faint:#7f8aa6;
+      --accent:#7dd3fc;
+      --accent2:#a7f3d0;
+      --danger:#fb7185;
+      --warn:#fbbf24;
+      --ok:#34d399;
+      --line:#263045;
+      --shadow: 0 0.8rem 2.5rem rgba(0,0,0,0.35);
+      --radius: 1rem;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(125,211,252,0.10), transparent 60%),
+                  radial-gradient(900px 500px at 85% 25%, rgba(167,243,208,0.10), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.35;
+    }
+
+    a{ color: var(--accent); text-decoration: none; }
+    a:focus{ outline: 2px solid var(--accent); outline-offset: 0.2rem; border-radius: 0.4rem; }
+
+    .app-nav{
+      max-width: min(92vw, 78rem);
+      margin: 0 auto;
+      padding: 1.5rem 1rem 0;
+    }
+
+    .min-h-64{ min-height: 16rem; } /* guideline */
+    .app{
+      max-width: min(92vw, 78rem);
+      margin: 0 auto;
+      padding: 2.2rem 1rem 3rem;
+      box-sizing: border-box;
+    }
+
+    .hero{
+      display:flex;
+      gap: 1.2rem;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 1.2rem;
+    }
+
+    .titleBlock{
+      flex: 1 1 22rem;
+      min-width: 16rem;
+    }
+
+    h1{
+      font-size: clamp(1.35rem, 2.6vw, 2.1rem);
+      margin: 0 0 0.4rem 0;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle{
+      color: var(--muted);
+      margin: 0.1rem 0 0.8rem 0;
+      max-width: 68ch;
+    }
+
+    .pillRow{
+      display:flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.2rem;
+    }
+
+    .pill{
+      font-size: 0.85rem;
+      color: var(--muted);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      padding: 0.35rem 0.6rem;
+    }
+
+    .warning{
+      flex: 0 1 22rem;
+      min-width: 16rem;
+      background: linear-gradient(180deg, rgba(251,191,36,0.12), rgba(251,191,36,0.05));
+      border: 1px solid rgba(251,191,36,0.25);
+      border-radius: var(--radius);
+      padding: 0.9rem 1rem;
+      box-shadow: var(--shadow);
+    }
+    .warning strong{ color: var(--warn); }
+    .warning p{ margin: 0.3rem 0 0 0; color: var(--muted); font-size: 0.95rem; }
+
+    .frame{
+      background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: clip;
+    }
+
+    .layout{
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    @media (max-width: 60rem){
+      .layout{ grid-template-columns: 1fr; }
+    }
+
+    .tabs{
+      display:flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      padding: 0.8rem 0.8rem 0 0.8rem;
+    }
+
+    .tabBtn{
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.7rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      user-select: none;
+    }
+    .tabBtn:hover{ transform: translateY(-1px); border-color: rgba(125,211,252,0.35); }
+    .tabBtn:active{ transform: translateY(0px); }
+    .tabBtn[aria-selected="true"]{
+      background: rgba(125,211,252,0.14);
+      color: var(--text);
+      border-color: rgba(125,211,252,0.45);
+    }
+
+    .panel{
+      padding: 0.8rem;
+    }
+
+    .js [data-panel]{ display:none; }
+    .js [data-panel].active{ display:block; }
+
+    .diagramCard{
+      padding: 0.8rem;
+      border-radius: calc(var(--radius) - 0.2rem);
+      background: rgba(0,0,0,0.12);
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .diagramWrap{
+      width: 100%;
+      aspect-ratio: 2.4 / 1;
+      min-height: 18rem;
+      max-height: 46vh;
+      position: relative;
+      border-radius: 0.8rem;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(18,20,27,0.9), rgba(12,13,18,0.9));
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .diagramWrap svg{
+      width: 100%;
+      height: 100%;
+      display:block;
+    }
+
+    .legend{
+      display:flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 0.7rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .legend .chip{
+      display:flex;
+      gap:0.4rem;
+      align-items:center;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 999px;
+      padding: 0.25rem 0.55rem;
+      background: rgba(255,255,255,0.03);
+    }
+    .dot{
+      width:0.7rem; height:0.7rem; border-radius: 999px;
+      display:inline-block;
+      border: 1px solid rgba(0,0,0,0.25);
+    }
+
+    .sideCard{
+      padding: 0.9rem 1rem;
+      background: rgba(0,0,0,0.14);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: calc(var(--radius) - 0.2rem);
+    }
+
+    .sideCard h2{
+      margin: 0 0 0.4rem 0;
+      font-size: 1.1rem;
+      letter-spacing: -0.01em;
+    }
+    .sideCard p, .sideCard li{
+      color: var(--muted);
+    }
+    .sideCard ul{ padding-left: 1.2rem; margin: 0.4rem 0 0 0; }
+    .sideCard code{ font-family: var(--mono); font-size: 0.9em; color: #dbeafe; }
+
+    .kv{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+      margin-top: 0.6rem;
+    }
+    .kvRow{
+      display:flex;
+      gap:0.6rem;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 0.5rem 0.6rem;
+      border-radius: 0.7rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+    }
+    .kvRow .k{ color: var(--faint); font-size: 0.92rem; }
+    .kvRow .v{ font-family: var(--mono); font-size: 0.95rem; color: var(--text); }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+    @media (max-width: 45rem){
+      .grid2{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      border-radius: 0.9rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.12);
+      padding: 0.9rem;
+    }
+    .card h3{ margin: 0 0 0.4rem 0; font-size: 1.05rem; }
+    .card p{ margin: 0.3rem 0; color: var(--muted); }
+    .card .math{
+      margin-top: 0.6rem;
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: #dbeafe;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 0.7rem;
+      padding: 0.7rem 0.8rem;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .controls{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      align-items: start;
+    }
+    @media (max-width: 55rem){
+      .controls{ grid-template-columns: 1fr; }
+    }
+
+    .controlGroup{
+      border-radius: 0.9rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.12);
+      padding: 0.9rem;
+    }
+    .controlGroup h3{ margin:0 0 0.6rem 0; font-size: 1.05rem; }
+
+    .field{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .field label{
+      display:flex;
+      justify-content: space-between;
+      gap: 0.8rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .field label span.value{
+      font-family: var(--mono);
+      color: var(--text);
+    }
+    input[type="range"]{
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .toggles{
+      display:flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 0.2rem;
+    }
+    .toggle{
+      display:flex;
+      gap: 0.5rem;
+      align-items: center;
+      padding: 0.4rem 0.6rem;
+      border-radius: 0.7rem;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+    }
+    .toggle input{ accent-color: var(--accent2); }
+
+    .btnRow{
+      display:flex;
+      gap:0.6rem;
+      flex-wrap: wrap;
+      margin-top: 0.3rem;
+    }
+    .btn{
+      appearance:none;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 0.8rem;
+      padding: 0.55rem 0.8rem;
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+      user-select: none;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(167,243,208,0.45); }
+    .btn:active{ transform: translateY(0px); }
+    .btn.secondary{ color: var(--muted); }
+    .btn.danger{ border-color: rgba(251,113,133,0.4); }
+    .btn.danger:hover{ border-color: rgba(251,113,133,0.7); }
+
+    .statusGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 0.6rem;
+      margin-top: 0.6rem;
+    }
+
+    .statusRow{
+      display:flex;
+      justify-content: space-between;
+      gap: 0.7rem;
+      align-items: center;
+      padding: 0.65rem 0.75rem;
+      border-radius: 0.8rem;
+      border: 1px solid rgba(255,255,255,0.09);
+      background: rgba(255,255,255,0.03);
+    }
+    .statusRow .left{
+      display:flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      min-width: 12rem;
+    }
+    .statusRow .left .name{ font-size: 0.98rem; }
+    .statusRow .left .why{ color: var(--faint); font-size: 0.9rem; }
+    .badge{
+      font-family: var(--mono);
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.25);
+      color: var(--muted);
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+    .badge.ok{ border-color: rgba(52,211,153,0.5); color: var(--ok); }
+    .badge.bad{ border-color: rgba(251,113,133,0.5); color: var(--danger); }
+    .badge.warn{ border-color: rgba(251,191,36,0.5); color: var(--warn); }
+
+    .mono{
+      font-family: var(--mono);
+      font-size: 0.95rem;
+    }
+
+    .pre{
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      color: #dbeafe;
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 0.8rem;
+      padding: 0.85rem 0.9rem;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .small{
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+
+    footer{
+      margin-top: 1rem;
+      color: var(--faint);
+      font-size: 0.92rem;
+      padding: 0.6rem 0.2rem 0;
+    }
+
+    /* Toast */
+    .toastHost{
+      position: fixed;
+      left: 50%;
+      bottom: 1.2rem;
+      transform: translateX(-50%);
+      width: min(92vw, 42rem);
+      display:flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    .toast{
+      pointer-events: auto;
+      background: rgba(18,20,27,0.95);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 0.9rem;
+      padding: 0.7rem 0.85rem;
+      box-shadow: var(--shadow);
+      display:flex;
+      gap: 0.7rem;
+      align-items: flex-start;
+    }
+    .toast .icon{
+      width: 0.9rem; height: 0.9rem; border-radius: 999px;
+      margin-top: 0.2rem;
+      flex: 0 0 auto;
+      border: 1px solid rgba(0,0,0,0.25);
+    }
+    .toast .msg{
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .toast .msg strong{ color: var(--text); }
+    .toast .close{
+      margin-left: auto;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      border-radius: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    /* SVG styles */
+    .svgText{ font-family: var(--sans); fill: var(--text); }
+    .svgSmall{ font-size: 16px; fill: var(--muted); }
+    .svgMono{ font-family: var(--mono); font-size: 15px; fill: #dbeafe; }
+    .box{
+      fill: rgba(255,255,255,0.035);
+      stroke: rgba(255,255,255,0.12);
+      stroke-width: 2;
+      rx: 12; ry: 12;
+      cursor: pointer;
+    }
+    .boxTitle{ font-weight: 700; font-size: 18px; }
+    .boxSub{ font-size: 13.5px; fill: var(--muted); }
+    .wire{
+      stroke: rgba(125,211,252,0.65);
+      stroke-width: 3;
+      fill: none;
+      marker-end: url(#arrow);
+      opacity: 0.92;
+    }
+    .wire.data{
+      stroke: rgba(167,243,208,0.65);
+    }
+    .wire.ok{ stroke: rgba(52,211,153,0.9); }
+    .wire.bad{ stroke: rgba(251,113,133,0.9); }
+    .wire.neutral{ stroke: rgba(255,255,255,0.22); marker-end: none; opacity: 0.75; }
+    .port{
+      fill: rgba(255,255,255,0.18);
+      stroke: rgba(0,0,0,0.30);
+      stroke-width: 1;
+    }
+    .badgeSvg{
+      fill: rgba(0,0,0,0.28);
+      stroke: rgba(255,255,255,0.10);
+      stroke-width: 1;
+      rx: 10; ry: 10;
+    }
+    .labelBg{
+      fill: rgba(0,0,0,0.35);
+      stroke: rgba(255,255,255,0.08);
+      stroke-width: 1;
+      rx: 8; ry: 8;
+    }
+    .clickHint{
+      fill: rgba(255,255,255,0.06);
+      stroke: rgba(255,255,255,0.10);
+      stroke-width: 1;
+      rx: 10; ry: 10;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-nav">
+    <a href="../../index.html">Back to app index</a>
+  </div>
+  <div id="app" class="app min-h-64 frame" data-timeout="3000">
+    <noscript>
+      <div style="padding:1rem">
+        Interactive visualisation (requires JavaScript). Below you will still find the static diagram and formalism text.
+      </div>
+    </noscript>
+
+    <div class="hero">
+      <div class="titleBlock">
+        <h1>Wall + Roof Safety as a <span style="color:var(--accent)">Contracts Algebra</span> over a Wiring Diagram</h1>
+        <p class="subtitle">
+          This page turns a simple construction “wall + roof” plan into a wiring diagram, annotates each box with a <em>contract</em> (a safety requirement),
+          and then composes those contracts into a single system-level predicate that must hold.
+        </p>
+        <div class="pillRow" aria-label="Key ideas">
+          <span class="pill">Contracts = relations (predicates)</span>
+          <span class="pill">Wiring diagram = composition syntax</span>
+          <span class="pill">Algebra maps diagrams → composite constraints</span>
+          <span class="pill">Interactive scenario checker</span>
+        </div>
+      </div>
+
+      <aside class="warning" role="note">
+        <strong>Scope note (important):</strong>
+        <p>
+          This is a deliberately simplified, didactic safety model: one scalar “design load” flows from roof to wall.
+          Real structural design requires jurisdiction-specific codes, load combinations, detailing, and professional judgement.
+        </p>
+      </aside>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Sections">
+      <button class="tabBtn" role="tab" aria-selected="true" aria-controls="panel-diagram" id="tab-diagram" data-tab="diagram">Diagram</button>
+      <button class="tabBtn" role="tab" aria-selected="false" aria-controls="panel-contracts" id="tab-contracts" data-tab="contracts">Contracts</button>
+      <button class="tabBtn" role="tab" aria-selected="false" aria-controls="panel-formalism" id="tab-formalism" data-tab="formalism">Formalism</button>
+      <button class="tabBtn" role="tab" aria-selected="false" aria-controls="panel-try" id="tab-try" data-tab="try">Try a Scenario</button>
+    </div>
+
+    <div class="layout">
+      <main class="panel" id="mainPanel" aria-live="polite">
+
+        <!-- PANEL: DIAGRAM -->
+        <section class="panel active" id="panel-diagram" data-panel="diagram" role="tabpanel" aria-labelledby="tab-diagram">
+          <div class="diagramCard">
+            <div class="diagramWrap" aria-label="Wiring diagram canvas">
+              <svg id="diagramSvg" viewBox="0 0 1000 420" role="img" aria-label="Wiring diagram: Roof feeds Wall; booleans feed AND; output is system safety">
+                <defs>
+                  <marker id="arrow" viewBox="0 0 10 10" refX="9.2" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(125,211,252,0.75)"></path>
+                  </marker>
+                </defs>
+
+                <!-- Outer hint -->
+                <rect x="18" y="18" width="964" height="384" class="clickHint"></rect>
+                <text x="34" y="44" class="svgSmall svgText">Click a box to see its contract. Use “Try a Scenario” to watch wires turn green/red.</text>
+
+                <!-- Input labels -->
+                <g id="inputs">
+                  <text x="40" y="110" class="svgSmall svgText">S (design load, kN)</text>
+                  <text x="40" y="152" class="svgSmall svgText">Cap_R (roof cap., kN)</text>
+                  <text x="40" y="194" class="svgSmall svgText">Code_R (roof code?)</text>
+
+                  <text x="40" y="278" class="svgSmall svgText">Cap_W (wall cap., kN)</text>
+                  <text x="40" y="320" class="svgSmall svgText">Code_W (wall code?)</text>
+                </g>
+
+                <!-- Ports at left -->
+                <circle cx="220" cy="105" r="5.5" class="port"></circle>
+                <circle cx="220" cy="147" r="5.5" class="port"></circle>
+                <circle cx="220" cy="189" r="5.5" class="port"></circle>
+                <circle cx="520" cy="273" r="5.5" class="port"></circle>
+                <circle cx="520" cy="315" r="5.5" class="port"></circle>
+
+                <!-- Roof box -->
+                <g id="box_roof" data-box="roof" tabindex="0" aria-label="Roof subsystem box">
+                  <rect x="240" y="78" width="260" height="160" class="box"></rect>
+                  <text x="260" y="108" class="svgText boxTitle">Roof subsystem</text>
+                  <text x="260" y="130" class="svgText boxSub">Behaviour: computes reaction r to wall</text>
+                  <rect x="260" y="144" width="220" height="78" class="badgeSvg"></rect>
+                  <text x="272" y="164" class="svgMono">Contract C_R (safety)</text>
+                  <text x="272" y="186" class="svgMono">Code_R ∧ Cap_R ≥ γ_R·S</text>
+                  <text x="272" y="206" class="svgMono">r = S ∧ ok_R = ⊤</text>
+
+                  <!-- Roof ports -->
+                  <circle cx="240" cy="105" r="5.5" class="port"></circle>
+                  <circle cx="240" cy="147" r="5.5" class="port"></circle>
+                  <circle cx="240" cy="189" r="5.5" class="port"></circle>
+                  <circle cx="500" cy="125" r="5.5" class="port"></circle>
+                  <circle cx="500" cy="210" r="5.5" class="port"></circle>
+                </g>
+
+                <!-- Wall box -->
+                <g id="box_wall" data-box="wall" tabindex="0" aria-label="Wall subsystem box">
+                  <rect x="560" y="78" width="260" height="160" class="box"></rect>
+                  <text x="580" y="108" class="svgText boxTitle">Wall subsystem</text>
+                  <text x="580" y="130" class="svgText boxSub">Behaviour: checks support of roof reaction</text>
+                  <rect x="580" y="144" width="220" height="78" class="badgeSvg"></rect>
+                  <text x="592" y="164" class="svgMono">Contract C_W (safety)</text>
+                  <text x="592" y="186" class="svgMono">Code_W ∧ Cap_W ≥ γ_W·r</text>
+                  <text x="592" y="206" class="svgMono">ok_W = ⊤</text>
+
+                  <!-- Wall ports -->
+                  <circle cx="560" cy="125" r="5.5" class="port"></circle>
+                  <circle cx="560" cy="273" r="5.5" class="port"></circle>
+                  <circle cx="560" cy="315" r="5.5" class="port"></circle>
+                  <circle cx="820" cy="210" r="5.5" class="port"></circle>
+                </g>
+
+                <!-- AND box -->
+                <g id="box_and" data-box="and" tabindex="0" aria-label="AND combiner box">
+                  <rect x="845" y="110" width="135" height="110" class="box"></rect>
+                  <text x="860" y="140" class="svgText boxTitle">AND</text>
+                  <text x="860" y="160" class="svgText boxSub">ok = ok_R ∧ ok_W</text>
+                  <rect x="860" y="174" width="105" height="36" class="badgeSvg"></rect>
+                  <text x="868" y="198" class="svgMono">C_∧</text>
+
+                  <!-- AND ports -->
+                  <circle cx="845" cy="150" r="5.5" class="port"></circle>
+                  <circle cx="845" cy="190" r="5.5" class="port"></circle>
+                  <circle cx="980" cy="170" r="5.5" class="port"></circle>
+                </g>
+
+                <!-- Output label -->
+                <text x="900" y="90" class="svgSmall svgText">Output</text>
+                <text x="900" y="108" class="svgSmall svgText">ok_S (shell safe?)</text>
+
+                <!-- Wires (inputs to roof) -->
+                <path id="wire_S" class="wire data" d="M 220 105 C 230 105, 232 105, 240 105"></path>
+                <path id="wire_CapR" class="wire data" d="M 220 147 C 230 147, 232 147, 240 147"></path>
+                <path id="wire_CodeR" class="wire data" d="M 220 189 C 230 189, 232 189, 240 189"></path>
+
+                <!-- Wires (inputs to wall, routed from left) -->
+                <path id="wire_CapW" class="wire data" d="M 220 273 C 350 273, 430 273, 520 273 C 535 273, 545 273, 560 273"></path>
+                <path id="wire_CodeW" class="wire data" d="M 220 315 C 350 315, 430 315, 520 315 C 535 315, 545 315, 560 315"></path>
+
+                <!-- Internal wire: reaction r from roof to wall -->
+                <path id="wire_r" class="wire" d="M 500 125 C 520 125, 540 125, 560 125"></path>
+
+                <!-- Internal wire: ok_R to AND -->
+                <path id="wire_okR" class="wire" d="M 500 210 C 650 210, 760 210, 845 150"></path>
+
+                <!-- Internal wire: ok_W to AND -->
+                <path id="wire_okW" class="wire" d="M 820 210 C 830 210, 840 210, 845 190"></path>
+
+                <!-- Output wire: ok_S -->
+                <path id="wire_okS" class="wire" d="M 980 170 C 985 170, 990 170, 995 170"></path>
+
+                <!-- Numeric overlays -->
+                <g id="overlay">
+                  <rect x="520" y="98" width="70" height="22" class="labelBg"></rect>
+                  <text id="label_r" x="526" y="114" class="svgMono">r=?</text>
+
+                  <rect x="720" y="134" width="92" height="22" class="labelBg"></rect>
+                  <text id="label_okR" x="726" y="150" class="svgMono">ok_R=?</text>
+
+                  <rect x="825" y="214" width="92" height="22" class="labelBg"></rect>
+                  <text id="label_okW" x="831" y="230" class="svgMono">ok_W=?</text>
+
+                  <rect x="900" y="172" width="92" height="22" class="labelBg"></rect>
+                  <text id="label_okS" x="906" y="188" class="svgMono">ok_S=?</text>
+                </g>
+              </svg>
+            </div>
+
+            <div class="legend" aria-label="Legend">
+              <div class="chip"><span class="dot" style="background:rgba(167,243,208,0.85)"></span>Input/resource/value wires</div>
+              <div class="chip"><span class="dot" style="background:rgba(125,211,252,0.85)"></span>Internal signal wires</div>
+              <div class="chip"><span class="dot" style="background:rgba(52,211,153,0.9)"></span>Wire consistent with contracts</div>
+              <div class="chip"><span class="dot" style="background:rgba(251,113,133,0.9)"></span>Contract violation along that connection</div>
+            </div>
+          </div>
+
+          <div style="height:0.8rem"></div>
+
+          <div class="grid2">
+            <div class="card">
+              <h3>Agent reading guide</h3>
+              <p>
+                To ground this example in the cited theory, focus your reading on:
+              </p>
+              <ul>
+                <li><span class="mono">Contracts as relations</span>: a contract on a box \(X\) is a subset \(R \subseteq X_{in}\times X_{out}\), i.e. a predicate on input/output pairs.</li>
+                <li><span class="mono">Contracts form an algebra</span>: a functorial mechanism that takes a wiring diagram and “pushes” internal contracts to a composite external contract.</li>
+                <li><span class="mono">Composition = existential elimination</span>: internal wires disappear from the external view, so the composite predicate quantifies over them.</li>
+              </ul>
+              <p class="small">
+                In the <em>Formalism</em> tab we write the generic rule and then instantiate it for wall+roof.
+              </p>
+            </div>
+
+            <div class="card">
+              <h3>What you are seeing</h3>
+              <p>
+                This wiring diagram is the <em>syntax</em> (how subsystems connect). The contracts are the <em>semantics</em> (what must be true).
+              </p>
+              <p>
+                In operad language: a wiring diagram is a multi-input “arrangement” of inner boxes into an outer box, and an algebra evaluates that arrangement. In our case, the evaluation produces a <em>predicate</em> (a set of allowed I/O pairs).
+              </p>
+              <div class="math" aria-label="High-level composition statement">
+C(f)(C_R × C_W × C_∧) = C_shell
+(where f is the wiring diagram)
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PANEL: CONTRACTS -->
+        <section class="panel" id="panel-contracts" data-panel="contracts" role="tabpanel" aria-labelledby="tab-contracts">
+          <div class="grid2">
+            <div class="card">
+              <h3>Roof safety contract \(C_R\)</h3>
+              <p>
+                Safety requirement: the roof must (i) pass code checks, and (ii) have capacity ≥ safety factor × design load.
+                It also computes the reaction \(r\) that the wall must carry.
+              </p>
+              <div class="math" id="math_roof">
+Types:
+  X_R,in  = ℝ≥0 × ℝ≥0 × Bool     (S, Cap_R, Code_R)
+  X_R,out = ℝ≥0 × Bool          (r, ok_R)
+
+Contract (predicate form):
+  P_R(S, Cap_R, Code_R; r, ok_R) :⇔
+    Code_R = ⊤
+    ∧ r = S
+    ∧ Cap_R ≥ γ_R · S
+    ∧ ok_R = ⊤
+
+"Maximum load" implied:
+  S ≤ Cap_R / γ_R
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Wall safety contract \(C_W\)</h3>
+              <p>
+                Safety requirement: the wall must (i) pass code checks, and (ii) support the roof reaction load \(r\) with margin.
+              </p>
+              <div class="math" id="math_wall">
+Types:
+  X_W,in  = ℝ≥0 × ℝ≥0 × Bool     (r, Cap_W, Code_W)
+  X_W,out = Bool                 (ok_W)
+
+Contract:
+  P_W(r, Cap_W, Code_W; ok_W) :⇔
+    Code_W = ⊤
+    ∧ Cap_W ≥ γ_W · r
+    ∧ ok_W = ⊤
+
+"Maximum reaction" implied:
+  r ≤ Cap_W / γ_W
+              </div>
+            </div>
+          </div>
+
+          <div style="height:0.8rem"></div>
+
+          <div class="grid2">
+            <div class="card">
+              <h3>Combiner contract \(C_{\wedge}\)</h3>
+              <p>
+                This box is just the “system verdict”: it turns two booleans into one.
+                (You can treat this as “reporting” the outcome, or as a tiny behavioural model.)
+              </p>
+              <div class="math" id="math_and">
+Types:
+  X_∧,in  = Bool × Bool   (ok_R, ok_W)
+  X_∧,out = Bool          (ok_S)
+
+Contract:
+  P_∧(ok_R, ok_W; ok_S) :⇔  ok_S = (ok_R ∧ ok_W)
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>System-level meaning</h3>
+              <p>
+                When you connect roof → wall, the intermediate wire \(r\) becomes “internal”.
+                So the system-level contract talks only about external inputs and outputs:
+                it existentially quantifies over internal values.
+              </p>
+              <p class="small">
+                That’s exactly the “contracts algebra” idea: a wiring diagram plus component contracts determines a composite contract.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- PANEL: FORMALISM -->
+        <section class="panel" id="panel-formalism" data-panel="formalism" role="tabpanel" aria-labelledby="tab-formalism">
+          <div class="card">
+            <h3>1) Contracts as an algebra over wiring diagrams</h3>
+            <p>
+              A static contract on a box \(X\) is a relation \(R \subseteq X_{in}\times X_{out}\), i.e. a predicate \(P_X(x_{in},x_{out})\).
+              A wiring diagram tells you how inner boxes are connected inside an outer box.
+            </p>
+
+            <div class="pre" aria-label="General contract pushforward along a wiring diagram">
+Given a wiring diagram f : X → Y in the wiring-diagram category W,
+and a contract R_X ⊆ X_in × X_out,
+
+the contracts algebra produces a composite contract:
+
+  R_Y = C(f)(R_X) ⊆ Y_in × Y_out
+
+Membership / predicate view:
+
+  (y_in, y_out) ∈ R_Y    ⇔    ∃ x_out :
+      ( f_in(x_out, y_in), x_out ) ∈ R_X
+      ∧ f_out(x_out) = y_out
+
+Read this as: "there exists an internal behaviour on hidden wires
+that makes all component constraints true."
+            </div>
+
+            <p class="small">
+              In this example we mainly use the “existential over internal wires” intuition (and you can see it computed explicitly below).
+            </p>
+          </div>
+
+          <div style="height:0.8rem"></div>
+
+          <div class="card">
+            <h3>2) Instantiating the rule for the wall+roof wiring diagram</h3>
+            <p>
+              Let the outer system (the “shell”) have external inputs
+              \((S, Cap_R, Code_R, Cap_W, Code_W)\) and external output \((ok_S)\).
+              The internal wires are \(r\), \(ok_R\), \(ok_W\).
+            </p>
+
+            <div class="pre" aria-label="Composite predicate (unsimplified)">
+Component predicates:
+
+  P_R(S, Cap_R, Code_R; r, ok_R) :⇔ Code_R ∧ (r=S) ∧ (Cap_R ≥ γ_R·S) ∧ (ok_R=⊤)
+  P_W(r, Cap_W, Code_W; ok_W)    :⇔ Code_W ∧ (Cap_W ≥ γ_W·r) ∧ (ok_W=⊤)
+  P_∧(ok_R, ok_W; ok_S)          :⇔ ok_S = (ok_R ∧ ok_W)
+
+Composite predicate produced by the contracts algebra:
+
+  P_shell(S, Cap_R, Code_R, Cap_W, Code_W; ok_S) :⇔
+    ∃ r, ok_R, ok_W :
+      P_R(S, Cap_R, Code_R; r, ok_R)
+      ∧ P_W(r, Cap_W, Code_W; ok_W)
+      ∧ P_∧(ok_R, ok_W; ok_S)
+            </div>
+
+            <div style="height:0.6rem"></div>
+
+            <div class="pre" aria-label="Composite predicate (simplified)">
+Because P_R forces r = S and ok_R = ⊤, and P_W forces ok_W = ⊤,
+we can simplify:
+
+  P_shell(...)  ⇔
+    (Code_R = ⊤) ∧ (Code_W = ⊤)
+    ∧ (Cap_R ≥ γ_R·S)
+    ∧ (Cap_W ≥ γ_W·S)
+    ∧ (ok_S = ⊤)
+
+Equivalently, in "maximum load" form:
+
+  S ≤ min( Cap_R/γ_R , Cap_W/γ_W )   and both code checks are true.
+            </div>
+
+            <p class="small">
+              This is the promised “diagram → predicate” mapping: the wiring determines which internal variables are existentially eliminated.
+            </p>
+          </div>
+
+          <div style="height:0.8rem"></div>
+
+          <div class="card">
+            <h3>3) Composing contracts with behaviour</h3>
+            <p>
+              To demonstrate composition with system behaviour, we use a simple deterministic behaviour model:
+              the roof sets \(r := S\); the “ok” booleans compute from the inequalities and code flags; and the system ok is an AND.
+            </p>
+            <div class="pre" aria-label="Behaviour then contracts (commuting intuition)">
+Behaviour (toy, deterministic):
+
+  r      := S
+  ok_R   := Code_R ∧ (Cap_R ≥ γ_R·S)
+  ok_W   := Code_W ∧ (Cap_W ≥ γ_W·r)
+  ok_S   := ok_R ∧ ok_W
+
+Safety as contracts demands ok_R = ⊤ and ok_W = ⊤ (not merely computed).
+So the composed system satisfies the composed contract exactly when:
+
+  Code_R ∧ Code_W ∧ (Cap_R ≥ γ_R·S) ∧ (Cap_W ≥ γ_W·S)
+
+i.e., when the behaviour outputs land in the allowed relation.
+            </div>
+          </div>
+        </section>
+
+        <!-- PANEL: TRY -->
+        <section class="panel" id="panel-try" data-panel="try" role="tabpanel" aria-labelledby="tab-try">
+          <div class="controls">
+            <div class="controlGroup" aria-label="Scenario inputs">
+              <h3>Inputs (external wires)</h3>
+
+              <div class="field">
+                <label for="S">
+                  <span>S: design load on roof (kN)</span>
+                  <span class="value" id="S_val">80</span>
+                </label>
+                <input id="S" type="range" min="0" max="250" step="1" value="80" />
+              </div>
+
+              <div class="field">
+                <label for="capR">
+                  <span>Cap_R: roof capacity (kN)</span>
+                  <span class="value" id="capR_val">140</span>
+                </label>
+                <input id="capR" type="range" min="0" max="350" step="1" value="140" />
+              </div>
+
+              <div class="field">
+                <label for="capW">
+                  <span>Cap_W: wall capacity (kN)</span>
+                  <span class="value" id="capW_val">220</span>
+                </label>
+                <input id="capW" type="range" min="0" max="600" step="1" value="220" />
+              </div>
+
+              <div class="field">
+                <label for="gammaR">
+                  <span>γ_R: roof safety factor</span>
+                  <span class="value" id="gammaR_val">1.50</span>
+                </label>
+                <input id="gammaR" type="range" min="1.0" max="2.5" step="0.05" value="1.5" />
+              </div>
+
+              <div class="field">
+                <label for="gammaW">
+                  <span>γ_W: wall safety factor</span>
+                  <span class="value" id="gammaW_val">1.50</span>
+                </label>
+                <input id="gammaW" type="range" min="1.0" max="2.5" step="0.05" value="1.5" />
+              </div>
+
+              <div class="toggles">
+                <label class="toggle"><input id="codeR" type="checkbox" checked /> Roof passes code check (Code_R)</label>
+                <label class="toggle"><input id="codeW" type="checkbox" checked /> Wall passes code check (Code_W)</label>
+              </div>
+
+              <div class="btnRow" aria-label="Scenario buttons">
+                <button class="btn" id="btnSafe">Make a safe scenario</button>
+                <button class="btn secondary" id="btnEdge">Near the limit</button>
+                <button class="btn danger" id="btnUnsafe">Make an unsafe scenario</button>
+              </div>
+
+              <p class="small" style="margin-top:0.65rem">
+                As you change inputs, the diagram overlays update: reaction \(r\), booleans \(ok_R, ok_W, ok_S\), and wire colors.
+              </p>
+            </div>
+
+            <div class="controlGroup" aria-label="Results and contract checks">
+              <h3>Outputs + contract checks</h3>
+
+              <div class="kv" aria-label="Computed quantities">
+                <div class="kvRow">
+                  <div class="k">Computed reaction</div>
+                  <div class="v" id="out_r">r = 80 kN</div>
+                </div>
+                <div class="kvRow">
+                  <div class="k">Max roof load</div>
+                  <div class="v" id="max_roof">Cap_R/γ_R = 93.3 kN</div>
+                </div>
+                <div class="kvRow">
+                  <div class="k">Max wall load</div>
+                  <div class="v" id="max_wall">Cap_W/γ_W = 146.7 kN</div>
+                </div>
+                <div class="kvRow">
+                  <div class="k">Overall max load</div>
+                  <div class="v" id="max_sys">min(...) = 93.3 kN</div>
+                </div>
+              </div>
+
+              <div class="statusGrid" aria-label="Contract satisfaction results">
+                <div class="statusRow">
+                  <div class="left">
+                    <div class="name">Roof contract \(C_R\)</div>
+                    <div class="why" id="why_roof">Cap_R ≥ γ_R·S and Code_R</div>
+                  </div>
+                  <div class="badge" id="badge_roof">?</div>
+                </div>
+
+                <div class="statusRow">
+                  <div class="left">
+                    <div class="name">Wall contract \(C_W\)</div>
+                    <div class="why" id="why_wall">Cap_W ≥ γ_W·r and Code_W</div>
+                  </div>
+                  <div class="badge" id="badge_wall">?</div>
+                </div>
+
+                <div class="statusRow">
+                  <div class="left">
+                    <div class="name">Composite contract \(C_{shell}\)</div>
+                    <div class="why" id="why_shell">Existentially eliminate internal wires</div>
+                  </div>
+                  <div class="badge" id="badge_shell">?</div>
+                </div>
+              </div>
+
+              <div style="height:0.7rem"></div>
+
+              <div class="card" style="padding:0.8rem">
+                <h3 style="margin:0 0 0.35rem 0">Composite predicate (live)</h3>
+                <div class="pre" id="livePredicate" aria-label="Live simplified predicate">
+P_shell ⇔ Code_R ∧ Code_W ∧ (Cap_R ≥ γ_R·S) ∧ (Cap_W ≥ γ_W·S) ∧ (ok_S=⊤)
+                </div>
+                <p class="small" style="margin:0.5rem 0 0 0">
+                  This is the “contracts algebra output”: the wiring diagram plus component contracts yields a single checkable condition.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <aside class="panel" aria-label="Details panel">
+        <div class="sideCard" id="detailCard">
+          <h2 id="detailTitle">Box details</h2>
+          <p id="detailIntro">
+            Select a box in the wiring diagram to see its contract and its role in the composite safety story.
+          </p>
+
+          <div class="kv" aria-label="Selected box data">
+            <div class="kvRow">
+              <div class="k">Selected</div>
+              <div class="v" id="selName">none</div>
+            </div>
+            <div class="kvRow">
+              <div class="k">Inputs (types)</div>
+              <div class="v" id="selIn">—</div>
+            </div>
+            <div class="kvRow">
+              <div class="k">Outputs (types)</div>
+              <div class="v" id="selOut">—</div>
+            </div>
+          </div>
+
+          <div style="height:0.7rem"></div>
+
+          <div class="pre" id="selContract" aria-label="Selected contract">
+Click a box to load its contract here.
+          </div>
+
+          <div style="height:0.7rem"></div>
+
+          <p class="small">
+            Tip: go to <strong>Try a Scenario</strong> and adjust inputs — then come back to the diagram and watch wire colors reflect contract satisfaction.
+          </p>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      <div>
+        Implementation note: “contract = subset = predicate” and “composition hides internal wires via ∃” is the key idea.
+        This page is a lightweight, construction-themed instance of that categorical contracts algebra story.
+      </div>
+    </footer>
+
+    <div id="toastHost" class="toastHost" aria-live="polite" aria-atomic="true"></div>
+    <div id="smokeMarker" data-smoke="pending" style="display:none"></div>
+
+    <script>
+      (function(){
+        const root = document.getElementById('app');
+        const toastHost = document.getElementById('toastHost');
+        const smokeMarker = document.getElementById('smokeMarker');
+
+        function toast(message, kind){
+          const k = kind || 'info';
+          const dotColor = (k === 'ok') ? 'rgba(52,211,153,0.95)'
+                        : (k === 'warn') ? 'rgba(251,191,36,0.95)'
+                        : (k === 'error') ? 'rgba(251,113,133,0.95)'
+                        : 'rgba(125,211,252,0.95)';
+          const el = document.createElement('div');
+          el.className = 'toast';
+          el.innerHTML = `
+            <span class="icon" style="background:${dotColor}"></span>
+            <div class="msg">${message}</div>
+            <button class="close" type="button" aria-label="Close toast">×</button>
+          `;
+          const closeBtn = el.querySelector('.close');
+          closeBtn.addEventListener('click', () => el.remove());
+          toastHost.appendChild(el);
+          window.setTimeout(() => { if (el.isConnected) el.remove(); }, 5200);
+        }
+
+        function fallback(reason){
+          console.warn('Fallback:', reason);
+          window.__canvasStatus = 'fallback';
+          toast(`<strong>Static mode:</strong> interactive features failed (${String(reason)}).`, 'warn');
+
+          // Keep the static content; just disable controls if they exist.
+          const inputs = root.querySelectorAll('input, button.tabBtn, button.btn');
+          inputs.forEach(i => {
+            if (i.classList.contains('tabBtn')) return; // tabs can remain
+            try { i.disabled = true; } catch(_) {}
+          });
+        }
+
+        function setTab(tab){
+          const tabs = root.querySelectorAll('[data-tab]');
+          const panels = root.querySelectorAll('[data-panel]');
+          tabs.forEach(btn => {
+            const is = btn.getAttribute('data-tab') === tab;
+            btn.setAttribute('aria-selected', is ? 'true' : 'false');
+          });
+          panels.forEach(p => {
+            const is = p.getAttribute('data-panel') === tab;
+            p.classList.toggle('active', is);
+          });
+        }
+
+        function clamp(n, lo, hi){ return Math.max(lo, Math.min(hi, n)); }
+        function fmtBool(b){ return b ? '⊤' : '⊥'; }
+        function fmtNum(n, d){
+          const digits = (typeof d === 'number') ? d : 1;
+          return Number(n).toFixed(digits);
+        }
+
+        const svg = document.getElementById('diagramSvg');
+        const wires = {
+          S: document.getElementById('wire_S'),
+          capR: document.getElementById('wire_CapR'),
+          codeR: document.getElementById('wire_CodeR'),
+          capW: document.getElementById('wire_CapW'),
+          codeW: document.getElementById('wire_CodeW'),
+          r: document.getElementById('wire_r'),
+          okR: document.getElementById('wire_okR'),
+          okW: document.getElementById('wire_okW'),
+          okS: document.getElementById('wire_okS'),
+        };
+
+        const labels = {
+          r: document.getElementById('label_r'),
+          okR: document.getElementById('label_okR'),
+          okW: document.getElementById('label_okW'),
+          okS: document.getElementById('label_okS'),
+        };
+
+        const detail = {
+          title: document.getElementById('detailTitle'),
+          intro: document.getElementById('detailIntro'),
+          name: document.getElementById('selName'),
+          inT: document.getElementById('selIn'),
+          outT: document.getElementById('selOut'),
+          contract: document.getElementById('selContract'),
+        };
+
+        const ui = {
+          S: document.getElementById('S'),
+          capR: document.getElementById('capR'),
+          capW: document.getElementById('capW'),
+          gammaR: document.getElementById('gammaR'),
+          gammaW: document.getElementById('gammaW'),
+          codeR: document.getElementById('codeR'),
+          codeW: document.getElementById('codeW'),
+          S_val: document.getElementById('S_val'),
+          capR_val: document.getElementById('capR_val'),
+          capW_val: document.getElementById('capW_val'),
+          gammaR_val: document.getElementById('gammaR_val'),
+          gammaW_val: document.getElementById('gammaW_val'),
+
+          out_r: document.getElementById('out_r'),
+          max_roof: document.getElementById('max_roof'),
+          max_wall: document.getElementById('max_wall'),
+          max_sys: document.getElementById('max_sys'),
+
+          badge_roof: document.getElementById('badge_roof'),
+          badge_wall: document.getElementById('badge_wall'),
+          badge_shell: document.getElementById('badge_shell'),
+
+          why_roof: document.getElementById('why_roof'),
+          why_wall: document.getElementById('why_wall'),
+          why_shell: document.getElementById('why_shell'),
+
+          livePredicate: document.getElementById('livePredicate'),
+
+          btnSafe: document.getElementById('btnSafe'),
+          btnEdge: document.getElementById('btnEdge'),
+          btnUnsafe: document.getElementById('btnUnsafe'),
+        };
+
+        const boxInfo = {
+          roof: {
+            name: 'Roof subsystem',
+            inT: 'ℝ≥0×ℝ≥0×Bool  (S, Cap_R, Code_R)',
+            outT:'ℝ≥0×Bool      (r, ok_R)',
+            contract:
+`C_R ⊆ X_R,in × X_R,out
+
+P_R(S, Cap_R, Code_R; r, ok_R) :⇔
+  Code_R = ⊤
+  ∧ r = S
+  ∧ Cap_R ≥ γ_R·S
+  ∧ ok_R = ⊤
+
+Interpretation:
+- “Maximum allowed load” is Cap_R/γ_R.
+- Code_R is a proxy for detailed building-code compliance evidence.`
+          },
+          wall: {
+            name: 'Wall subsystem',
+            inT: 'ℝ≥0×ℝ≥0×Bool  (r, Cap_W, Code_W)',
+            outT:'Bool          (ok_W)',
+            contract:
+`C_W ⊆ X_W,in × X_W,out
+
+P_W(r, Cap_W, Code_W; ok_W) :⇔
+  Code_W = ⊤
+  ∧ Cap_W ≥ γ_W·r
+  ∧ ok_W = ⊤
+
+Interpretation:
+- “Maximum allowed reaction” is Cap_W/γ_W.
+- Code_W is a proxy for code compliance (materials, detailing, inspection).`
+          },
+          and: {
+            name: 'AND combiner',
+            inT: 'Bool×Bool  (ok_R, ok_W)',
+            outT:'Bool      (ok_S)',
+            contract:
+`C_∧ ⊆ X_∧,in × X_∧,out
+
+P_∧(ok_R, ok_W; ok_S) :⇔  ok_S = (ok_R ∧ ok_W)
+
+Interpretation:
+- This box “reports” the overall safety verdict from the sub-verdicts.`
+          }
+        };
+
+        function selectBox(key){
+          const b = boxInfo[key];
+          if (!b) return;
+          detail.title.textContent = 'Selected box';
+          detail.intro.textContent = 'Contract and interface (types) for the selected subsystem:';
+          detail.name.textContent = b.name;
+          detail.inT.textContent = b.inT;
+          detail.outT.textContent = b.outT;
+          detail.contract.textContent = b.contract;
+          toast(`<strong>${b.name}</strong> selected.`, 'ok');
+        }
+
+        function setWireState(pathEl, state){
+          // state: 'ok' | 'bad' | 'neutral' | 'base'
+          if (!pathEl) return;
+          pathEl.classList.remove('ok','bad','neutral');
+          if (state === 'ok') pathEl.classList.add('ok');
+          if (state === 'bad') pathEl.classList.add('bad');
+          if (state === 'neutral') pathEl.classList.add('neutral');
+        }
+
+        function badge(el, ok, detailText){
+          el.classList.remove('ok','bad','warn');
+          if (ok === true){
+            el.classList.add('ok');
+            el.textContent = 'Holds ✓';
+          } else if (ok === false){
+            el.classList.add('bad');
+            el.textContent = 'Violated ✗';
+          } else {
+            el.classList.add('warn');
+            el.textContent = '?';
+          }
+          if (detailText) el.title = detailText;
+        }
+
+        function compute(p){
+          const S = p.S;
+          const r = S; // toy behaviour: all load becomes wall reaction
+          const okR = !!p.codeR && (p.capR >= p.gammaR * S);
+          const okW = !!p.codeW && (p.capW >= p.gammaW * r);
+          const okS = okR && okW;
+          return {S, r, okR, okW, okS};
+        }
+
+        function roofContract(p, out){
+          // Safety contract requires ok_R = true and r=S.
+          return (p.codeR === true)
+              && (Math.abs(out.r - p.S) < 1e-9)
+              && (p.capR >= p.gammaR * p.S)
+              && (out.okR === true);
+        }
+
+        function wallContract(p, out){
+          return (p.codeW === true)
+              && (p.capW >= p.gammaW * out.r)
+              && (out.okW === true);
+        }
+
+        function andContract(out){
+          return (out.okS === (out.okR && out.okW));
+        }
+
+        function compositeContract(p, out){
+          // Simplified composite predicate from formalism tab:
+          return (p.codeR === true)
+              && (p.codeW === true)
+              && (p.capR >= p.gammaR * p.S)
+              && (p.capW >= p.gammaW * p.S)
+              && (out.okS === true); // treat ok_S=true as the system safety requirement
+        }
+
+        function update(){
+          const p = {
+            S: parseFloat(ui.S.value),
+            capR: parseFloat(ui.capR.value),
+            capW: parseFloat(ui.capW.value),
+            gammaR: parseFloat(ui.gammaR.value),
+            gammaW: parseFloat(ui.gammaW.value),
+            codeR: ui.codeR.checked,
+            codeW: ui.codeW.checked,
+          };
+
+          ui.S_val.textContent = String(p.S);
+          ui.capR_val.textContent = String(p.capR);
+          ui.capW_val.textContent = String(p.capW);
+          ui.gammaR_val.textContent = fmtNum(p.gammaR, 2);
+          ui.gammaW_val.textContent = fmtNum(p.gammaW, 2);
+
+          const out = compute(p);
+
+          // Overlays on diagram
+          labels.r.textContent = `r=${fmtNum(out.r,0)}`;
+          labels.okR.textContent = `ok_R=${fmtBool(out.okR)}`;
+          labels.okW.textContent = `ok_W=${fmtBool(out.okW)}`;
+          labels.okS.textContent = `ok_S=${fmtBool(out.okS)}`;
+
+          // Max loads
+          const maxRoof = (p.gammaR > 0) ? (p.capR / p.gammaR) : Infinity;
+          const maxWall = (p.gammaW > 0) ? (p.capW / p.gammaW) : Infinity;
+          const maxSys  = Math.min(maxRoof, maxWall);
+
+          ui.out_r.textContent = `r = ${fmtNum(out.r,0)} kN`;
+          ui.max_roof.textContent = `Cap_R/γ_R = ${fmtNum(maxRoof,1)} kN`;
+          ui.max_wall.textContent = `Cap_W/γ_W = ${fmtNum(maxWall,1)} kN`;
+          ui.max_sys.textContent = `min(...) = ${fmtNum(maxSys,1)} kN`;
+
+          // Contract satisfaction
+          const holdsRoof = roofContract(p, out);
+          const holdsWall = wallContract(p, out);
+          const holdsAnd  = andContract(out);
+          const holdsShell = compositeContract(p, out);
+
+          badge(ui.badge_roof, holdsRoof, 'Roof safety contract C_R');
+          badge(ui.badge_wall, holdsWall, 'Wall safety contract C_W');
+          badge(ui.badge_shell, holdsShell, 'Composite shell contract C_shell');
+
+          // Explanations
+          const roofNeed = p.gammaR * p.S;
+          ui.why_roof.textContent = `Need Cap_R ≥ γ_R·S = ${fmtNum(roofNeed,1)} kN and Code_R=⊤`;
+          const wallNeed = p.gammaW * out.r;
+          ui.why_wall.textContent = `Need Cap_W ≥ γ_W·r = ${fmtNum(wallNeed,1)} kN and Code_W=⊤`;
+
+          ui.why_shell.textContent = `Equivalent to Code_R ∧ Code_W ∧ Cap_R≥γ_R·S ∧ Cap_W≥γ_W·S ∧ ok_S=⊤`;
+
+          // Live predicate display (numerical instantiation)
+          ui.livePredicate.textContent =
+`P_shell ⇔ Code_R ∧ Code_W ∧ (Cap_R ≥ γ_R·S) ∧ (Cap_W ≥ γ_W·S) ∧ (ok_S=⊤)
+
+With your values:
+  Code_R = ${fmtBool(p.codeR)}
+  Code_W = ${fmtBool(p.codeW)}
+  Cap_R ≥ γ_R·S  is  ${p.capR} ≥ ${fmtNum(roofNeed,1)}   (${(p.capR >= roofNeed) ? 'true' : 'false'})
+  Cap_W ≥ γ_W·S  is  ${p.capW} ≥ ${fmtNum(p.gammaW * p.S,1)}   (${(p.capW >= p.gammaW * p.S) ? 'true' : 'false'})
+  ok_S (behaviour) = ${fmtBool(out.okS)}
+=> Contract holds: ${holdsShell ? 'YES' : 'NO'}`;
+
+          // Wire coloring logic:
+          // - Data input wires are neutral (they are "given"); violations are shown on internal logical wires.
+          setWireState(wires.S, 'neutral');
+          setWireState(wires.capR, 'neutral');
+          setWireState(wires.codeR, 'neutral');
+          setWireState(wires.capW, 'neutral');
+          setWireState(wires.codeW, 'neutral');
+
+          // Reaction wire must be acceptable for the wall contract; if wall fails, show red.
+          setWireState(wires.r, holdsWall ? 'ok' : 'bad');
+
+          // ok wires reflect boolean satisfaction
+          setWireState(wires.okR, holdsRoof ? 'ok' : 'bad');
+          setWireState(wires.okW, holdsWall ? 'ok' : 'bad');
+
+          // output ok_S wire reflects composite
+          setWireState(wires.okS, holdsShell ? 'ok' : 'bad');
+
+          // Adjust arrow color fill to match main internal wire state (rough heuristic)
+          // (We keep marker color stable to avoid complex defs.)
+          return {p, out, holdsRoof, holdsWall, holdsShell, holdsAnd};
+        }
+
+        function init(){
+          // mark JS mode
+          root.classList.add('js');
+
+          // Tabs
+          root.querySelectorAll('[data-tab]').forEach(btn => {
+            btn.addEventListener('click', () => setTab(btn.getAttribute('data-tab')));
+          });
+
+          // Box click handlers
+          ['roof','wall','and'].forEach(key => {
+            const el = document.querySelector(`[data-box="${key}"]`);
+            if (!el) return;
+            const act = () => selectBox(key);
+            el.addEventListener('click', act);
+            el.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); }
+            });
+          });
+
+          // Inputs update
+          ['S','capR','capW','gammaR','gammaW','codeR','codeW'].forEach(id => {
+            const el = ui[id];
+            if (!el) return;
+            el.addEventListener('input', () => update());
+            el.addEventListener('change', () => update());
+          });
+
+          // Scenario buttons
+          ui.btnSafe.addEventListener('click', () => {
+            // Ensure both capacities comfortably above demand and codes true.
+            ui.codeR.checked = true; ui.codeW.checked = true;
+            ui.gammaR.value = 1.5; ui.gammaW.value = 1.5;
+            ui.S.value = 80;
+            ui.capR.value = 160;
+            ui.capW.value = 250;
+            update();
+            toast('Loaded a safe scenario.', 'ok');
+          });
+
+          ui.btnEdge.addEventListener('click', () => {
+            ui.codeR.checked = true; ui.codeW.checked = true;
+            ui.gammaR.value = 1.6; ui.gammaW.value = 1.6;
+            ui.S.value = 100;
+            // near limit: capacities just barely meet
+            ui.capR.value = Math.round(1.6 * 100);
+            ui.capW.value = Math.round(1.6 * 100);
+            update();
+            toast('Loaded a near-the-limit scenario.', 'warn');
+          });
+
+          ui.btnUnsafe.addEventListener('click', () => {
+            ui.codeR.checked = true; ui.codeW.checked = true;
+            ui.gammaR.value = 1.8; ui.gammaW.value = 1.8;
+            ui.S.value = 140;
+            // make roof under-capacity
+            ui.capR.value = 180;
+            ui.capW.value = 500;
+            update();
+            toast('Loaded an unsafe scenario (roof fails).', 'error');
+          });
+
+          // initial selection and update
+          selectBox('roof');
+          update();
+
+          // smoke markers per guidelines
+          root.dataset.smoke = 'ok';
+          smokeMarker.dataset.smoke = 'ok';
+          window.__canvasStatus = 'ready';
+
+          toast('Interactive mode ready. Use “Try a Scenario” to test contract composition.', 'ok');
+        }
+
+        // Boot with robustness wrapper
+        try{
+          init();
+        }catch(e){
+          console.error(e);
+          window.__canvasStatus = 'error';
+          toast(`<strong>Error:</strong> ${String(e && e.message ? e.message : e)}`, 'error');
+          fallback(e && e.message ? e.message : e);
+        }
+
+        // Visibility watchdog per guidelines
+        (function watchdog(){
+          const timeout = parseInt(root.getAttribute('data-timeout') || '3000', 10);
+          const start = Date.now();
+          const tick = () => {
+            try{
+              const ok = root.querySelector('[data-smoke="ok"]');
+              if (ok){
+                return; // ready
+              }
+              if (Date.now() - start > timeout){
+                fallback('timeout');
+                return;
+              }
+              window.setTimeout(tick, 500);
+            }catch(e){
+              console.error(e);
+              fallback(e && e.message ? e.message : e);
+            }
+          };
+          window.setTimeout(tick, 500);
+        })();
+      })();
+    </script>
+  </div>
+</body>
+</html>
