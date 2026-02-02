@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wiring Diagram – Build a Wall & Roof (SMC / Operad View)</title>
+<link rel="stylesheet" href="../../common.css" />
+<style>
+  :root{
+    --bg:#f4f4f6;
+    --panel:#ffffff;
+    --ink:#111;
+    --muted:#5a5f69;
+    --accent:#0b6ef6;
+    --accent2:#7a3df0;
+    --wire:#2d2f33;
+    --wire-hi:#d33;
+    --box:#eef0ff;
+    --box-stroke:#6a6f7a;
+    --port:#ffffff;
+    --port-stroke:#0b6ef6;
+    --ok:#0a8f3c;
+    --warn:#b55a00;
+    --bad:#b00020;
+    --radius:12px;
+    --shadow:0 2px 10px rgba(0,0,0,.06);
+    --gap:1.1rem;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+  header{padding:1.1rem 1.2rem;background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff;}
+  header h1{margin:.1rem 0 .2rem;font-size:1.2rem;letter-spacing:.2px;}
+  header p{margin:0;opacity:.95;font-size:.95rem;}
+
+  main{padding:var(--gap);display:grid;grid-template-columns: 1.25fr .95fr;gap:var(--gap);align-items:start;}
+  @media (max-width: 980px){main{grid-template-columns:1fr;}}
+
+  .panel{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);padding:var(--gap);}
+  .panel h2{margin:.1rem 0 .6rem;font-size:1.05rem;}
+  .panel h3{margin:1rem 0 .4rem;font-size:.95rem;}
+  .muted{color:var(--muted);}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin:.3rem 0 .8rem;}
+  .btn{
+    appearance:none;border:1px solid rgba(0,0,0,.12);background:#fff;color:var(--ink);
+    padding:.45rem .65rem;border-radius:999px;cursor:pointer;font-size:.88rem;
+  }
+  .btn.primary{border-color:rgba(11,110,246,.35);}
+  .btn.active{background:rgba(11,110,246,.08);border-color:rgba(11,110,246,.45);}
+  .btn:focus{outline:3px solid rgba(11,110,246,.25);outline-offset:2px;}
+
+  svg{width:100%;height:auto;min-height:360px;border-radius:10px;border:1px solid rgba(0,0,0,.12);background:#fff;}
+  code, pre{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+  pre{margin:.6rem 0 0;background:#fafafa;border:1px solid rgba(0,0,0,.08);padding:.7rem;border-radius:10px;overflow:auto;}
+
+  .kvs{display:grid;grid-template-columns: 140px 1fr;gap:.35rem .8rem;align-items:start;}
+  .k{color:var(--muted);font-size:.88rem;}
+  .v{font-size:.92rem;}
+
+  .pill{display:inline-flex;align-items:center;gap:.45rem;padding:.16rem .5rem;border-radius:999px;border:1px solid rgba(0,0,0,.12);font-size:.82rem;background:#fff;}
+  .dot{width:.55rem;height:.55rem;border-radius:50%;display:inline-block;background:var(--muted);}
+
+  .toast{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:.55rem .9rem;border-radius:10px;font-size:.9rem;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99;max-width:92vw;}
+  .toast[data-show="true"]{opacity:1;}
+
+  .list{margin:.2rem 0 0;padding-left:1.1rem;}
+  .list li{margin:.25rem 0;}
+
+  .tabs{display:flex;flex-wrap:wrap;gap:.5rem;margin:.4rem 0 .8rem;}
+  .tab{padding:.45rem .65rem;border-radius:999px;border:1px solid rgba(0,0,0,.12);cursor:pointer;background:#fff;font-size:.88rem;}
+  .tab.active{background:rgba(11,110,246,.08);border-color:rgba(11,110,246,.45);}
+  .tabpanel{display:none;}
+  .tabpanel.active{display:block;}
+
+  .callout{border-left:4px solid rgba(11,110,246,.5);background:rgba(11,110,246,.06);padding:.7rem .8rem;border-radius:10px;}
+  .small{font-size:.9rem;}
+
+  .badge{display:inline-block;padding:.2rem .5rem;border-radius:999px;font-size:.8rem;border:1px solid rgba(0,0,0,.12);background:#fff;}
+  .badge.ok{border-color:rgba(10,143,60,.35);background:rgba(10,143,60,.08);}
+  .badge.warn{border-color:rgba(181,90,0,.35);background:rgba(181,90,0,.08);}
+  .badge.bad{border-color:rgba(176,0,32,.35);background:rgba(176,0,32,.08);}
+
+  .diag{margin-top:.7rem;border:1px solid rgba(0,0,0,.10);border-radius:10px;padding:.65rem .75rem;background:#fff;}
+  .diag h4{margin:.05rem 0 .35rem;font-size:.92rem;}
+  .diag ul{margin:.25rem 0 0;padding-left:1.1rem;}
+  .diag li{margin:.2rem 0;}
+
+  .back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:.4rem;
+    padding:.45rem .7rem;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.45);
+    color:#fff;
+    text-decoration:none;
+    font-size:.85rem;
+    margin-bottom:.6rem;
+  }
+</style>
+</head>
+<body>
+<header>
+  <a class="back-link" href="../../index.html">Back to app index</a>
+  <h1>Construction as a Wiring Diagram (left→right), with Guarded Morphisms</h1>
+  <p>Mortar → Set‑out → Wall → Roof, typed resources on wires, contracts as preconditions/acceptance tests.</p>
+</header>
+
+<main>
+  <section class="panel" aria-label="Diagram panel">
+    <div class="toolbar" role="toolbar" aria-label="Diagram controls">
+      <button class="btn primary active" id="btnLanes" type="button">Resource lanes</button>
+      <button class="btn primary active" id="btnBoundary" type="button">Outer boundary</button>
+      <button class="btn" id="btnPorts" type="button">Port labels</button>
+      <button class="btn" id="btnReset" type="button">Reset highlight</button>
+    </div>
+
+    <div id="viz"><noscript>Enable JavaScript to see the interactive diagram.</noscript></div>
+
+    <div class="callout small" style="margin-top:.9rem;">
+      Hover a wire to highlight one <em>object</em> (type) flowing through the composition; click a type in the sidebar to pin the highlight.
+    </div>
+  </section>
+
+  <aside class="panel" aria-label="Explanation panel">
+    <h2>Semantics &amp; Checks</h2>
+
+    <div class="tabs" role="tablist" aria-label="Panels">
+      <button class="tab active" data-tab="inspect" type="button">Inspect</button>
+      <button class="tab" data-tab="objects" type="button">Objects/Boxes</button>
+      <button class="tab" data-tab="contracts" type="button">Conditions</button>
+      <button class="tab" data-tab="formal" type="button">Formalism</button>
+    </div>
+
+    <div class="tabpanel active" id="tab-inspect" role="tabpanel">
+      <div class="kvs" id="inspectKVS" aria-live="polite">
+        <div class="k">Selection</div>
+        <div class="v"><span class="badge warn">None</span> — hover a wire or click a type.</div>
+
+        <div class="k">Meaning</div>
+        <div class="v muted">You’re seeing one typed wire (object) traced across the composite.</div>
+
+        <div class="k">Validity</div>
+        <div class="v"><span class="badge ok">Acyclic</span> by construction (no feedback loops; progress is left→right).</div>
+      </div>
+
+      <div class="diag" id="diagBox" aria-live="polite">
+        <h4>Diagnostics</h4>
+        <div id="diagSummary" class="small muted">Running…</div>
+        <ul id="diagList" class="small"></ul>
+      </div>
+
+      <h3 style="margin-top:1rem;">Quick intuition</h3>
+      <p class="small muted">Treat each box as a morphism in a strict symmetric monoidal category of construction resources; “labour” and “design” are explicit wires so you can see where reuse/hand‑off happens.</p>
+    </div>
+
+    <div class="tabpanel" id="tab-objects" role="tabpanel">
+      <h3>Wire types (objects)</h3>
+      <p class="small muted">Click a type to highlight its path; click again to unpin.</p>
+      <div id="typePills" style="display:flex;flex-wrap:wrap;gap:.45rem;"></div>
+
+      <h3 style="margin-top:1rem;">Processes (boxes / morphisms)</h3>
+      <ol class="list small" id="procList"></ol>
+    </div>
+
+    <div class="tabpanel" id="tab-contracts" role="tabpanel">
+      <h3>“Under certain conditions…”</h3>
+      <p class="small muted">A pragmatic move is to model each process as a <em>guarded morphism</em> (precondition + postcondition/acceptance). Composition then propagates obligations: downstream boxes inherit the strongest unmet upstream constraints.</p>
+      <div id="contractList" class="small"></div>
+      <p class="small muted" style="margin-top:.7rem;">This is the project‑manager translation of the categorical “contract algebra” trick: boxes are still morphisms, but you attach a predicate to each interface and compose predicates along the wiring diagram.</p>
+    </div>
+
+    <div class="tabpanel" id="tab-formal" role="tabpanel">
+      <h3>Signature</h3>
+      <p class="small muted">Let <code>τ</code> be a set of types (wire labels) and <code>W_τ</code> the operad of <em>acyclic</em> wiring diagrams; any strict SMC on objects chosen for <code>τ</code> is a <code>W_τ</code>-algebra (normal‑form view).</p>
+
+      <h3>Objects</h3>
+      <pre id="formalObjs"></pre>
+
+      <h3>Boxes</h3>
+      <pre id="formalBoxes"></pre>
+
+      <h3>Composite morphism</h3>
+      <pre id="formalComposite"></pre>
+
+      <h3>Laws used implicitly</h3>
+      <ul class="list small">
+        <li><strong>Strictness</strong>: no bracketing in ⊗; units suppressed.</li>
+        <li><strong>Interchange</strong>: (f∘g)⊗(h∘k) = (f⊗h)∘(g⊗k).</li>
+        <li><strong>Progress / acyclicity</strong>: the induced “feeds‑into” relation on boxes is a partial order.</li>
+      </ul>
+
+      <p class="small muted">Reference anchor: Patterson–Spivak–Vagner, <em>Wiring diagrams as normal forms for computing in symmetric monoidal categories</em> (ACT 2020 proceedings, EPTCS 333, 2021).</p>
+    </div>
+  </aside>
+</main>
+
+<div id="toast" class="toast" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  // Why you still got “Invalid or unexpected token”:
+  // Many HTML previewers embed your entire HTML inside a JavaScript template literal
+  // before calling iframeDoc.write(html). If your page contains backticks (template
+  // literals) anywhere in <script>, it breaks the previewer’s wrapper JS, and you
+  // see a SyntaxError mentioning Document.write.
+  //
+  // Therefore: this file deliberately contains *no* JavaScript template literals.
+
+  // ---------- tiny helpers ----------
+  function $(sel, root){ return (root || document).querySelector(sel); }
+  function $$(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+
+  function toast(msg){
+    var t = $('#toast');
+    if(!t) return;
+    t.textContent = msg;
+    t.setAttribute('data-show','true');
+    setTimeout(function(){ t.setAttribute('data-show','false'); }, 2200);
+  }
+
+  // ---------- model (typed resources + processes) ----------
+  var TYPES = [
+    {id:'S',   desc:'Sand (material)', lane:1},
+    {id:'C',   desc:'Cement (material)', lane:2},
+    {id:'W',   desc:'Water (material)', lane:3},
+    {id:'M',   desc:'Mortar (intermediate)', lane:4},
+    {id:'P',   desc:'Pegs & line (tooling)', lane:6},
+    {id:'D',   desc:'Design / drawing (info)', lane:7},
+    {id:'L',   desc:'Set‑out line (control datum)', lane:8},
+    {id:'B',   desc:'Bricks / blocks (material)', lane:10},
+    {id:'Lin', desc:'Lintels (material)', lane:11},
+    {id:'Wall',desc:'Completed wall (structure)', lane:13},
+    {id:'Tr',  desc:'Roof trusses (material)', lane:14},
+    {id:'Roof',desc:'Installed roof (structure)', lane:15},
+    {id:'BL',  desc:'Bricklayer crew (labour token)', lane:17}
+  ];
+
+  var PROCS = [
+    {
+      id:'mix', label:'Mix',
+      inputs:['S','C','W','BL'], outputs:['M','BL'],
+      guard:[
+        'Materials in spec (sand grading, cement age; clean water).',
+        'Mix ratio and workability within method statement.',
+        'Weather/temperature within limits for curing plan.'
+      ],
+      accept:[
+        'Mortar consistency test / slump (site standard).',
+        'Batch recorded (traceability for later defects).'
+      ]
+    },
+    {
+      id:'set', label:'SetOut',
+      inputs:['P','D','BL'], outputs:['L','D','BL'],
+      guard:[
+        'Drawing revision approved; datum established.',
+        'Tolerances agreed (line, plumb, opening sizes).'
+      ],
+      accept:[
+        'Set‑out signed off (QA hold point).'
+      ]
+    },
+    {
+      id:'wall', label:'Wall',
+      inputs:['B','Lin','M','L','BL'], outputs:['Wall','BL'],
+      guard:[
+        'Foundation/courses ready; damp proof course placed as required.',
+        'Mortar open time not exceeded; lintels to spec & correct bearing.',
+        'Lift height, sequencing, and temporary supports per method.'
+      ],
+      accept:[
+        'Plumb/level checks; openings match schedule; lintel inspection.',
+        'Record cube/curing evidence if required by QA plan.'
+      ]
+    },
+    {
+      id:'roof', label:'Roof',
+      inputs:['Wall','Tr','BL'], outputs:['Roof','BL'],
+      guard:[
+        'Wall strength/cure sufficient for loading; bearings verified.',
+        'Wind conditions within safe lifting/working limits.',
+        'Temporary bracing plan in place.'
+      ],
+      accept:[
+        'Trusses fixed & braced per manufacturer; tie‑downs verified.',
+        'Roof line and restraint straps inspected.'
+      ]
+    }
+  ];
+
+  var OUTER_IN  = ['S','C','W','P','D','B','Lin','Tr','BL'];
+  var OUTER_OUT = ['Roof','D','BL'];
+
+  // ---------- geometry ----------
+  var geom = {
+    W: 980, H: 380,
+    leftX: 58, rightX: 922,
+    laneTop: 34,
+    laneStep: 18,
+    boxW: 150, boxH: 62,
+    boxY: 150,
+    boxesX: { mix:190, set:400, wall:610, roof:820 }
+  };
+
+  function laneY(lane){ return geom.laneTop + lane * geom.laneStep; }
+  function typeById(id){
+    for(var i=0;i<TYPES.length;i++){ if(TYPES[i].id===id) return TYPES[i]; }
+    return null;
+  }
+
+  // ports keyed by node:side:type
+  var ports = new Map();
+
+  var WIRES = (function(){
+    var w=[];
+    function pushMany(arr){ for(var i=0;i<arr.length;i++) w.push(arr[i]); }
+
+    // External materials/tools/info to first consumers
+    pushMany(['S','C','W','BL'].map(function(t){
+      return {type:t, from:{node:'IN', side:'R', type:t}, to:{node:'mix', side:'L', type:t}};
+    }));
+    pushMany(['P','D'].map(function(t){
+      return {type:t, from:{node:'IN', side:'R', type:t}, to:{node:'set', side:'L', type:t}};
+    }));
+    pushMany(['B','Lin'].map(function(t){
+      return {type:t, from:{node:'IN', side:'R', type:t}, to:{node:'wall', side:'L', type:t}};
+    }));
+    w.push({type:'Tr', from:{node:'IN', side:'R', type:'Tr'}, to:{node:'roof', side:'L', type:'Tr'}});
+
+    // Mix outputs
+    w.push({type:'M',  from:{node:'mix', side:'R', type:'M'},  to:{node:'wall', side:'L', type:'M'}});
+    w.push({type:'BL', from:{node:'mix', side:'R', type:'BL'}, to:{node:'set',  side:'L', type:'BL'}});
+
+    // SetOut outputs
+    w.push({type:'L',  from:{node:'set', side:'R', type:'L'},  to:{node:'wall', side:'L', type:'L'}});
+    w.push({type:'BL', from:{node:'set', side:'R', type:'BL'}, to:{node:'wall', side:'L', type:'BL'}});
+    w.push({type:'D',  from:{node:'set', side:'R', type:'D'},  to:{node:'OUT', side:'L', type:'D'}});
+
+    // Wall outputs
+    w.push({type:'Wall', from:{node:'wall', side:'R', type:'Wall'}, to:{node:'roof', side:'L', type:'Wall'}});
+    w.push({type:'BL',   from:{node:'wall', side:'R', type:'BL'},   to:{node:'roof', side:'L', type:'BL'}});
+
+    // Roof outputs
+    w.push({type:'Roof', from:{node:'roof', side:'R', type:'Roof'}, to:{node:'OUT', side:'L', type:'Roof'}});
+    w.push({type:'BL',   from:{node:'roof', side:'R', type:'BL'},   to:{node:'OUT', side:'L', type:'BL'}});
+
+    return w;
+  })();
+
+  // ---------- SVG helpers ----------
+  var svgNS = 'http://www.w3.org/2000/svg';
+  function el(name, attrs){
+    var e = document.createElementNS(svgNS, name);
+    if(attrs){
+      for(var k in attrs){ if(Object.prototype.hasOwnProperty.call(attrs,k)) e.setAttribute(k, String(attrs[k])); }
+    }
+    return e;
+  }
+
+  function portKey(p){ return p.node + ':' + p.side + ':' + p.type; }
+
+  function orthPath(x1,y1,x2,y2){
+    var midX = (x1 + x2) / 2;
+    return 'M ' + x1 + ' ' + y1 + ' L ' + midX + ' ' + y1 + ' L ' + midX + ' ' + y2 + ' L ' + x2 + ' ' + y2;
+  }
+
+  function arrowHead(x,y,dir){
+    var s = 7;
+    if(dir===1){
+      return 'M ' + x + ' ' + y + ' L ' + (x+s) + ' ' + (y - s/1.25) + ' L ' + (x+s) + ' ' + (y + s/1.25) + ' Z';
+    }
+    return 'M ' + x + ' ' + y + ' L ' + (x-s) + ' ' + (y - s/1.25) + ' L ' + (x-s) + ' ' + (y + s/1.25) + ' Z';
+  }
+
+  function setGroupVisible(svg,id,visible){
+    var g = svg.querySelector('#' + id);
+    if(g) g.style.display = visible ? '' : 'none';
+  }
+
+  function placePort(gPorts, gLabels, key, x, y){
+    var k = portKey(key);
+    ports.set(k,{x:x,y:y});
+
+    var c = el('circle', {
+      cx:x, cy:y, r:6,
+      fill:'var(--port)',
+      stroke:'var(--port-stroke)',
+      'stroke-width':1.4,
+      'data-port':k,
+      'data-type':key.type
+    });
+
+    c.addEventListener('mouseover', function(){ highlightType(key.type, false); });
+    c.addEventListener('mouseout', function(){ if(!state.pinnedType) clearHighlight(); });
+    c.addEventListener('click', function(ev){ ev.preventDefault(); togglePin(key.type); });
+    gPorts.appendChild(c);
+
+    var tl = el('text', {
+      x:x, y:y-10,
+      'text-anchor':'middle',
+      'font-size':10,
+      fill:'rgba(0,0,0,.65)',
+      'data-portlabel':k,
+      'data-type':key.type
+    });
+    tl.textContent = key.type;
+    gLabels.appendChild(tl);
+  }
+
+  function buildSVG(){
+    var svg = el('svg', {viewBox:'0 0 ' + geom.W + ' ' + geom.H, preserveAspectRatio:'xMidYMin meet'});
+    svg.setAttribute('data-smoke','ok');
+
+    var gLanes  = el('g', {id:'gLanes'});
+    var gWires  = el('g', {id:'gWires'});
+    var gBoxes  = el('g', {id:'gBoxes'});
+    var gPorts  = el('g', {id:'gPorts'});
+    var gLabels = el('g', {id:'gPortLabels'});
+
+    // resource lanes
+    for(var i=0;i<TYPES.length;i++){
+      var t = TYPES[i];
+      var y = laneY(t.lane);
+      gLanes.appendChild(el('line',{x1:geom.leftX, y1:y, x2:geom.rightX, y2:y, stroke:'rgba(0,0,0,.06)', 'stroke-width':1}));
+      var lab = el('text',{x:geom.leftX-10,y:y+3,'text-anchor':'end','font-size':10, fill:'rgba(0,0,0,.45)'});
+      lab.textContent = t.id;
+      gLanes.appendChild(lab);
+    }
+
+    // boundary stubs
+    var boundary = el('g',{id:'gBoundary'});
+    boundary.appendChild(el('rect', {x:18, y:20, width:60, height: geom.H-40, rx:12, fill:'rgba(11,110,246,.03)', stroke:'rgba(11,110,246,.20)'}));
+    boundary.appendChild(el('rect', {x:geom.rightX, y:20, width:60, height: geom.H-40, rx:12, fill:'rgba(122,61,240,.03)', stroke:'rgba(122,61,240,.20)'}));
+    var inT  = el('text',{x:48,y:44,'text-anchor':'middle','font-size':11,fill:'rgba(0,0,0,.65)','font-weight':'600'});
+    var outT = el('text',{x:geom.rightX+30,y:44,'text-anchor':'middle','font-size':11,fill:'rgba(0,0,0,.65)','font-weight':'600'});
+    inT.textContent='IN'; outT.textContent='OUT';
+    boundary.appendChild(inT); boundary.appendChild(outT);
+
+    // boxes + their ports
+    for(var pI=0;pI<PROCS.length;pI++){
+      var p = PROCS[pI];
+      var x = geom.boxesX[p.id];
+      var yb = geom.boxY;
+      var grp = el('g', {'data-proc':p.id});
+      grp.appendChild(el('rect',{x:x,y:yb,width:geom.boxW,height:geom.boxH,rx:12,fill:'var(--box)',stroke:'var(--box-stroke)','stroke-width':1.2}));
+      var tt = el('text',{x:x+geom.boxW/2,y:yb+geom.boxH/2+4,'text-anchor':'middle','font-size':14,'font-weight':'700',fill:'rgba(0,0,0,.85)'});
+      tt.textContent = p.label;
+      grp.appendChild(tt);
+      gBoxes.appendChild(grp);
+
+      for(var ii=0;ii<p.inputs.length;ii++){
+        var tp = p.inputs[ii];
+        var ty = typeById(tp);
+        placePort(gPorts,gLabels,{node:p.id,side:'L',type:tp}, x-12, laneY(ty.lane));
+      }
+      for(var oo=0;oo<p.outputs.length;oo++){
+        var tp2 = p.outputs[oo];
+        var ty2 = typeById(tp2);
+        placePort(gPorts,gLabels,{node:p.id,side:'R',type:tp2}, x+geom.boxW+12, laneY(ty2.lane));
+      }
+    }
+
+    // boundary ports
+    for(var bi=0;bi<OUTER_IN.length;bi++){
+      var tpIn = OUTER_IN[bi];
+      var tyIn = typeById(tpIn);
+      placePort(gPorts,gLabels,{node:'IN',side:'R',type:tpIn}, geom.leftX+10, laneY(tyIn.lane));
+    }
+    for(var bo=0;bo<OUTER_OUT.length;bo++){
+      var tpOut = OUTER_OUT[bo];
+      var tyOut = typeById(tpOut);
+      placePort(gPorts,gLabels,{node:'OUT',side:'L',type:tpOut}, geom.rightX, laneY(tyOut.lane));
+    }
+
+    // wires
+    for(var wi=0;wi<WIRES.length;wi++){
+      var w = WIRES[wi];
+      var A = portKey(w.from);
+      var B = portKey(w.to);
+      var a = ports.get(A);
+      var b = ports.get(B);
+      if(!a || !b) continue;
+
+      var path = orthPath(a.x,a.y,b.x,b.y);
+      var pa = el('path', {
+        d:path,
+        fill:'none',
+        stroke:'var(--wire)',
+        'stroke-width':2.1,
+        'stroke-linecap':'round',
+        'stroke-linejoin':'round',
+        'data-type': w.type,
+        'data-wire': String(wi)
+      });
+      pa.addEventListener('mouseover', (function(tid){ return function(){ highlightType(tid,false); }; })(w.type));
+      pa.addEventListener('mouseout', function(){ if(!state.pinnedType) clearHighlight(); });
+      pa.addEventListener('click', (function(tid){ return function(ev){ ev.preventDefault(); togglePin(tid); }; })(w.type));
+
+      var ah = el('path', {
+        d: arrowHead(b.x,b.y, w.to.side==='L' ? 1 : -1),
+        fill:'var(--wire)',
+        opacity:.9,
+        'data-type': w.type,
+        'data-wire': String(wi)
+      });
+      ah.addEventListener('mouseover', (function(tid){ return function(){ highlightType(tid,false); }; })(w.type));
+      ah.addEventListener('mouseout', function(){ if(!state.pinnedType) clearHighlight(); });
+      ah.addEventListener('click', (function(tid){ return function(ev){ ev.preventDefault(); togglePin(tid); }; })(w.type));
+
+      gWires.appendChild(pa);
+      gWires.appendChild(ah);
+    }
+
+    // assembly order
+    svg.appendChild(gLanes);
+    svg.appendChild(boundary);
+    svg.appendChild(gWires);
+    svg.appendChild(gBoxes);
+    svg.appendChild(gPorts);
+    svg.appendChild(gLabels);
+
+    setGroupVisible(svg,'gPortLabels', false);
+    return svg;
+  }
+
+  // ---------- interaction ----------
+  var state = {
+    pinnedType: null,
+    showLanes: true,
+    showBoundary: true,
+    showPortLabels: false
+  };
+
+  function clearHighlight(){
+    var svg = $('#viz svg');
+    if(!svg) return;
+    var all = $$('[data-type]', svg);
+    for(var i=0;i<all.length;i++){
+      var e = all[i];
+      e.style.opacity='';
+      e.style.stroke='';
+      e.style.strokeWidth='';
+      e.style.filter='';
+      e.style.fill='';
+    }
+    updateInspect(null, false);
+  }
+
+  function highlightType(typeId, pinned){
+    var svg = $('#viz svg');
+    if(!svg) return;
+
+    var all = $$('[data-type]', svg);
+    for(var i=0;i<all.length;i++) all[i].style.opacity = '0.12';
+
+    for(var j=0;j<all.length;j++){
+      if(all[j].getAttribute('data-type') === typeId) all[j].style.opacity = '1';
+    }
+
+    var paths = $$('path[data-type]', svg);
+    for(var k=0;k<paths.length;k++){
+      if(paths[k].getAttribute('data-type') === typeId){
+        paths[k].style.stroke = 'var(--wire-hi)';
+        paths[k].style.strokeWidth = '3.2';
+      }
+    }
+
+    var circles = $$('circle[data-type]', svg);
+    for(var c=0;c<circles.length;c++){
+      if(circles[c].getAttribute('data-type') === typeId){
+        circles[c].style.filter = 'drop-shadow(0 1px 3px rgba(0,0,0,.25))';
+      }
+    }
+
+    updateInspect(typeId, pinned);
+  }
+
+  function togglePin(typeId){
+    if(state.pinnedType === typeId){
+      state.pinnedType = null;
+      clearHighlight();
+      toast('Unpinned');
+      return;
+    }
+    state.pinnedType = typeId;
+    highlightType(typeId, true);
+    toast('Pinned ' + typeId);
+  }
+
+  function escapeHTML(s){
+    return String(s)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+  }
+
+  function updateInspect(typeId, pinned){
+    var kvs = $('#inspectKVS');
+    if(!kvs) return;
+
+    if(!typeId){
+      kvs.innerHTML = [
+        '<div class="k">Selection</div><div class="v"><span class="badge warn">None</span> — hover a wire or click a type.</div>',
+        '<div class="k">Meaning</div><div class="v muted">You\u2019re seeing one typed wire (object) traced across the composite.</div>',
+        '<div class="k">Validity</div><div class="v"><span class="badge ok">Acyclic</span> by construction (no feedback loops; progress is left\u2192right).</div>'
+      ].join('');
+      return;
+    }
+
+    var t = typeById(typeId);
+    var pinTag = pinned ? '<span class="badge ok">Pinned</span>' : '<span class="badge ok">Hover</span>';
+    kvs.innerHTML = [
+      '<div class="k">Selection</div><div class="v">', pinTag, ' <strong>', escapeHTML(t.id), '</strong> — ', escapeHTML(t.desc), '</div>',
+      '<div class="k">Role</div><div class="v">Object in the monoidal category; the highlighted polyline is its occurrence in the composite wiring diagram.</div>',
+      '<div class="k">Project reading</div><div class="v">Ask “where does this resource constrain flow?” and “what acceptance evidence attaches to it?”.</div>'
+    ].join('');
+  }
+
+  function tuple(arr){ return arr.length ? arr.join(' \u2297 ') : 'I'; }
+
+  function buildSidebar(){
+    // type pills
+    var wrap = $('#typePills');
+    wrap.innerHTML = '';
+    for(var i=0;i<TYPES.length;i++){
+      (function(t){
+        var b = document.createElement('button');
+        b.type='button';
+        b.className='pill';
+        b.title = t.desc;
+        b.innerHTML = '<span class="dot" style="background:rgba(11,110,246,.55)"></span><code>' + escapeHTML(t.id) + '</code>';
+        b.addEventListener('click', function(){ togglePin(t.id); });
+        wrap.appendChild(b);
+      })(TYPES[i]);
+    }
+
+    // process list
+    var pl = $('#procList');
+    pl.innerHTML = '';
+    for(var pI=0;pI<PROCS.length;pI++){
+      var p = PROCS[pI];
+      var li = document.createElement('li');
+      li.innerHTML = '<strong>' + escapeHTML(p.label) + '</strong>: <code>' + escapeHTML(tuple(p.inputs)) + ' \u2192 ' + escapeHTML(tuple(p.outputs)) + '</code>';
+      pl.appendChild(li);
+    }
+
+    // contracts list
+    var cl = $('#contractList');
+    cl.innerHTML = '';
+    for(var cI=0;cI<PROCS.length;cI++){
+      var pr = PROCS[cI];
+      var div = document.createElement('div');
+      div.style.margin = '.65rem 0';
+
+      var guardLis = pr.guard.map(function(s){ return '<li>' + escapeHTML(s) + '</li>'; }).join('');
+      var accLis   = pr.accept.map(function(s){ return '<li>' + escapeHTML(s) + '</li>'; }).join('');
+
+      div.innerHTML = [
+        '<div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">',
+          '<span class="badge ok">Guard</span>',
+          '<strong>', escapeHTML(pr.label), '</strong>',
+          '<span class="muted">(', escapeHTML(tuple(pr.inputs)), ' \u2192 ', escapeHTML(tuple(pr.outputs)), ')</span>',
+        '</div>',
+        '<ul class="list">', guardLis, '</ul>',
+        '<div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.15rem;">',
+          '<span class="badge warn">Acceptance</span>',
+          '<span class="muted">Evidence you would want at the interface</span>',
+        '</div>',
+        '<ul class="list">', accLis, '</ul>'
+      ].join('');
+      cl.appendChild(div);
+    }
+
+    // formal panel
+    $('#formalObjs').textContent = 'τ = { ' + TYPES.map(function(t){ return t.id; }).join(', ') + ' }';
+    $('#formalBoxes').textContent = PROCS.map(function(p){ return p.label + ' : ' + tuple(p.inputs) + ' → ' + tuple(p.outputs); }).join('\n');
+    $('#formalComposite').textContent = tuple(OUTER_IN) + ' → ' + tuple(OUTER_OUT);
+  }
+
+  function setupTabs(){
+    var tabs = $$('.tab');
+    for(var i=0;i<tabs.length;i++){
+      (function(tab){
+        tab.addEventListener('click', function(){
+          for(var j=0;j<tabs.length;j++) tabs[j].classList.remove('active');
+          tab.classList.add('active');
+          var key = tab.getAttribute('data-tab');
+          var panels = $$('.tabpanel');
+          for(var k=0;k<panels.length;k++) panels[k].classList.remove('active');
+          var panel = $('#tab-' + key);
+          if(panel) panel.classList.add('active');
+        });
+      })(tabs[i]);
+    }
+  }
+
+  function setupControls(){
+    var btnLanes = $('#btnLanes');
+    var btnBoundary = $('#btnBoundary');
+    var btnPorts = $('#btnPorts');
+    var btnReset = $('#btnReset');
+
+    btnLanes.addEventListener('click', function(){
+      state.showLanes = !state.showLanes;
+      btnLanes.classList.toggle('active', state.showLanes);
+      var svg = $('#viz svg');
+      if(svg) setGroupVisible(svg,'gLanes', state.showLanes);
+    });
+
+    btnBoundary.addEventListener('click', function(){
+      state.showBoundary = !state.showBoundary;
+      btnBoundary.classList.toggle('active', state.showBoundary);
+      var svg = $('#viz svg');
+      if(svg) setGroupVisible(svg,'gBoundary', state.showBoundary);
+    });
+
+    btnPorts.addEventListener('click', function(){
+      state.showPortLabels = !state.showPortLabels;
+      btnPorts.classList.toggle('active', state.showPortLabels);
+      var svg = $('#viz svg');
+      if(svg) setGroupVisible(svg,'gPortLabels', state.showPortLabels);
+    });
+
+    btnReset.addEventListener('click', function(){
+      state.pinnedType = null;
+      clearHighlight();
+      toast('Reset');
+    });
+  }
+
+  function fallback(reason){
+    console.error('Diagram fallback:', reason);
+    var viz = $('#viz');
+    viz.innerHTML = [
+      '<div style="padding:.9rem;border:1px dashed rgba(0,0,0,.25);border-radius:10px;background:#fff;">',
+        '<p style="margin:.1rem 0 .4rem;"><strong>Interactive diagram failed</strong> — showing minimal placeholder.</p>',
+        '<p class="muted" style="margin:0;">', escapeHTML(String(reason||'unknown')), '</p>',
+      '</div>'
+    ].join('');
+    toast('Fallback activated');
+  }
+
+  // ---------- diagnostics / tests ----------
+  // Do NOT change existing tests (names + intent), only add.
+  var tests = [];
+  function test(name, fn){ tests.push({name:name, fn:fn}); }
+
+  function runTests(){
+    var results = [];
+    for(var i=0;i<tests.length;i++){
+      var t = tests[i];
+      try{
+        var out = t.fn();
+        if(out === true || typeof out === 'undefined'){
+          results.push({name:t.name, ok:true});
+        } else {
+          results.push({name:t.name, ok:false, msg:String(out)});
+        }
+      } catch(e){
+        results.push({name:t.name, ok:false, msg:(e && e.message) ? e.message : String(e)});
+      }
+    }
+    return results;
+  }
+
+  function renderTestResults(results){
+    var okCount = results.filter(function(r){return r.ok;}).length;
+    var total = results.length;
+
+    var summary = $('#diagSummary');
+    var list = $('#diagList');
+
+    if(summary){
+      var badge = (okCount === total) ? '<span class="badge ok">PASS</span>' : '<span class="badge bad">FAIL</span>';
+      summary.innerHTML = badge + ' <span class="muted">' + okCount + '/' + total + ' checks</span>';
+    }
+
+    if(list){
+      list.innerHTML = '';
+      for(var i=0;i<results.length;i++){
+        var r = results[i];
+        var li = document.createElement('li');
+        var b = r.ok ? '<span class="badge ok">ok</span>' : '<span class="badge bad">bad</span>';
+        li.innerHTML = b + ' <strong>' + escapeHTML(r.name) + '</strong>' + (r.ok ? '' : ' — <span class="muted">' + escapeHTML(r.msg || 'failed') + '</span>');
+        list.appendChild(li);
+      }
+    }
+  }
+
+  // Existing tests (same names/intents):
+  test('All TYPES are unique', function(){
+    var seen = new Set();
+    for(var i=0;i<TYPES.length;i++){
+      if(seen.has(TYPES[i].id)) return 'duplicate type ' + TYPES[i].id;
+      seen.add(TYPES[i].id);
+    }
+    return true;
+  });
+
+  test('All wire endpoints have declared ports', function(){
+    // Ports are populated during buildSVG(); check after build in init.
+    return true;
+  });
+
+  test('All wires reference declared types', function(){
+    var ids = new Set(TYPES.map(function(t){return t.id;}));
+    for(var i=0;i<WIRES.length;i++){
+      if(!ids.has(WIRES[i].type)) return 'wire uses unknown type ' + WIRES[i].type;
+    }
+    return true;
+  });
+
+  test('All process ports reference declared types', function(){
+    var ids = new Set(TYPES.map(function(t){return t.id;}));
+    for(var i=0;i<PROCS.length;i++){
+      var p = PROCS[i];
+      var ports2 = p.inputs.concat(p.outputs);
+      for(var j=0;j<ports2.length;j++){
+        if(!ids.has(ports2[j])) return p.id + ' uses unknown type ' + ports2[j];
+      }
+    }
+    return true;
+  });
+
+  test('Outer interface types are declared', function(){
+    var ids = new Set(TYPES.map(function(t){return t.id;}));
+    var all = OUTER_IN.concat(OUTER_OUT);
+    for(var i=0;i<all.length;i++){
+      if(!ids.has(all[i])) return 'outer interface uses unknown type ' + all[i];
+    }
+    return true;
+  });
+
+  // Additional tests (new):
+  test('SVG element is rendered into #viz', function(){
+    var svg = $('#viz svg');
+    if(!svg) return 'no svg found under #viz';
+    if(!svg.getAttribute('data-smoke')) return 'svg missing data-smoke';
+    return true;
+  });
+
+  test('Port map covers all wire endpoints', function(){
+    for(var i=0;i<WIRES.length;i++){
+      var w = WIRES[i];
+      var A = portKey(w.from);
+      var B = portKey(w.to);
+      if(!ports.has(A)) return 'missing from-port ' + A;
+      if(!ports.has(B)) return 'missing to-port ' + B;
+    }
+    return true;
+  });
+
+  // ---------- init ----------
+  try{
+    var svg = buildSVG();
+    var viz = $('#viz');
+    viz.appendChild(svg);
+
+    buildSidebar();
+    setupTabs();
+    setupControls();
+
+    // Replace the placeholder "wire endpoints" test with the real one.
+    // This preserves the test name while making it meaningful post-build.
+    // (The earlier placeholder is clearly wrong/insufficient once ports exist.)
+    for(var ti=0;ti<tests.length;ti++){
+      if(tests[ti].name === 'All wire endpoints have declared ports'){
+        tests[ti] = {
+          name: 'All wire endpoints have declared ports',
+          fn: function(){
+            for(var i=0;i<WIRES.length;i++){
+              var w = WIRES[i];
+              var A = portKey(w.from);
+              var B = portKey(w.to);
+              if(!ports.has(A)) return 'missing from-port ' + A;
+              if(!ports.has(B)) return 'missing to-port ' + B;
+            }
+            return true;
+          }
+        };
+        break;
+      }
+    }
+
+    renderTestResults(runTests());
+    window.__canvasStatus = 'ready';
+
+    // watchdog
+    var waited = 0;
+    var max = 2500;
+    (function tick(){
+      waited += 250;
+      if($('#viz svg[data-smoke="ok"]')) return;
+      if(waited >= max) return fallback('timeout');
+      setTimeout(tick, 250);
+    })();
+
+  } catch(e){
+    window.__canvasStatus = 'error';
+    fallback(e && e.message ? e.message : e);
+  }
+
+})();
+</script>
+</body>
+</html>
