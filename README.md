@@ -6,7 +6,7 @@ This repository now hosts a lightweight, static HTML website for the Innovation 
 
 - **Home – Welcome & Overview** – Introductory page that welcomes users and explains the platform’s mission and structure in general terms.
 - **Projects Portfolio** – Directory of all innovation projects with brief summaries, allowing users to explore and navigate to individual project pages.
-- **Galois Adjoints Sandbox** – A conceptual playground explaining how adjoints can support project management trade-offs.
+- **Contracts as Algebras Sandbox** – A conceptual playground explaining how adjoints can support project management trade-offs.
 - **AI Tools & Collaboration** – Showcases AI-assisted features for project work and collaboration.
 - **Systems Thinking & Stakeholders** – Guides users in applying a systems-thinking lens to map stakeholder networks and decision processes.
 - **Project Lifecycle & Governance** – Provides a generic project lifecycle framework with governance checkpoints.
