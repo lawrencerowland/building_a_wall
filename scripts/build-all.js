@@ -31,6 +31,7 @@ for (const app of apps) {
 }
 
 cpSync(join(root, 'index.html'), join(docsDir, 'index.html'));
+cpSync(join(root, 'app-index.html'), join(docsDir, 'app-index.html'));
 cpSync(join(root, 'app-index.html'), join(appsDocsDir, 'index.html'));
 const appIndexCsv = readFileSync(join(root, 'app-index.csv'), 'utf8');
 const normalizedIndexCsv = appIndexCsv
@@ -50,6 +51,7 @@ const normalizedIndexCsv = appIndexCsv
   })
   .join('\n');
 writeFileSync(join(appsDocsDir, 'app-index.csv'), normalizedIndexCsv);
+writeFileSync(join(docsDir, 'app-index.csv'), appIndexCsv);
 cpSync(join(root, 'pics'), join(docsDir, 'pics'), { recursive: true });
 cpSync(join(root, 'common.css'), join(docsDir, 'common.css'));
 cpSync(join(root, 'pics'), join(appsDocsDir, 'pics'), { recursive: true });
