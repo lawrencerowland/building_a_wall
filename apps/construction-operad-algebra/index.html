@@ -1,0 +1,2365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Construction as an Operad Algebra — Wiring Diagrams, Equality Proofs, Hybrid Simulation</title>
+  <link rel="stylesheet" href="../../common.css">
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: rgba(255,255,255,0.06);
+      --panel2: rgba(255,255,255,0.09);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.70);
+      --muted2: rgba(255,255,255,0.55);
+      --ok: #7CFFB2;
+      --warn: #FFD27C;
+      --bad: #FF7C9B;
+      --line: rgba(255,255,255,0.16);
+      --line2: rgba(255,255,255,0.10);
+      --focus: rgba(124,255,178,0.35);
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    html, body { height: 100%; }
+    body{
+      margin: 0;
+      font-family: var(--sans);
+      background: radial-gradient(1200px 900px at 20% 10%, rgba(124,255,178,0.18), transparent 55%),
+                  radial-gradient(1000px 800px at 85% 25%, rgba(124,165,255,0.18), transparent 60%),
+                  linear-gradient(160deg, #070a14, var(--bg));
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .back-link{
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    /* Reserve visible space before JS loads */
+    .min-h-64{ min-height: 16rem; }
+
+    #app{
+      width: 100%;
+      box-sizing: border-box;
+      padding: 2.2vh 4vw 3vh 4vw;
+    }
+
+    .shell{
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    header{
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.1rem 1.1rem 1.0rem 1.1rem;
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .titleBlock{
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      min-width: min(40ch, 100%);
+    }
+
+    h1{
+      font-size: clamp(1.1rem, 2.2vw, 1.6rem);
+      margin: 0;
+      letter-spacing: 0.2px;
+    }
+
+    .subtitle{
+      color: var(--muted);
+      font-size: clamp(0.88rem, 1.5vw, 1.02rem);
+      line-height: 1.35;
+      margin: 0;
+    }
+
+    .badgeRow{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.4rem;
+    }
+
+    .badge{
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.28rem 0.55rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      border: 1px solid var(--line2);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    nav{
+      display: flex;
+      gap: 0.55rem;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .tabBtn{
+      appearance: none;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      padding: 0.55rem 0.8rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      user-select: none;
+    }
+    .tabBtn:hover, .tabBtn:focus{
+      outline: none;
+      border-color: rgba(124,255,178,0.55);
+      box-shadow: 0 0 0 0.22rem rgba(124,255,178,0.18);
+      transform: translateY(-1px);
+    }
+    .tabBtn[aria-selected="true"]{
+      background: rgba(124,255,178,0.14);
+      border-color: rgba(124,255,178,0.7);
+    }
+
+    main{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.1rem;
+    }
+
+    .panel{
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.045));
+      box-shadow: var(--shadow);
+      padding: 1rem;
+      overflow: hidden;
+    }
+
+    .panel h2{
+      margin: 0 0 0.6rem 0;
+      font-size: 1.08rem;
+      letter-spacing: 0.2px;
+    }
+
+    .panel p, .panel li{
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.98rem;
+    }
+
+    .grid2{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 900px){
+      .grid2{ grid-template-columns: 1.05fr 0.95fr; }
+    }
+
+    .grid3{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 1100px){
+      .grid3{ grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    .card{
+      border: 1px solid var(--line2);
+      background: rgba(0,0,0,0.18);
+      border-radius: 12px;
+      padding: 0.85rem;
+    }
+
+    .card h3{
+      margin: 0 0 0.4rem 0;
+      font-size: 1.02rem;
+    }
+    .small{
+      font-size: 0.9rem;
+      color: var(--muted2);
+      line-height: 1.45;
+    }
+
+    .controls{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.65rem;
+    }
+
+    .controlRow{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.45rem;
+      padding: 0.6rem 0.65rem;
+      border-radius: 12px;
+      border: 1px solid var(--line2);
+      background: rgba(255,255,255,0.03);
+    }
+    @media (min-width: 700px){
+      .controlRow{ grid-template-columns: 1.3fr 1.7fr; align-items: center; }
+    }
+
+    .controlRow label{
+      font-size: 0.94rem;
+      color: var(--text);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .controlRow label .v{
+      font-family: var(--mono);
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+
+    input[type="range"]{
+      width: 100%;
+      accent-color: #b6ffd7;
+    }
+
+    .btnRow{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn{
+      appearance: none;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      padding: 0.55rem 0.8rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      user-select: none;
+    }
+    .btn:hover, .btn:focus{
+      outline: none;
+      border-color: rgba(124,255,178,0.55);
+      box-shadow: 0 0 0 0.22rem rgba(124,255,178,0.16);
+      transform: translateY(-1px);
+    }
+    .btn.primary{
+      background: rgba(124,255,178,0.14);
+      border-color: rgba(124,255,178,0.65);
+    }
+
+    .hint{
+      margin-top: 0.55rem;
+      color: var(--muted2);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .diagramWrap{
+      border: 1px solid var(--line2);
+      background: rgba(0,0,0,0.25);
+      border-radius: 12px;
+      padding: 0.6rem;
+      overflow: hidden;
+    }
+
+    .svgHost{
+      width: 100%;
+      height: 46vh;
+      min-height: 18rem;
+      max-height: 30rem;
+      display: block;
+    }
+
+    .svgHost.small{
+      height: 35vh;
+      min-height: 15rem;
+      max-height: 24rem;
+    }
+
+    .chartWrap{
+      border: 1px solid var(--line2);
+      background: rgba(0,0,0,0.25);
+      border-radius: 12px;
+      padding: 0.6rem;
+      overflow: hidden;
+    }
+
+    canvas.plot{
+      width: 100%;
+      height: 34vh;
+      min-height: 14rem;
+      max-height: 26rem;
+      display: block;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .twoCharts{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 1000px){
+      .twoCharts{ grid-template-columns: 1fr 1fr; }
+    }
+
+    .math{
+      font-family: var(--mono);
+      color: rgba(255,255,255,0.86);
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--line2);
+      border-radius: 12px;
+      padding: 0.75rem;
+      overflow-x: auto;
+      line-height: 1.5;
+      font-size: 0.92rem;
+    }
+
+    .equation{
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.9);
+      background: rgba(0,0,0,0.22);
+      border: 1px solid var(--line2);
+      border-radius: 12px;
+      padding: 0.65rem 0.75rem;
+      overflow-x: auto;
+      line-height: 1.55;
+    }
+
+    .status{
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.92rem;
+      padding: 0.35rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid var(--line2);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted);
+      user-select: none;
+    }
+    .dot{
+      width: 0.65rem;
+      height: 0.65rem;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+      box-shadow: 0 0 0 0.18rem rgba(255,255,255,0.08);
+    }
+    .status.ok .dot{ background: var(--ok); box-shadow: 0 0 0 0.18rem rgba(124,255,178,0.16); }
+    .status.warn .dot{ background: var(--warn); box-shadow: 0 0 0 0.18rem rgba(255,210,124,0.16); }
+    .status.bad .dot{ background: var(--bad); box-shadow: 0 0 0 0.18rem rgba(255,124,155,0.16); }
+
+    .codeBlock{
+      position: relative;
+    }
+    pre{
+      margin: 0;
+      font-family: var(--mono);
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: rgba(255,255,255,0.88);
+      white-space: pre;
+      overflow-x: auto;
+      background: rgba(0,0,0,0.28);
+      border: 1px solid var(--line2);
+      border-radius: 12px;
+      padding: 0.85rem;
+    }
+    .copyBtn{
+      position: absolute;
+      top: 0.55rem;
+      right: 0.55rem;
+      font-size: 0.82rem;
+      padding: 0.35rem 0.55rem;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+    }
+    .copyBtn:hover, .copyBtn:focus{
+      outline: none;
+      border-color: rgba(124,255,178,0.55);
+      box-shadow: 0 0 0 0.22rem rgba(124,255,178,0.14);
+    }
+
+    footer{
+      padding: 0.85rem 1.1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      color: var(--muted2);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .hidden{ display: none !important; }
+
+    /* Toast */
+    #toastHost{
+      position: fixed;
+      left: 50%;
+      bottom: 1.2rem;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      z-index: 9999;
+      pointer-events: none;
+      width: min(92vw, 520px);
+    }
+    .toast{
+      pointer-events: auto;
+      padding: 0.75rem 0.85rem;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.55);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+      color: rgba(255,255,255,0.92);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.7rem;
+    }
+    .toast .msg{
+      font-size: 0.92rem;
+      line-height: 1.35;
+      color: rgba(255,255,255,0.92);
+    }
+    .toast .x{
+      cursor: pointer;
+      user-select: none;
+      font-weight: 700;
+      color: rgba(255,255,255,0.75);
+      padding: 0.1rem 0.35rem;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: transparent;
+    }
+    .toast .x:hover{
+      border-color: rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.06);
+    }
+
+    /* Tiny helper for click-to-reveal tooltips */
+    .tooltip{
+      position: absolute;
+      background: rgba(0,0,0,0.68);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.55rem 0.65rem;
+      color: rgba(255,255,255,0.92);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      max-width: min(80vw, 320px);
+      z-index: 50;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+    }
+    .sr{
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="min-h-64" data-timeout="3000">
+    <noscript>
+      <div style="max-width: 1100px; margin: 0 auto; padding: 1rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 14px; background: rgba(0,0,0,0.25);">
+        <strong>Interactive visualisation</strong><br/>
+        This page needs JavaScript to draw wiring diagrams and simulate dynamics. You can still read the static idea:
+        <pre style="white-space: pre-wrap;">Inputs ─▶ (Mix mortar) ─▶ Mortar ─┐
+                                  ├─▶ (Build wall) ─▶ Walls ─▶ (Install roof) ─▶ Roof stability
+Inputs ─▶ (Set out line) ─▶ Line ─┘</pre>
+      </div>
+    </noscript>
+
+    <div class="shell" id="shell">
+      <header>
+        <div class="titleBlock">
+          <a class="back-link" href="../../index.html">Back to app index</a>
+          <h1>Construction as an Operad Algebra</h1>
+          <p class="subtitle">
+            A simple “build walls then put on a roof” project, modeled compositionally with wiring diagrams,
+            with <em>formal equality proofs</em> (operad algebra law + interchange), plus a hybrid simulation:
+            wall height (discrete) and roof stability (continuous).
+          </p>
+          <div class="badgeRow">
+            <span class="badge">Operad syntax: wiring diagrams</span>
+            <span class="badge">Semantics: operad algebra (functions / dynamics)</span>
+            <span class="badge">Equality: normal form / same diagram</span>
+            <span class="badge">Hybrid: discrete + continuous</span>
+          </div>
+        </div>
+
+        <nav aria-label="Sections">
+          <button class="tabBtn" data-tab="diagram" aria-selected="true">Wiring diagrams</button>
+          <button class="tabBtn" data-tab="proofs" aria-selected="false">Formal equality proofs</button>
+          <button class="tabBtn" data-tab="sim" aria-selected="false">Simulation</button>
+          <button class="tabBtn" data-tab="julia" aria-selected="false">Julia / AlgebraicDynamics</button>
+        </nav>
+      </header>
+
+      <!-- Smoke marker for watchdog -->
+      <div id="smokeMarker" class="sr" aria-hidden="true"></div>
+
+      <!-- TAB: DIAGRAMS -->
+      <section class="panel" id="tab-diagram">
+        <div class="grid2">
+          <div>
+            <h2>1) Scope wiring diagram: build walls, then roof</h2>
+            <p>
+              This is the project “scope” view: boxes are tasks; wires are typed resources / artefacts carried across tasks.
+              The diagram is deliberately simple and left-to-right.
+            </p>
+
+            <div class="btnRow" role="group" aria-label="Diagram selection">
+              <button class="btn primary" id="btnScope">Show scope diagram</button>
+              <button class="btn" id="btnDynamics">Show dynamics diagram</button>
+              <button class="btn" id="btnExportSVG">Download current diagram (SVG)</button>
+              <button class="btn" id="btnExportJSON">Export diagram JSON</button>
+            </div>
+
+            <p class="hint">
+              Tip: tap/click any wire label in the diagram to see what it represents.
+              (No hover required — this works on mobile.)
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Interpretation rule of thumb</h3>
+            <p class="small">
+              A box is a process. A wire is a “thing” (material, information, constraint, state) whose
+              type stays consistent end-to-end. Composition is “plugging outputs into inputs”.
+            </p>
+            <p class="small">
+              In operad terms: a wiring diagram is <em>syntax</em>; choosing a meaning for each box
+              (e.g., a dynamical system, a function, a resource transformer) is <em>semantics</em>.
+            </p>
+            <div class="equation" style="margin-top:0.65rem;">
+              Operad algebra axiom (substitution law):<br/>
+              A( φ ∘<sub>i</sub> ψ )  =  A(φ) ∘<sub>i</sub> A(ψ)
+            </div>
+          </div>
+        </div>
+
+        <div class="diagramWrap" style="margin-top: 1rem;">
+          <svg id="mainDiagram" class="svgHost" viewBox="0 0 1000 600" role="img" aria-label="Wiring diagram"></svg>
+        </div>
+
+        <div class="grid3" style="margin-top: 1rem;">
+          <div class="card">
+            <h3>Key wires</h3>
+            <ul class="small">
+              <li><strong>M</strong> = mortar, produced before wall building</li>
+              <li><strong>L</strong> = set-out line / reference, produced before wall building</li>
+              <li><strong>W</strong> = walls, produced before roof install</li>
+              <li><strong>Stab</strong> = roof stability signal/state (used for assurance)</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Why this catches scope mistakes</h3>
+            <p class="small">
+              If a downstream task expects a type you haven’t produced (e.g., roof install needs “Walls” but you only
+              have “Damaged walls”), the diagram literally won’t “type-check” — the wire types don’t match.
+            </p>
+          </div>
+          <div class="card">
+            <h3>What we model in the simulation</h3>
+            <p class="small">
+              We treat “wall height” as a discrete state updated once per day (difference equation), while “roof stability”
+              evolves continuously (an ODE integrated by Euler in-browser).
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: PROOFS -->
+      <section class="panel hidden" id="tab-proofs">
+        <h2>2) Formal proof of equality</h2>
+        <p>
+          Here are two kinds of equality that matter in compositional project thinking:
+          (A) equality from <em>symmetric monoidal structure</em> (interchange law), and
+          (B) equality from the <em>operad algebra substitution law</em> (hierarchical vs flattened modeling).
+        </p>
+
+        <div class="grid2">
+          <div class="card">
+            <h3>A) Interchange law equality (parallel vs sequential grouping)</h3>
+            <p class="small">
+              Suppose we are building two independent walls (Left, Right). Each wall has two steps:
+              Mix mortar, then Build wall. We can group the work in two ways:
+            </p>
+
+            <div class="equation" style="margin-top:0.55rem;">
+              (Mix<sub>L</sub> ⊗ Mix<sub>R</sub>) ; (Build<sub>L</sub> ⊗ Build<sub>R</sub>)
+              &nbsp;=&nbsp;
+              (Mix<sub>L</sub> ; Build<sub>L</sub>) ⊗ (Mix<sub>R</sub> ; Build<sub>R</sub>)
+            </div>
+
+            <p class="small">
+              In wiring-diagram normal form, both sides have the <em>same underlying diagram</em>
+              (same boxes + same wires); only the “parentheses” (grouping boundaries) differ.
+            </p>
+
+            <div class="btnRow">
+              <button class="btn primary" id="btnCheckInterchange">Check equality (diagram normal form)</button>
+              <span class="status" id="statusInterchange"><span class="dot"></span><span>Not checked</span></span>
+            </div>
+
+            <div class="hint">
+              The “proof” here is: compile both expressions to wiring diagrams and compare the resulting
+              combinatorial normal forms. If identical (up to relabeling), the morphisms are equal.
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Interchange: two groupings, same diagram</h3>
+            <div class="diagramWrap">
+              <svg id="diagInterchangeA" class="svgHost small" viewBox="0 0 1000 520" role="img" aria-label="Interchange diagram A"></svg>
+            </div>
+            <div style="height:0.8rem;"></div>
+            <div class="diagramWrap">
+              <svg id="diagInterchangeB" class="svgHost small" viewBox="0 0 1000 520" role="img" aria-label="Interchange diagram B"></svg>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:1rem;"></div>
+
+        <div class="grid2">
+          <div class="card">
+            <h3>B) Operad algebra law: hierarchical vs flattened model</h3>
+            <p class="small">
+              Let <span style="font-family:var(--mono);">ψ</span> be the “Prep” subdiagram (mix mortar + set out line),
+              and <span style="font-family:var(--mono);">φ</span> be the outer diagram (Prep feeding Wall+Roof).
+              There are two strategies:
+            </p>
+
+            <div class="math" style="margin-top:0.65rem;">
+              Strategy 1 (hierarchical):<br/>
+              &nbsp;&nbsp;prep = A(ψ)(mix, setout)<br/>
+              &nbsp;&nbsp;total = A(φ)(prep, wall_and_roof)<br/><br/>
+              Strategy 2 (flatten syntax first):<br/>
+              &nbsp;&nbsp;flat = φ ∘<sub>Prep</sub> ψ<br/>
+              &nbsp;&nbsp;total' = A(flat)(mix, setout, wall_and_roof)
+            </div>
+
+            <p class="small">
+              By the operad algebra axiom, <span style="font-family:var(--mono);">total = total'</span> as functions,
+              i.e. they have identical denotational semantics.
+            </p>
+
+            <div class="btnRow">
+              <button class="btn primary" id="btnCheckOperadLaw">Check equality (evaluate both composites)</button>
+              <span class="status" id="statusOperad"><span class="dot"></span><span>Not checked</span></span>
+            </div>
+
+            <p class="hint">
+              We demonstrate equality by evaluating both composite functions on the same input vector and
+              showing the outputs match. The reason this works is not luck — it is exactly what “being an operad algebra”
+              means.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Hierarchical term vs flattened term</h3>
+
+            <div class="diagramWrap">
+              <svg id="diagOperadHier" class="svgHost small" viewBox="0 0 1000 520" role="img" aria-label="Hierarchical operad term"></svg>
+            </div>
+
+            <div style="height:0.8rem;"></div>
+
+            <div class="diagramWrap">
+              <svg id="diagOperadFlat" class="svgHost small" viewBox="0 0 1000 520" role="img" aria-label="Flattened operad term"></svg>
+            </div>
+
+            <div style="margin-top:0.8rem;" class="equation" id="operadLawResult">
+              Output check not run yet.
+            </div>
+          </div>
+        </div>
+
+        <div style="height:1rem;"></div>
+
+        <div class="card">
+          <h3>What counts as a “formal proof” here?</h3>
+          <p class="small">
+            There are two complementary notions:
+          </p>
+          <ul class="small">
+            <li>
+              <strong>Axiomatic proof:</strong> The equality follows from the defining laws of the structure you chose
+              (SMC axioms like interchange; operad-algebra axioms like substitution preservation).
+            </li>
+            <li>
+              <strong>Normal-form proof:</strong> Compile both expressions into the same canonical wiring-diagram form
+              and compare the resulting data structures (diagram identity/isomorphism).
+            </li>
+          </ul>
+          <p class="small">
+            In practical tooling (e.g., Catlab/AlgebraicJulia), the second style often becomes a fast, automated check.
+          </p>
+        </div>
+      </section>
+
+      <!-- TAB: SIM -->
+      <section class="panel hidden" id="tab-sim">
+        <h2>3) Hybrid simulation: wall height (discrete) + roof stability (continuous)</h2>
+        <p>
+          The goal is not a perfect engineering model — it’s a compositional “toy” that is faithful to the
+          idea of mixing discrete project events (daily progress) with continuous physical dynamics (stability).
+        </p>
+
+        <div class="grid2">
+          <div class="card">
+            <h3>Parameters</h3>
+            <div class="controls" id="controls"></div>
+
+            <div class="btnRow">
+              <button class="btn primary" id="btnRun">Run / re-run simulation</button>
+              <button class="btn" id="btnExportSim">Export simulation data (JSON)</button>
+              <span class="status" id="statusSim"><span class="dot"></span><span>Ready</span></span>
+            </div>
+
+            <p class="hint">
+              Tap/click on a chart to pin a data tooltip at the nearest timepoint.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Derived milestones</h3>
+            <div class="math" id="milestones">
+              (Run the simulation to populate this.)
+            </div>
+
+            <div style="height:0.7rem;"></div>
+
+            <h3>Dynamics wiring diagram (the “semantic” model)</h3>
+            <p class="small">
+              The diagram below is the compositional view of the hybrid model: the discrete wall subsystem
+              drives the continuous roof subsystem.
+            </p>
+            <div class="diagramWrap">
+              <svg id="diagDynamicsSmall" class="svgHost small" viewBox="0 0 1000 520" role="img" aria-label="Dynamics wiring diagram"></svg>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:1rem;"></div>
+
+        <div class="twoCharts">
+          <div class="chartWrap">
+            <h3 style="margin:0 0 0.5rem 0;">Wall height over time (discrete updates)</h3>
+            <canvas class="plot" id="plotWall" aria-label="Wall height plot"></canvas>
+          </div>
+          <div class="chartWrap">
+            <h3 style="margin:0 0 0.5rem 0;">Roof stability over time (continuous ODE)</h3>
+            <canvas class="plot" id="plotRoof" aria-label="Roof stability plot"></canvas>
+          </div>
+        </div>
+
+        <div style="height:1rem;"></div>
+
+        <div class="card">
+          <h3>Model equations used in-browser</h3>
+          <div class="math">
+            Discrete wall update (daily):<br/>
+            &nbsp;&nbsp;h<sub>n+1</sub> = min(H<sub>target</sub>, h<sub>n</sub> + r<sub>wall</sub>)  &nbsp;&nbsp;for n = 0,1,2,...<br/><br/>
+            Continuous roof stability (Euler-integrated):<br/>
+            &nbsp;&nbsp;ṡ(t) = k<sub>install</sub>(t)·(1 − s(t)) − k<sub>decay</sub>·wind(t)·s(t)<br/>
+            &nbsp;&nbsp;0 ≤ s(t) ≤ 1<br/><br/>
+            Coupling rule (hybrid):<br/>
+            &nbsp;&nbsp;k<sub>install</sub>(t) = 0 until walls are complete (h ≥ H<sub>target</sub>) and a delay has passed.
+          </div>
+          <p class="small" style="margin-top:0.65rem;">
+            This is intentionally minimal: it’s enough to demonstrate how a wiring diagram organizes
+            the dependency of one subsystem’s inputs on another subsystem’s outputs.
+          </p>
+        </div>
+      </section>
+
+      <!-- TAB: JULIA -->
+      <section class="panel hidden" id="tab-julia">
+        <h2>4) Julia / AlgebraicJulia (AlgebraicDynamics) notebook template</h2>
+        <p>
+          This page is fully self-contained and runs its simulation in JavaScript.
+          Below is a Julia notebook-style template that mirrors the same structure using the AlgebraicJulia ecosystem:
+          wiring diagrams (Catlab) + operad algebras (AlgebraicDynamics) + solvers (DifferentialEquations).
+        </p>
+
+        <div class="grid2">
+          <div class="card">
+            <h3>Important note about this sandbox</h3>
+            <p class="small">
+              The execution environment that generated this HTML did not have Julia preinstalled, and it
+              does not permit downloading Julia binaries (so I cannot genuinely run <span style="font-family:var(--mono);">Pkg.add</span> here).
+              The code below is therefore a <em>ready-to-run template</em> for your own Julia setup (local machine, Codespaces, etc.).
+            </p>
+            <p class="small">
+              It uses the same operad-algebra idea: define primitive systems, define a composition pattern (wiring diagram),
+              and compose with <span style="font-family:var(--mono);">oapply</span>.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>What this notebook does</h3>
+            <ul class="small">
+              <li>Installs <span style="font-family:var(--mono);">Catlab</span> and <span style="font-family:var(--mono);">AlgebraicDynamics</span></li>
+              <li>Builds a wiring diagram for wall→roof coupling</li>
+              <li>Defines a discrete wall machine + continuous roof machine (same equations as above)</li>
+              <li>Simulates wall height (discrete) and roof stability (continuous)</li>
+              <li>Visualizes diagrams and plots (your plotting library of choice)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div style="height:1rem;"></div>
+
+        <div class="card codeBlock">
+          <h3>Julia notebook cells</h3>
+          <button class="copyBtn" data-copy="#juliaCode">Copy</button>
+          <pre id="juliaCode"># ╔══════════════════════════════════════════════════════════════════════╗
+# ║ 0) Package install (first run)                                       ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+import Pkg
+Pkg.activate(".")
+Pkg.add([
+  "Catlab",
+  "AlgebraicDynamics",
+  "OrdinaryDiffEq",       # ODE solvers
+  "DiffEqCallbacks",      # hybrid / callbacks (optional)
+  "Plots"                 # or CairoMakie, GLMakie, etc.
+])
+
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║ 1) Imports                                                          ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+using Catlab
+using Catlab.WiringDiagrams
+using AlgebraicDynamics
+using OrdinaryDiffEq
+using DiffEqCallbacks
+using Plots
+
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║ 2) Define primitive subsystems                                       ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+# Discrete wall height (daily difference equation)
+# State u = [h], Input x = [work_on], Output y = [h]
+wall = DiscreteMachine{Float64}(1, 1, 1,
+  (u, x, p, t) -> begin
+    h = u[1]
+    work_on = x[1]
+    h2 = min(p[:H_target], h + work_on * p[:wall_rate])
+    return [h2]
+  end,
+  u -> u
+)
+
+# Continuous roof stability
+# State u = [s], Inputs x = [walls_ready, wind], Output y = [s]
+roof = ContinuousMachine{Float64}(1, 2, 1,
+  (u, x, p, t) -> begin
+    s = u[1]
+    walls_ready = x[1]
+    wind = x[2]
+    install = walls_ready * p[:install_rate]
+    ds = install * (1 - s) - p[:decay_rate] * wind * s
+    return [ds]
+  end,
+  u -> u
+)
+
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║ 3) Build a wiring diagram (directed)                                 ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+# We conceptually want: WallHeight ─▶ (determine walls_ready) ─▶ Roof
+# AlgebraicDynamics wiring-diagram composition expects all primitives
+# to live in the *same* semantic category (all discrete or all continuous).
+# For a hybrid simulation, we do:
+#   - run the wall DiscreteMachine for daily steps
+#   - feed a walls_ready signal into the roof ContinuousMachine, solved as an ODE
+#
+# Still, we can use Catlab to *visualize* the wiring diagram:
+
+d = WiringDiagram([:work_on, :wind], [:height, :stability])
+wall_box = add_box!(d, Box(:WallDiscrete, [:work_on], [:height]))
+roof_box = add_box!(d, Box(:RoofContinuous, [:walls_ready, :wind], [:stability]))
+
+# external -> wall input
+add_wire!(d, (input_id(d), 1) => (wall_box, 1))   # work_on -> WallDiscrete
+# wall output -> roof input 1 (walls_ready)
+# In a hybrid sim we'll compute walls_ready = height >= H_target
+# Here we visualize the conceptual dependency as a wire:
+add_wire!(d, (wall_box, 1) => (roof_box, 1))      # height -> RoofContinuous.walls_ready (conceptual)
+# external wind -> roof input 2
+add_wire!(d, (input_id(d), 2) => (roof_box, 2))   # wind -> RoofContinuous
+# outputs
+add_wire!(d, (wall_box, 1) => (output_id(d), 1))  # height out
+add_wire!(d, (roof_box, 1) => (output_id(d), 2))  # stability out
+
+to_graphviz(d) |> display
+
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║ 4) Hybrid simulation (one simple approach)                            ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+H_target = 2.4
+wall_rate = 0.2
+delay = 1.0          # days after wall completion before roof starts
+install_rate = 1.2
+decay_rate = 0.45
+
+# Discrete wall simulation (daily)
+T_days = 30
+h = 0.0
+height = Float64[]
+time_d = Int[]
+wall_done_day = nothing
+for day in 0:T_days
+  push!(time_d, day)
+  push!(height, h)
+  if h < H_target
+    h = min(H_target, h + wall_rate)
+    if h >= H_target && wall_done_day === nothing
+      wall_done_day = day
+    end
+  end
+end
+
+# Continuous roof ODE, driven by walls_ready(t) and wind(t)
+wind(t) = 1.0 + 0.35*sin(2π*t/7)
+walls_ready(t) = (wall_done_day === nothing) ? 0.0 :
+                 (t >= (wall_done_day + delay) ? 1.0 : 0.0)
+
+function roof_ode!(du, u, p, t)
+  s = u[1]
+  w = wind(t)
+  ready = walls_ready(t)
+  install = ready * p[:install_rate]
+  du[1] = install * (1 - s) - p[:decay_rate] * w * s
+end
+
+u0 = [0.0]
+p = Dict(:install_rate => install_rate, :decay_rate => decay_rate)
+prob = ODEProblem(roof_ode!, u0, (0.0, T_days), p)
+sol = solve(prob, Tsit5(); dtmax=0.1)
+
+# Plot results
+plt1 = plot(time_d, height; label="wall height", xlabel="day", ylabel="height")
+plt2 = plot(sol.t, getindex.(sol.u,1); label="roof stability", xlabel="day", ylabel="stability")
+plot(plt1, plt2; layout=(2,1))</pre>
+          <p class="hint">
+            Note: the “hybrid” coupling is implemented explicitly (wall as daily loop, roof as ODE).
+            If you want a single integrated hybrid state vector, consider DifferentialEquations callbacks
+            to apply discrete updates inside a continuous solve.
+          </p>
+        </div>
+
+        <div style="height:1rem;"></div>
+
+        <div class="card">
+          <h3>How this relates to operads (conceptually)</h3>
+          <p class="small">
+            The wiring diagram is the <em>syntax</em>, and each “machine” (wall, roof) is a semantic object
+            that can be composed along wires. This is the “systems-as-algebras” viewpoint: you pick an operad
+            of diagrams and give an algebra that interprets them as concrete systems.
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <strong>How to use this page:</strong> switch tabs above. In “Formal equality proofs”, press the check buttons.
+        In “Simulation”, adjust parameters and export JSON if you want to feed results elsewhere.
+        <span style="opacity:0.9">This is a single file: save it as <span style="font-family:var(--mono);">construction-operad.html</span> and open it.</span>
+      </footer>
+    </div>
+
+    <div id="toastHost" aria-live="polite"></div>
+  </div>
+
+  <script>
+  (function(){
+    const app = document.getElementById('app');
+    const shell = document.getElementById('shell');
+    const toastHost = document.getElementById('toastHost');
+    const smokeMarker = document.getElementById('smokeMarker');
+
+    function toast(message, kind="info", ms=3600){
+      try{
+        const t = document.createElement('div');
+        t.className = 'toast';
+        const msg = document.createElement('div');
+        msg.className = 'msg';
+        msg.textContent = message;
+        const x = document.createElement('button');
+        x.className = 'x';
+        x.type = 'button';
+        x.textContent = '×';
+        x.addEventListener('click', () => t.remove());
+        t.appendChild(msg);
+        t.appendChild(x);
+        toastHost.appendChild(t);
+        setTimeout(() => { if(t && t.parentNode) t.remove(); }, ms);
+      } catch(e){
+        console.log('toast failed', e);
+      }
+    }
+
+    function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+
+    function fallback(err){
+      console.error('FALLBACK:', err);
+      window.__canvasStatus = (String(err) === 'timeout') ? 'fallback' : 'error';
+      toast('Falling back to static view. Check console for details.', 'warn', 5200);
+
+      const staticHtml = `
+        <div style="max-width: 1100px; margin: 0 auto; padding: 1rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 14px; background: rgba(0,0,0,0.25);">
+          <h2 style="margin:0 0 0.5rem 0;">Static fallback</h2>
+          <p style="margin:0 0 0.6rem 0; color: rgba(255,255,255,0.75); line-height:1.5;">
+            Interactive rendering failed. Here is the core idea as ASCII.
+          </p>
+          <pre style="white-space: pre-wrap; line-height:1.55; font-family: ui-monospace, monospace; background: rgba(0,0,0,0.35); padding: 0.8rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14);">
+Inputs ─▶ [Mix mortar] ─▶ Mortar ─┐
+                                 ├─▶ [Build wall] ─▶ Walls ─▶ [Install roof] ─▶ Roof stability
+Inputs ─▶ [Set out line] ─▶ Line ─┘
+
+Hybrid state:
+  wall height: updated once/day (difference equation)
+  roof stability: continuous ODE between events
+          </pre>
+          <p style="margin:0.7rem 0 0 0; color: rgba(255,255,255,0.7); line-height:1.5;">
+            You can still copy the Julia notebook template from the source of this HTML.
+          </p>
+        </div>
+      `;
+      app.innerHTML = staticHtml;
+    }
+
+    // Watchdog (per requirements)
+    const watchdogStart = performance.now();
+    const watchdogTimeout = parseInt(app.getAttribute('data-timeout') || '3000', 10);
+    function watchdog(){
+      const okNode = app.querySelector('[data-smoke="ok"]'); // descendant
+      if(okNode) return;
+      const elapsed = performance.now() - watchdogStart;
+      if(elapsed > watchdogTimeout){
+        fallback('timeout');
+        return;
+      }
+      setTimeout(watchdog, 500);
+    }
+    setTimeout(watchdog, 500);
+
+    // ---------- Wiring diagram rendering ----------
+    function clearSvg(svg){
+      while(svg.firstChild) svg.removeChild(svg.firstChild);
+    }
+
+    function svgEl(name, attrs={}){
+      const el = document.createElementNS('http://www.w3.org/2000/svg', name);
+      for(const [k,v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+      return el;
+    }
+
+    function renderWiringDiagram(svg, model, opts={}){
+      const W = 1000, H = (opts.height || 600);
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      clearSvg(svg);
+
+      // defs: arrowhead + subtle glow
+      const defs = svgEl('defs');
+      const marker = svgEl('marker', { id: `arrow-${model.id}`, markerWidth: '10', markerHeight: '8', refX: '9', refY: '4', orient: 'auto' });
+      marker.appendChild(svgEl('path', { d: 'M0,0 L10,4 L0,8 Z', fill: 'rgba(255,255,255,0.65)' }));
+      defs.appendChild(marker);
+
+      const filt = svgEl('filter', { id: `glow-${model.id}`, x: '-20%', y: '-20%', width: '140%', height: '140%' });
+      filt.appendChild(svgEl('feGaussianBlur', { stdDeviation: '2', result: 'coloredBlur' }));
+      const merge = svgEl('feMerge');
+      merge.appendChild(svgEl('feMergeNode', { in: 'coloredBlur' }));
+      merge.appendChild(svgEl('feMergeNode', { in: 'SourceGraphic' }));
+      filt.appendChild(merge);
+      defs.appendChild(filt);
+
+      svg.appendChild(defs);
+
+      // background grid (very subtle)
+      const bg = svgEl('g', { opacity: '0.22' });
+      const step = 100;
+      for(let x=0; x<=W; x+=step){
+        bg.appendChild(svgEl('line', { x1: x, y1: 0, x2: x, y2: H, stroke: 'rgba(255,255,255,0.06)', 'stroke-width': '1' }));
+      }
+      for(let y=0; y<=H; y+=step){
+        bg.appendChild(svgEl('line', { x1: 0, y1: y, x2: W, y2: y, stroke: 'rgba(255,255,255,0.06)', 'stroke-width': '1' }));
+      }
+      svg.appendChild(bg);
+
+      // layering
+      const gGroups = svgEl('g');
+      const gWires = svgEl('g');
+      const gBoxes = svgEl('g');
+      const gPorts = svgEl('g');
+      svg.appendChild(gGroups);
+      svg.appendChild(gWires);
+      svg.appendChild(gBoxes);
+      svg.appendChild(gPorts);
+
+      const boxById = Object.fromEntries(model.boxes.map(b => [b.id, b]));
+      const layout = model.layout || {};
+      const boxPos = layout.boxPositions || {};
+
+      const boxSize = layout.boxSize || { w: 220, h: 120 };
+      const portR = 7;
+      const marginL = 60, marginR = 60;
+
+      // External ports positions
+      const extInY = (i) => {
+        const n = model.inputs.length || 1;
+        const pad = 0.12 * H;
+        const usable = H - 2*pad;
+        return pad + (i+0.5) * (usable / n);
+      };
+      const extOutY = (i) => {
+        const n = model.outputs.length || 1;
+        const pad = 0.12 * H;
+        const usable = H - 2*pad;
+        return pad + (i+0.5) * (usable / n);
+      };
+
+      function boxRect(b){
+        const p = boxPos[b.id] || { x: 0.5, y: 0.5 };
+        const x = p.x * W;
+        const y = p.y * H;
+        return { x: x - boxSize.w/2, y: y - boxSize.h/2, w: boxSize.w, h: boxSize.h };
+      }
+
+      function portPos(endpoint){
+        // endpoint = {kind:'extIn'|'extOut'|'boxIn'|'boxOut', ...}
+        if(endpoint.kind === 'extIn'){
+          return { x: marginL, y: extInY(endpoint.port) };
+        }
+        if(endpoint.kind === 'extOut'){
+          return { x: W - marginR, y: extOutY(endpoint.port) };
+        }
+        const b = boxById[endpoint.box];
+        const rect = boxRect(b);
+        const nIn = b.inputs.length || 1;
+        const nOut = b.outputs.length || 1;
+        if(endpoint.kind === 'boxIn'){
+          const y = rect.y + (endpoint.port + 0.5) * (rect.h / nIn);
+          return { x: rect.x, y };
+        }
+        if(endpoint.kind === 'boxOut'){
+          const y = rect.y + (endpoint.port + 0.5) * (rect.h / nOut);
+          return { x: rect.x + rect.w, y };
+        }
+        return { x: 0, y: 0 };
+      }
+
+      // Draw grouping rectangles (optional)
+      if(model.groups && opts.showGroups){
+        for(const grp of model.groups){
+          const x = grp.x * W, y = grp.y * H, w = grp.w * W, h = grp.h * H;
+          const r = svgEl('rect', {
+            x, y, width: w, height: h, rx: 16, ry: 16,
+            fill: 'rgba(255,255,255,0.03)',
+            stroke: 'rgba(124,255,178,0.55)',
+            'stroke-width': 2,
+            'stroke-dasharray': '8 7',
+            filter: `url(#glow-${model.id})`
+          });
+          gGroups.appendChild(r);
+
+          if(grp.label){
+            const t = svgEl('text', {
+              x: x + 12, y: y + 24,
+              fill: 'rgba(255,255,255,0.85)',
+              'font-size': 16,
+              'font-family': 'ui-monospace, monospace'
+            });
+            t.textContent = grp.label;
+            gGroups.appendChild(t);
+          }
+        }
+      }
+
+      // Draw wires
+      const wireLabelHotspots = [];
+      for(const w of model.wires){
+        const a = portPos(w.from);
+        const b = portPos(w.to);
+        const dx = (b.x - a.x);
+        const c1 = { x: a.x + 0.35*dx, y: a.y };
+        const c2 = { x: b.x - 0.35*dx, y: b.y };
+        const path = `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`;
+        const p = svgEl('path', {
+          d: path,
+          fill: 'none',
+          stroke: 'rgba(255,255,255,0.62)',
+          'stroke-width': 2.2,
+          'marker-end': `url(#arrow-${model.id})`,
+          opacity: 0.95
+        });
+        gWires.appendChild(p);
+
+        if(w.label){
+          // label at midpoint
+          const tMid = 0.5;
+          const mx = cubicBezier(a.x, c1.x, c2.x, b.x, tMid);
+          const my = cubicBezier(a.y, c1.y, c2.y, b.y, tMid);
+          const bg = svgEl('rect', {
+            x: mx - 26, y: my - 12, width: 52, height: 24, rx: 10, ry: 10,
+            fill: 'rgba(0,0,0,0.45)',
+            stroke: 'rgba(255,255,255,0.18)',
+            'stroke-width': 1
+          });
+          const txt = svgEl('text', {
+            x: mx, y: my + 5,
+            'text-anchor': 'middle',
+            fill: 'rgba(255,255,255,0.9)',
+            'font-size': 14,
+            'font-family': 'ui-monospace, monospace'
+          });
+          txt.textContent = w.label;
+          gWires.appendChild(bg);
+          gWires.appendChild(txt);
+
+          wireLabelHotspots.push({ x: mx, y: my, label: w.label, note: w.note || '' });
+        }
+      }
+
+      // Draw boxes and ports
+      for(const b of model.boxes){
+        const rect = boxRect(b);
+
+        const r = svgEl('rect', {
+          x: rect.x, y: rect.y, width: rect.w, height: rect.h,
+          rx: 16, ry: 16,
+          fill: 'rgba(255,255,255,0.05)',
+          stroke: 'rgba(255,255,255,0.22)',
+          'stroke-width': 1.6
+        });
+        gBoxes.appendChild(r);
+
+        const title = svgEl('text', {
+          x: rect.x + rect.w/2,
+          y: rect.y + 30,
+          'text-anchor': 'middle',
+          fill: 'rgba(255,255,255,0.92)',
+          'font-size': 16,
+          'font-weight': 650
+        });
+        title.textContent = b.label;
+        gBoxes.appendChild(title);
+
+        // ports
+        const inLabel = svgEl('text', {
+          x: rect.x + 14, y: rect.y + rect.h - 12,
+          fill: 'rgba(255,255,255,0.55)',
+          'font-size': 12,
+          'font-family': 'ui-monospace, monospace'
+        });
+        inLabel.textContent = b.inputs.length ? ('in: ' + b.inputs.join(', ')) : 'in: —';
+        gBoxes.appendChild(inLabel);
+
+        const outLabel = svgEl('text', {
+          x: rect.x + rect.w - 14, y: rect.y + rect.h - 12,
+          fill: 'rgba(255,255,255,0.55)',
+          'font-size': 12,
+          'font-family': 'ui-monospace, monospace',
+          'text-anchor': 'end'
+        });
+        outLabel.textContent = b.outputs.length ? ('out: ' + b.outputs.join(', ')) : 'out: —';
+        gBoxes.appendChild(outLabel);
+
+        for(let i=0; i<b.inputs.length; i++){
+          const pt = portPos({kind:'boxIn', box:b.id, port:i});
+          gPorts.appendChild(svgEl('circle', { cx: pt.x, cy: pt.y, r: portR, fill:'rgba(0,0,0,0.45)', stroke:'rgba(255,255,255,0.6)', 'stroke-width': 1.4 }));
+        }
+        for(let i=0; i<b.outputs.length; i++){
+          const pt = portPos({kind:'boxOut', box:b.id, port:i});
+          gPorts.appendChild(svgEl('circle', { cx: pt.x, cy: pt.y, r: portR, fill:'rgba(0,0,0,0.45)', stroke:'rgba(255,255,255,0.6)', 'stroke-width': 1.4 }));
+        }
+      }
+
+      // External ports labels
+      for(let i=0;i<model.inputs.length;i++){
+        const pt = portPos({kind:'extIn', port:i});
+        gPorts.appendChild(svgEl('circle', { cx: pt.x, cy: pt.y, r: portR, fill:'rgba(0,0,0,0.45)', stroke:'rgba(124,255,178,0.7)', 'stroke-width': 1.4 }));
+        const t = svgEl('text', {
+          x: pt.x - 10, y: pt.y + 5,
+          'text-anchor': 'end',
+          fill: 'rgba(255,255,255,0.82)',
+          'font-size': 14,
+          'font-family': 'ui-monospace, monospace'
+        });
+        t.textContent = model.inputs[i];
+        gPorts.appendChild(t);
+      }
+      for(let i=0;i<model.outputs.length;i++){
+        const pt = portPos({kind:'extOut', port:i});
+        gPorts.appendChild(svgEl('circle', { cx: pt.x, cy: pt.y, r: portR, fill:'rgba(0,0,0,0.45)', stroke:'rgba(124,165,255,0.75)', 'stroke-width': 1.4 }));
+        const t = svgEl('text', {
+          x: pt.x + 10, y: pt.y + 5,
+          'text-anchor': 'start',
+          fill: 'rgba(255,255,255,0.82)',
+          'font-size': 14,
+          'font-family': 'ui-monospace, monospace'
+        });
+        t.textContent = model.outputs[i];
+        gPorts.appendChild(t);
+      }
+
+      // Clickable wire labels (no hover)
+      svg.style.cursor = 'default';
+      svg.addEventListener('click', (ev) => {
+        const pt = svgPoint(svg, ev.clientX, ev.clientY);
+        const nearest = nearestHotspot(wireLabelHotspots, pt.x, pt.y, 28);
+        if(nearest){
+          toast(`${nearest.label}: ${nearest.note || 'No note available.'}`, 'info', 5200);
+        }
+      }, { passive: true });
+
+      // helper math for label midpoint
+      function cubicBezier(p0, p1, p2, p3, t){
+        const u = 1 - t;
+        return u*u*u*p0 + 3*u*u*t*p1 + 3*u*t*t*p2 + t*t*t*p3;
+      }
+    }
+
+    function svgPoint(svg, clientX, clientY){
+      const rect = svg.getBoundingClientRect();
+      const x = (clientX - rect.left) * (svg.viewBox.baseVal.width / rect.width);
+      const y = (clientY - rect.top) * (svg.viewBox.baseVal.height / rect.height);
+      return { x, y };
+    }
+
+    function nearestHotspot(hotspots, x, y, radius){
+      let best = null, bestD = Infinity;
+      for(const h of hotspots){
+        const d = Math.hypot(h.x - x, h.y - y);
+        if(d < bestD){
+          bestD = d; best = h;
+        }
+      }
+      return (best && bestD <= radius) ? best : null;
+    }
+
+    // ---------- Diagram models ----------
+    function buildModels(){
+      const scope = {
+        id: 'scope',
+        title: 'Scope diagram',
+        inputs: ['S', 'C', 'H₂O', 'P', 'D', 'B', 'Lin', 'T', 'N', 'Wind'],
+        outputs: ['W', 'Roof', 'Stab'],
+        boxes: [
+          { id: 'mix', label: 'Mix mortar', inputs: ['S','C','H₂O'], outputs: ['M'] },
+          { id: 'set', label: 'Set out line', inputs: ['P','D'], outputs: ['L'] },
+          { id: 'wall', label: 'Build wall', inputs: ['B','Lin','M','L'], outputs: ['W'] },
+          { id: 'roof', label: 'Install roof', inputs: ['W','T','N','Wind'], outputs: ['Roof','Stab'] },
+        ],
+        wires: [
+          { from:{kind:'extIn', port:0}, to:{kind:'boxIn', box:'mix', port:0}, label:'S', note:'Sand into mortar mixing' },
+          { from:{kind:'extIn', port:1}, to:{kind:'boxIn', box:'mix', port:1}, label:'C', note:'Cement into mortar mixing' },
+          { from:{kind:'extIn', port:2}, to:{kind:'boxIn', box:'mix', port:2}, label:'H₂O', note:'Water into mortar mixing' },
+          { from:{kind:'boxOut', box:'mix', port:0}, to:{kind:'boxIn', box:'wall', port:2}, label:'M', note:'Mortar used to build wall' },
+
+          { from:{kind:'extIn', port:3}, to:{kind:'boxIn', box:'set', port:0}, label:'P', note:'Peg+line kit to set-out' },
+          { from:{kind:'extIn', port:4}, to:{kind:'boxIn', box:'set', port:1}, label:'D', note:'Design drawing / reference' },
+          { from:{kind:'boxOut', box:'set', port:0}, to:{kind:'boxIn', box:'wall', port:3}, label:'L', note:'Set-out line used to align the wall' },
+
+          { from:{kind:'extIn', port:5}, to:{kind:'boxIn', box:'wall', port:0}, label:'B', note:'Bricks into wall task' },
+          { from:{kind:'extIn', port:6}, to:{kind:'boxIn', box:'wall', port:1}, label:'Lin', note:'Lintels for openings' },
+
+          { from:{kind:'boxOut', box:'wall', port:0}, to:{kind:'boxIn', box:'roof', port:0}, label:'W', note:'Completed walls are required before roof install' },
+          { from:{kind:'extIn', port:7}, to:{kind:'boxIn', box:'roof', port:1}, label:'T', note:'Trusses / rafters' },
+          { from:{kind:'extIn', port:8}, to:{kind:'boxIn', box:'roof', port:2}, label:'N', note:'Fasteners / nails' },
+          { from:{kind:'extIn', port:9}, to:{kind:'boxIn', box:'roof', port:3}, label:'Wind', note:'Exogenous disturbance affecting stability' },
+
+          { from:{kind:'boxOut', box:'wall', port:0}, to:{kind:'extOut', port:0}, label:'W', note:'Walls output (scope)' },
+          { from:{kind:'boxOut', box:'roof', port:0}, to:{kind:'extOut', port:1}, label:'Roof', note:'Weatherproof shell begins here' },
+          { from:{kind:'boxOut', box:'roof', port:1}, to:{kind:'extOut', port:2}, label:'Stab', note:'Roof stability state/signal' },
+        ],
+        layout: {
+          boxSize: { w: 240, h: 140 },
+          boxPositions: {
+            mix: { x: 0.28, y: 0.26 },
+            set: { x: 0.28, y: 0.70 },
+            wall: { x: 0.56, y: 0.48 },
+            roof: { x: 0.80, y: 0.48 },
+          }
+        }
+      };
+
+      const dynamics = {
+        id: 'dyn',
+        title: 'Dynamics diagram',
+        inputs: ['Work', 'Wind'],
+        outputs: ['h', 's'],
+        boxes: [
+          { id: 'wallD', label: 'Wall (discrete)', inputs: ['Work'], outputs: ['h','ready'] },
+          { id: 'roofC', label: 'Roof (continuous)', inputs: ['ready','Wind'], outputs: ['s'] },
+        ],
+        wires: [
+          { from:{kind:'extIn', port:0}, to:{kind:'boxIn', box:'wallD', port:0}, label:'Work', note:'Daily on/off or productivity signal (exogenous)' },
+          { from:{kind:'boxOut', box:'wallD', port:0}, to:{kind:'extOut', port:0}, label:'h', note:'Wall height state (discrete-time)' },
+          { from:{kind:'boxOut', box:'wallD', port:1}, to:{kind:'boxIn', box:'roofC', port:0}, label:'ready', note:'Walls complete? (derived from height)' },
+          { from:{kind:'extIn', port:1}, to:{kind:'boxIn', box:'roofC', port:1}, label:'Wind', note:'Disturbance input to continuous roof dynamics' },
+          { from:{kind:'boxOut', box:'roofC', port:0}, to:{kind:'extOut', port:1}, label:'s', note:'Roof stability state (continuous-time)' }
+        ],
+        layout: {
+          boxSize: { w: 280, h: 160 },
+          boxPositions: {
+            wallD: { x: 0.35, y: 0.52 },
+            roofC: { x: 0.70, y: 0.52 }
+          }
+        }
+      };
+
+      // Interchange proof diagrams (same underlying boxes/wires; different group rectangles)
+      const interchangeBase = {
+        id: 'int',
+        inputs: ['Sₗ,Cₗ,H₂Oₗ','Sᵣ,Cᵣ,H₂Oᵣ'],
+        outputs: ['Wₗ','Wᵣ'],
+        boxes: [
+          { id:'mixL', label:'Mixₗ', inputs:['Sₗ','Cₗ','H₂Oₗ'], outputs:['Mₗ'] },
+          { id:'mixR', label:'Mixᵣ', inputs:['Sᵣ','Cᵣ','H₂Oᵣ'], outputs:['Mᵣ'] },
+          { id:'buildL', label:'Buildₗ', inputs:['Mₗ'], outputs:['Wₗ'] },
+          { id:'buildR', label:'Buildᵣ', inputs:['Mᵣ'], outputs:['Wᵣ'] },
+        ],
+        wires: [
+          { from:{kind:'extIn',port:0}, to:{kind:'boxIn',box:'mixL',port:0}, label:'Sₗ', note:'Left wall sand' },
+          { from:{kind:'extIn',port:0}, to:{kind:'boxIn',box:'mixL',port:1}, label:'Cₗ', note:'Left wall cement' },
+          { from:{kind:'extIn',port:0}, to:{kind:'boxIn',box:'mixL',port:2}, label:'H₂Oₗ', note:'Left wall water' },
+          { from:{kind:'extIn',port:1}, to:{kind:'boxIn',box:'mixR',port:0}, label:'Sᵣ', note:'Right wall sand' },
+          { from:{kind:'extIn',port:1}, to:{kind:'boxIn',box:'mixR',port:1}, label:'Cᵣ', note:'Right wall cement' },
+          { from:{kind:'extIn',port:1}, to:{kind:'boxIn',box:'mixR',port:2}, label:'H₂Oᵣ', note:'Right wall water' },
+
+          { from:{kind:'boxOut',box:'mixL',port:0}, to:{kind:'boxIn',box:'buildL',port:0}, label:'Mₗ', note:'Left wall mortar' },
+          { from:{kind:'boxOut',box:'mixR',port:0}, to:{kind:'boxIn',box:'buildR',port:0}, label:'Mᵣ', note:'Right wall mortar' },
+
+          { from:{kind:'boxOut',box:'buildL',port:0}, to:{kind:'extOut',port:0}, label:'Wₗ', note:'Left wall output' },
+          { from:{kind:'boxOut',box:'buildR',port:0}, to:{kind:'extOut',port:1}, label:'Wᵣ', note:'Right wall output' },
+        ],
+        layout: {
+          boxSize: { w: 220, h: 120 }
+        }
+      };
+
+      const interchangeA = JSON.parse(JSON.stringify(interchangeBase));
+      interchangeA.id = 'intA';
+      interchangeA.layout.boxPositions = {
+        mixL: { x: 0.34, y: 0.28 },
+        mixR: { x: 0.34, y: 0.62 },
+        buildL: { x: 0.70, y: 0.28 },
+        buildR: { x: 0.70, y: 0.62 },
+      };
+      interchangeA.groups = [
+        { x: 0.18, y: 0.10, w: 0.32, h: 0.78, label: '(Mixₗ ⊗ Mixᵣ)' },
+        { x: 0.54, y: 0.10, w: 0.32, h: 0.78, label: '(Buildₗ ⊗ Buildᵣ)' },
+      ];
+
+      const interchangeB = JSON.parse(JSON.stringify(interchangeBase));
+      interchangeB.id = 'intB';
+      interchangeB.layout.boxPositions = {
+        mixL: { x: 0.28, y: 0.32 },
+        buildL: { x: 0.52, y: 0.32 },
+        mixR: { x: 0.28, y: 0.70 },
+        buildR: { x: 0.52, y: 0.70 },
+      };
+      interchangeB.groups = [
+        { x: 0.16, y: 0.18, w: 0.44, h: 0.32, label: '(Mixₗ ; Buildₗ)' },
+        { x: 0.16, y: 0.56, w: 0.44, h: 0.32, label: '(Mixᵣ ; Buildᵣ)' },
+      ];
+
+      // Operad-law diagrams (hierarchical & flat)
+      const operadHier = {
+        id: 'opHier',
+        inputs: ['S','C','H₂O','D','B','T'],
+        outputs: ['House'],
+        boxes: [
+          { id:'prep', label:'PREP (subdiagram)', inputs:['S','C','H₂O','D'], outputs:['M','L'] },
+          { id:'war', label:'Wall+Roof', inputs:['M','L','B','T'], outputs:['House'] },
+        ],
+        wires: [
+          { from:{kind:'extIn',port:0}, to:{kind:'boxIn',box:'prep',port:0}, label:'S', note:'Sand into prep' },
+          { from:{kind:'extIn',port:1}, to:{kind:'boxIn',box:'prep',port:1}, label:'C', note:'Cement into prep' },
+          { from:{kind:'extIn',port:2}, to:{kind:'boxIn',box:'prep',port:2}, label:'H₂O', note:'Water into prep' },
+          { from:{kind:'extIn',port:3}, to:{kind:'boxIn',box:'prep',port:3}, label:'D', note:'Drawing into set-out' },
+
+          { from:{kind:'boxOut',box:'prep',port:0}, to:{kind:'boxIn',box:'war',port:0}, label:'M', note:'Mortar' },
+          { from:{kind:'boxOut',box:'prep',port:1}, to:{kind:'boxIn',box:'war',port:1}, label:'L', note:'Line' },
+
+          { from:{kind:'extIn',port:4}, to:{kind:'boxIn',box:'war',port:2}, label:'B', note:'Bricks' },
+          { from:{kind:'extIn',port:5}, to:{kind:'boxIn',box:'war',port:3}, label:'T', note:'Trusses' },
+
+          { from:{kind:'boxOut',box:'war',port:0}, to:{kind:'extOut',port:0}, label:'House', note:'Shell output' },
+        ],
+        layout: {
+          boxSize: { w: 280, h: 150 },
+          boxPositions: { prep:{x:0.34,y:0.50}, war:{x:0.72,y:0.50} }
+        },
+        groups: [
+          { x: 0.12, y: 0.26, w: 0.34, h: 0.48, label: 'ψ (prep)' }
+        ]
+      };
+
+      const operadFlat = {
+        id: 'opFlat',
+        inputs: ['S','C','H₂O','D','B','T'],
+        outputs: ['House'],
+        boxes: [
+          { id:'mix', label:'Mix', inputs:['S','C','H₂O'], outputs:['M'] },
+          { id:'set', label:'Set', inputs:['D'], outputs:['L'] },
+          { id:'war', label:'Wall+Roof', inputs:['M','L','B','T'], outputs:['House'] },
+        ],
+        wires: [
+          { from:{kind:'extIn',port:0}, to:{kind:'boxIn',box:'mix',port:0}, label:'S', note:'Sand' },
+          { from:{kind:'extIn',port:1}, to:{kind:'boxIn',box:'mix',port:1}, label:'C', note:'Cement' },
+          { from:{kind:'extIn',port:2}, to:{kind:'boxIn',box:'mix',port:2}, label:'H₂O', note:'Water' },
+          { from:{kind:'extIn',port:3}, to:{kind:'boxIn',box:'set',port:0}, label:'D', note:'Drawing' },
+
+          { from:{kind:'boxOut',box:'mix',port:0}, to:{kind:'boxIn',box:'war',port:0}, label:'M', note:'Mortar' },
+          { from:{kind:'boxOut',box:'set',port:0}, to:{kind:'boxIn',box:'war',port:1}, label:'L', note:'Line' },
+
+          { from:{kind:'extIn',port:4}, to:{kind:'boxIn',box:'war',port:2}, label:'B', note:'Bricks' },
+          { from:{kind:'extIn',port:5}, to:{kind:'boxIn',box:'war',port:3}, label:'T', note:'Trusses' },
+
+          { from:{kind:'boxOut',box:'war',port:0}, to:{kind:'extOut',port:0}, label:'House', note:'Shell output' },
+        ],
+        layout: {
+          boxSize: { w: 250, h: 140 },
+          boxPositions: { mix:{x:0.30,y:0.36}, set:{x:0.30,y:0.72}, war:{x:0.70,y:0.52} }
+        }
+      };
+
+      return { scope, dynamics, interchangeA, interchangeB, operadHier, operadFlat };
+    }
+
+    function canonicalSignature(model, ignoreGroups=true){
+      const boxes = model.boxes.map(b => ({
+        id: b.id,
+        label: b.label,
+        inputs: b.inputs.slice(),
+        outputs: b.outputs.slice()
+      })).sort((a,b) => (a.label.localeCompare(b.label) || a.id.localeCompare(b.id)));
+
+      const wires = model.wires.map(w => ({
+        from: endpointSig(w.from, model, boxes),
+        to: endpointSig(w.to, model, boxes),
+        label: w.label || ''
+      })).sort((a,b) => (a.from.localeCompare(b.from) || a.to.localeCompare(b.to) || a.label.localeCompare(b.label)));
+
+      return JSON.stringify({ boxes, wires });
+    }
+
+    function endpointSig(ep, model, sortedBoxes){
+      if(ep.kind === 'extIn') return `IN:${model.inputs[ep.port] ?? ep.port}`;
+      if(ep.kind === 'extOut') return `OUT:${model.outputs[ep.port] ?? ep.port}`;
+      // box endpoints: key by label to remove dependency on internal IDs
+      const b = model.boxes.find(x => x.id === ep.box);
+      const lbl = b ? b.label : ep.box;
+      return `${lbl}:${ep.kind === 'boxIn' ? 'in' : 'out'}:${ep.port}`;
+    }
+
+    // ---------- Operad-algebra demonstration: oapply on a DAG wiring diagram ----------
+    function topoOrder(model){
+      const ids = model.boxes.map(b => b.id);
+      const edges = new Map(ids.map(id => [id, new Set()]));
+      const indeg = new Map(ids.map(id => [id, 0]));
+
+      for(const w of model.wires){
+        if(w.from.kind === 'boxOut' && w.to.kind === 'boxIn'){
+          const a = w.from.box, b = w.to.box;
+          if(a !== b && edges.has(a)){
+            if(!edges.get(a).has(b)){
+              edges.get(a).add(b);
+              indeg.set(b, (indeg.get(b) || 0) + 1);
+            }
+          }
+        }
+      }
+
+      const q = [];
+      for(const id of ids) if((indeg.get(id) || 0) === 0) q.push(id);
+      const order = [];
+      while(q.length){
+        // stable
+        q.sort();
+        const n = q.shift();
+        order.push(n);
+        for(const m of (edges.get(n) || [])){
+          indeg.set(m, (indeg.get(m) || 0) - 1);
+          if(indeg.get(m) === 0) q.push(m);
+        }
+      }
+      return order;
+    }
+
+    function buildCompositeFunction(model, semanticsByBox){
+      const order = topoOrder(model);
+
+      // map of wire targets for each box input
+      // For each box input port, find the incoming wire (assume at most one for this toy)
+      const incoming = new Map(); // key "box:in:port" => from endpoint
+      const outgoing = new Map(); // key "box:out:port" => list of to endpoints
+      const extOutFrom = new Map(); // extOut port => from endpoint
+
+      for(const w of model.wires){
+        if(w.to.kind === 'boxIn'){
+          incoming.set(`${w.to.box}:${w.to.port}`, w.from);
+        }
+        if(w.from.kind === 'boxOut'){
+          const key = `${w.from.box}:${w.from.port}`;
+          if(!outgoing.has(key)) outgoing.set(key, []);
+          outgoing.get(key).push(w.to);
+        }
+        if(w.to.kind === 'extOut'){
+          extOutFrom.set(w.to.port, w.from);
+        }
+      }
+
+      // External input mapping: value array by index
+      function getExtInputVal(args, port){
+        return args[port];
+      }
+
+      function evalEndpoint(values, args, ep){
+        if(ep.kind === 'extIn') return getExtInputVal(args, ep.port);
+        if(ep.kind === 'boxOut') return values.get(`${ep.box}:out:${ep.port}`);
+        if(ep.kind === 'boxIn') return values.get(`${ep.box}:in:${ep.port}`);
+        if(ep.kind === 'extOut') return values.get(`OUT:${ep.port}`);
+        return undefined;
+      }
+
+      return function(args){
+        const values = new Map();
+
+        // Evaluate boxes in topological order
+        for(const boxId of order){
+          const box = model.boxes.find(b => b.id === boxId);
+          const f = semanticsByBox[boxId];
+          if(typeof f !== 'function'){
+            throw new Error(`Missing semantics for box: ${boxId} (${box.label})`);
+          }
+
+          const inVals = box.inputs.map((_,i) => {
+            const src = incoming.get(`${boxId}:${i}`);
+            if(!src) return undefined;
+            return evalEndpoint(values, args, src);
+          });
+
+          // store box input port values
+          for(let i=0;i<inVals.length;i++){
+            values.set(`${boxId}:in:${i}`, inVals[i]);
+          }
+
+          const outVals = f(inVals);
+
+          // store outputs
+          for(let j=0;j<box.outputs.length;j++){
+            values.set(`${boxId}:out:${j}`, outVals[j]);
+          }
+        }
+
+        // collect external outputs
+        const outs = model.outputs.map((_,i) => {
+          const src = extOutFrom.get(i);
+          if(!src) return undefined;
+          return evalEndpoint(values, args, src);
+        });
+
+        return outs;
+      };
+    }
+
+    // ---------- Hybrid simulation ----------
+    function pseudoNoise(t){
+      // deterministic pseudo-noise in [0,1]
+      const x = Math.sin(12.9898 * t + 78.233) * 43758.5453;
+      return x - Math.floor(x);
+    }
+
+    function simulateHybrid(params){
+      const dt = params.dt;
+      const steps = Math.max(2, Math.floor(params.daysTotal / dt) + 1);
+
+      let h = 0.0;
+      let s = 0.0;
+
+      let nextUpdate = 0.0;
+      let wallDoneDay = null;
+      let roofStartTime = Infinity;
+
+      const tArr = new Array(steps);
+      const hArr = new Array(steps);
+      const sArr = new Array(steps);
+      const windArr = new Array(steps);
+      const readyArr = new Array(steps);
+
+      for(let i=0;i<steps;i++){
+        const t = i * dt;
+
+        // Discrete wall update at integer days (or every period)
+        while(t + 1e-9 >= nextUpdate){
+          const dayIndex = Math.round(nextUpdate); // period is 1 day in this model
+          if(dayIndex >= params.wallStartDay && h < params.wallTarget - 1e-12){
+            h = Math.min(params.wallTarget, h + params.wallRate);
+            if(h >= params.wallTarget - 1e-12 && wallDoneDay === null){
+              wallDoneDay = dayIndex;
+              roofStartTime = wallDoneDay + params.roofDelay;
+            }
+          }
+          nextUpdate += params.wallUpdatePeriod;
+          // stop runaway loop if dt is huge
+          if(nextUpdate > t + 2*params.wallUpdatePeriod) break;
+        }
+
+        // Wind (continuous, deterministic)
+        const wind =
+          params.windBase * (1 + params.windVariation * Math.sin(2*Math.PI * t / params.windPeriod)) +
+          params.windNoise * (pseudoNoise(t) - 0.5);
+
+        const ready = (roofStartTime !== Infinity && t >= roofStartTime) ? 1.0 : 0.0;
+
+        // roof ODE: s' = install*(1-s) - decay*wind*s
+        const install = ready * params.roofInstallRate;
+        const decay = params.roofDecayRate * Math.max(0, wind);
+
+        // Keep s=0 before roof begins (toy assumption)
+        if(ready <= 0){
+          s = 0.0;
+        } else {
+          const ds = dt * (install * (1 - s) - decay * s);
+          s = clamp(s + ds, 0, 1);
+        }
+
+        tArr[i] = t;
+        hArr[i] = h;
+        sArr[i] = s;
+        windArr[i] = wind;
+        readyArr[i] = ready;
+      }
+
+      // milestones
+      const wallDone = wallDoneDay;
+      const roofStart = (roofStartTime !== Infinity) ? roofStartTime : null;
+      const stableThresh = params.stabilityThreshold;
+
+      let stableTime = null;
+      for(let i=0;i<steps;i++){
+        if(sArr[i] >= stableThresh){
+          stableTime = tArr[i];
+          break;
+        }
+      }
+
+      return {
+        t: tArr, h: hArr, s: sArr, wind: windArr, ready: readyArr,
+        milestones: {
+          wallDoneDay: wallDone,
+          roofStartDay: roofStart,
+          stabilityThreshold: stableThresh,
+          firstStableDay: stableTime
+        }
+      };
+    }
+
+    // ---------- Plotting ----------
+    function setupHiDPICanvas(canvas){
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const w = Math.max(10, Math.floor(rect.width * dpr));
+      const h = Math.max(10, Math.floor(rect.height * dpr));
+      if(canvas.width !== w) canvas.width = w;
+      if(canvas.height !== h) canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr,0,0,dpr,0,0); // draw in CSS pixels
+      return ctx;
+    }
+
+    function drawLinePlot(canvas, series, options){
+      const ctx = setupHiDPICanvas(canvas);
+      const rect = canvas.getBoundingClientRect();
+      const W = rect.width, H = rect.height;
+
+      ctx.clearRect(0,0,W,H);
+
+      const padL = 44, padR = 14, padT = 14, padB = 34;
+      const innerW = W - padL - padR;
+      const innerH = H - padT - padB;
+
+      const xs = series.x;
+      const ys = series.y;
+      const n = Math.min(xs.length, ys.length);
+
+      let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+      for(let i=0;i<n;i++){
+        const x = xs[i], y = ys[i];
+        if(Number.isFinite(x)){ xMin = Math.min(xMin,x); xMax = Math.max(xMax,x); }
+        if(Number.isFinite(y)){ yMin = Math.min(yMin,y); yMax = Math.max(yMax,y); }
+      }
+      if(!Number.isFinite(xMin) || !Number.isFinite(yMin)){
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.font = '14px ui-sans-serif, system-ui';
+        ctx.fillText('No data', 14, 20);
+        return;
+      }
+      const yPad = (yMax - yMin) * 0.08 + 1e-9;
+      yMin -= yPad; yMax += yPad;
+
+      function xToPx(x){ return padL + (x - xMin) / (xMax - xMin) * innerW; }
+      function yToPx(y){ return padT + (1 - (y - yMin) / (yMax - yMin)) * innerH; }
+
+      // axes
+      ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padL, padT);
+      ctx.lineTo(padL, padT + innerH);
+      ctx.lineTo(padL + innerW, padT + innerH);
+      ctx.stroke();
+
+      // ticks
+      ctx.fillStyle = 'rgba(255,255,255,0.70)';
+      ctx.font = '12px ui-monospace, monospace';
+
+      const yTicks = 4;
+      for(let k=0;k<=yTicks;k++){
+        const t = k / yTicks;
+        const yVal = yMin + (1 - t) * (yMax - yMin);
+        const y = padT + t * innerH;
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(padL + innerW, y);
+        ctx.stroke();
+        ctx.fillText(yVal.toFixed(2), 6, y+4);
+      }
+
+      const xTicks = 5;
+      for(let k=0;k<=xTicks;k++){
+        const t = k / xTicks;
+        const xVal = xMin + t * (xMax - xMin);
+        const x = padL + t * innerW;
+        ctx.strokeStyle = 'rgba(255,255,255,0.10)';
+        ctx.beginPath();
+        ctx.moveTo(x, padT);
+        ctx.lineTo(x, padT + innerH);
+        ctx.stroke();
+        ctx.fillText(xVal.toFixed(1), x - 10, padT + innerH + 22);
+      }
+
+      // title
+      ctx.fillStyle = 'rgba(255,255,255,0.86)';
+      ctx.font = '13px ui-sans-serif, system-ui';
+      ctx.fillText(options.title || '', padL, 16);
+
+      // line
+      ctx.strokeStyle = options.stroke || 'rgba(124,255,178,0.92)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for(let i=0;i<n;i++){
+        const x = xToPx(xs[i]);
+        const y = yToPx(ys[i]);
+        if(i===0) ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+
+      // optional threshold line
+      if(typeof options.threshold === 'number'){
+        const y = yToPx(options.threshold);
+        ctx.strokeStyle = 'rgba(255,210,124,0.75)';
+        ctx.setLineDash([6,6]);
+        ctx.beginPath();
+        ctx.moveTo(padL, y);
+        ctx.lineTo(padL + innerW, y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(255,210,124,0.85)';
+        ctx.font = '12px ui-monospace, monospace';
+        ctx.fillText(`threshold ${options.threshold.toFixed(2)}`, padL + 8, y - 6);
+      }
+
+      return {
+        xToPx, yToPx, xMin, xMax, yMin, yMax, padL, padT, innerW, innerH
+      };
+    }
+
+    function attachChartTooltip(canvas, series, metaGetter){
+      let pinned = null;
+
+      canvas.addEventListener('click', (ev) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = ev.clientX - rect.left;
+        // find nearest index by x in pixels (assume monotonic x)
+        const xs = series.x;
+        const n = xs.length;
+        if(n < 2) return;
+        // map x to t by proportion in css pixels
+        const tMin = xs[0], tMax = xs[n-1];
+        const t = tMin + (x / rect.width) * (tMax - tMin);
+        // binary search
+        let lo = 0, hi = n-1;
+        while(hi - lo > 1){
+          const mid = (lo + hi) >> 1;
+          if(xs[mid] < t) lo = mid; else hi = mid;
+        }
+        const idx = (Math.abs(xs[lo] - t) < Math.abs(xs[hi] - t)) ? lo : hi;
+        pinned = { idx, x: ev.clientX, y: ev.clientY };
+        const m = metaGetter(idx);
+        toast(m, 'info', 4200);
+      }, { passive: true });
+
+      return () => pinned;
+    }
+
+    // ---------- UI wiring ----------
+    function setActiveTab(name){
+      const tabs = ['diagram','proofs','sim','julia'];
+      for(const t of tabs){
+        const sec = document.getElementById(`tab-${t}`);
+        const btns = Array.from(document.querySelectorAll('.tabBtn'));
+        if(sec) sec.classList.toggle('hidden', t !== name);
+        for(const b of btns){
+          if(b.getAttribute('data-tab') === t){
+            b.setAttribute('aria-selected', (t === name) ? 'true' : 'false');
+          }
+        }
+      }
+      // re-render plots on entry to sim
+      if(name === 'sim'){
+        requestAnimationFrame(() => {
+          if(window.__appState && window.__appState.lastSim){
+            renderSimPlots(window.__appState.lastSim);
+          }
+        });
+      }
+    }
+
+    function downloadText(filename, text, mime='text/plain'){
+      const blob = new Blob([text], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function downloadSvg(svg, filename){
+      const xml = new XMLSerializer().serializeToString(svg);
+      const header = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      downloadText(filename, header + xml, 'image/svg+xml');
+    }
+
+    function copyFromSelector(sel){
+      const el = document.querySelector(sel);
+      if(!el) return false;
+      const text = el.innerText || el.textContent || '';
+      return navigator.clipboard.writeText(text).then(() => true).catch(() => false);
+    }
+
+    // ---------- Equality checks ----------
+    function setStatus(el, kind, text){
+      el.classList.remove('ok','warn','bad');
+      if(kind) el.classList.add(kind);
+      const span = el.querySelector('span:last-child');
+      if(span) span.textContent = text;
+    }
+
+    // ---------- Simulation UI ----------
+    const paramDefs = [
+      { key:'daysTotal', label:'Total simulated days', min: 10, max: 60, step: 1, value: 30, fmt: v=>`${v} d` },
+      { key:'dt', label:'Continuous step (days)', min: 0.02, max: 0.25, step: 0.01, value: 0.05, fmt: v=>v.toFixed(2) },
+      { key:'wallTarget', label:'Wall target height H_target (m)', min: 1.0, max: 4.0, step: 0.1, value: 2.4, fmt: v=>v.toFixed(1) },
+      { key:'wallRate', label:'Wall daily build rate r_wall (m/day)', min: 0.05, max: 0.5, step: 0.01, value: 0.20, fmt: v=>v.toFixed(2) },
+      { key:'wallStartDay', label:'Wall start day', min: 0, max: 10, step: 1, value: 0, fmt: v=>`day ${v}` },
+      { key:'roofDelay', label:'Delay after walls complete (days)', min: 0, max: 7, step: 0.5, value: 1.0, fmt: v=>v.toFixed(1) },
+      { key:'roofInstallRate', label:'Roof install rate k_install (/day)', min: 0.2, max: 3.0, step: 0.05, value: 1.2, fmt: v=>v.toFixed(2) },
+      { key:'roofDecayRate', label:'Stability decay factor k_decay', min: 0.0, max: 1.2, step: 0.02, value: 0.45, fmt: v=>v.toFixed(2) },
+      { key:'windBase', label:'Wind base level', min: 0.0, max: 3.0, step: 0.05, value: 1.0, fmt: v=>v.toFixed(2) },
+      { key:'windVariation', label:'Wind variation amplitude', min: 0.0, max: 1.0, step: 0.02, value: 0.35, fmt: v=>v.toFixed(2) },
+      { key:'windPeriod', label:'Wind period (days)', min: 2.0, max: 14.0, step: 0.5, value: 7.0, fmt: v=>v.toFixed(1) },
+      { key:'windNoise', label:'Wind noise (deterministic)', min: 0.0, max: 0.8, step: 0.02, value: 0.10, fmt: v=>v.toFixed(2) },
+      { key:'stabilityThreshold', label:'Stability threshold', min: 0.2, max: 0.95, step: 0.01, value: 0.75, fmt: v=>v.toFixed(2) },
+    ];
+
+    function renderControls(container, params){
+      container.innerHTML = '';
+      for(const p of paramDefs){
+        const row = document.createElement('div');
+        row.className = 'controlRow';
+
+        const lab = document.createElement('label');
+        lab.textContent = p.label;
+
+        const vSpan = document.createElement('span');
+        vSpan.className = 'v';
+        vSpan.textContent = p.fmt(params[p.key]);
+        lab.appendChild(vSpan);
+
+        const input = document.createElement('input');
+        input.type = 'range';
+        input.min = p.min;
+        input.max = p.max;
+        input.step = p.step;
+        input.value = params[p.key];
+        input.setAttribute('data-key', p.key);
+
+        input.addEventListener('input', () => {
+          params[p.key] = parseFloat(input.value);
+          vSpan.textContent = p.fmt(params[p.key]);
+          // live update (debounced)
+          scheduleSim();
+        });
+
+        row.appendChild(lab);
+        row.appendChild(input);
+        container.appendChild(row);
+      }
+
+      // fixed params
+      params.wallUpdatePeriod = 1.0;
+    }
+
+    let simTimer = null;
+    function scheduleSim(){
+      if(simTimer) clearTimeout(simTimer);
+      simTimer = setTimeout(() => runSimulation(false), 120);
+    }
+
+    function renderMilestones(sim, params){
+      const m = sim.milestones;
+      const lines = [];
+      lines.push(`Wall target height: ${params.wallTarget.toFixed(2)} m`);
+      if(m.wallDoneDay === null){
+        lines.push(`Wall completion day: (not reached in ${params.daysTotal} days)`);
+      } else {
+        lines.push(`Wall completion day: day ${m.wallDoneDay}`);
+      }
+      if(m.roofStartDay === null){
+        lines.push(`Roof start day: (not started)`);
+      } else {
+        lines.push(`Roof start day: day ${m.roofStartDay.toFixed(2)}`);
+      }
+      lines.push(`Stability threshold: ${m.stabilityThreshold.toFixed(2)}`);
+      if(m.firstStableDay === null){
+        lines.push(`First time stability ≥ threshold: (not reached)`);
+      } else {
+        lines.push(`First time stability ≥ threshold: day ${m.firstStableDay.toFixed(2)}`);
+      }
+      return lines.join('\n');
+    }
+
+    function renderSimPlots(sim){
+      const wallCanvas = document.getElementById('plotWall');
+      const roofCanvas = document.getElementById('plotRoof');
+      if(!wallCanvas || !roofCanvas) return;
+
+      const params = window.__appState.params;
+      drawLinePlot(wallCanvas, {x: sim.t, y: sim.h}, {
+        title: 'h(t) — wall height',
+        stroke: 'rgba(124,255,178,0.92)'
+      });
+
+      drawLinePlot(roofCanvas, {x: sim.t, y: sim.s}, {
+        title: 's(t) — roof stability',
+        stroke: 'rgba(124,165,255,0.92)',
+        threshold: params.stabilityThreshold
+      });
+    }
+
+    function runSimulation(showToast=true){
+      const st = window.__appState;
+      const params = st.params;
+
+      try{
+        const sim = simulateHybrid(params);
+        st.lastSim = sim;
+
+        document.getElementById('milestones').textContent = renderMilestones(sim, params);
+        renderSimPlots(sim);
+
+        setStatus(document.getElementById('statusSim'), 'ok', 'Updated');
+
+        if(showToast) toast('Simulation updated.', 'info', 2400);
+      } catch(e){
+        console.error(e);
+        setStatus(document.getElementById('statusSim'), 'bad', 'Error');
+        toast('Simulation error — see console.', 'warn', 5200);
+      }
+    }
+
+    // ---------- init ----------
+    function init(){
+      window.__canvasStatus = 'loading';
+
+      // tab buttons
+      for(const b of Array.from(document.querySelectorAll('.tabBtn'))){
+        b.addEventListener('click', () => {
+          setActiveTab(b.getAttribute('data-tab'));
+        });
+      }
+
+      const models = buildModels();
+      const svgMain = document.getElementById('mainDiagram');
+      const svgInterA = document.getElementById('diagInterchangeA');
+      const svgInterB = document.getElementById('diagInterchangeB');
+      const svgOpHier = document.getElementById('diagOperadHier');
+      const svgOpFlat = document.getElementById('diagOperadFlat');
+      const svgDynSmall = document.getElementById('diagDynamicsSmall');
+      const svgSimSmall = document.getElementById('diagDynamicsSmall');
+
+      let currentModel = models.scope;
+
+      function renderMain(){
+        renderWiringDiagram(svgMain, currentModel, { showGroups: true, height: 600 });
+      }
+
+      // Initial render
+      renderMain();
+
+      // Render proof diagrams
+      renderWiringDiagram(svgInterA, models.interchangeA, { showGroups: true, height: 520 });
+      renderWiringDiagram(svgInterB, models.interchangeB, { showGroups: true, height: 520 });
+      renderWiringDiagram(svgOpHier, models.operadHier, { showGroups: true, height: 520 });
+      renderWiringDiagram(svgOpFlat, models.operadFlat, { showGroups: false, height: 520 });
+      renderWiringDiagram(svgDynSmall, models.dynamics, { showGroups: false, height: 520 });
+
+      // Diagram switch buttons
+      document.getElementById('btnScope').addEventListener('click', () => {
+        currentModel = models.scope;
+        renderMain();
+        toast('Showing scope wiring diagram.', 'info', 2400);
+      });
+      document.getElementById('btnDynamics').addEventListener('click', () => {
+        currentModel = models.dynamics;
+        renderMain();
+        toast('Showing dynamics wiring diagram.', 'info', 2400);
+      });
+
+      // export buttons
+      document.getElementById('btnExportSVG').addEventListener('click', () => {
+        downloadSvg(svgMain, `wiring-diagram-${currentModel.id}.svg`);
+        toast('Downloaded SVG.', 'info', 2400);
+      });
+      document.getElementById('btnExportJSON').addEventListener('click', () => {
+        downloadText(`wiring-diagram-${currentModel.id}.json`, JSON.stringify(currentModel, null, 2), 'application/json');
+        toast('Downloaded JSON.', 'info', 2400);
+      });
+
+      // Equality check: interchange
+      document.getElementById('btnCheckInterchange').addEventListener('click', () => {
+        const sigA = canonicalSignature(models.interchangeA, true);
+        const sigB = canonicalSignature(models.interchangeB, true);
+
+        const ok = (sigA === sigB);
+        const status = document.getElementById('statusInterchange');
+        setStatus(status, ok ? 'ok' : 'bad', ok ? 'Equal ✓ (same normal form)' : 'Not equal ✗');
+        toast(ok ? 'Interchange check: equal (same underlying wiring diagram).' : 'Interchange check: not equal.', ok ? 'info' : 'warn', 5200);
+      });
+
+      // Equality check: operad-algebra substitution law (evaluate both composites)
+      document.getElementById('btnCheckOperadLaw').addEventListener('click', () => {
+        try{
+          // Define primitive semantics as pure functions on numbers
+          const mix = (ins) => {
+            const S = ins[0] ?? 0, C = ins[1] ?? 0, W = ins[2] ?? 0;
+            const M = S + C + 0.8*W;
+            return [M];
+          };
+          const set = (ins) => {
+            const D = ins[0] ?? 0;
+            const L = 0.5 + 0.5*clamp(D, 0, 1); // [0.5,1.0]
+            return [L];
+          };
+          const war = (ins) => {
+            const M = ins[0] ?? 0, L = ins[1] ?? 0, B = ins[2] ?? 0, T = ins[3] ?? 0;
+            const House = 0.9*M + 1.5*L + 0.6*B + 2.0*T;
+            return [House];
+          };
+
+          // Hierarchical: PREP is itself a composite function (mix+set)
+          const prepInner = models.operadFlat; // contains mix, set, war, but we'll use only mix+set part by slicing
+          // Build a dedicated prep diagram:
+          const prepDiag = {
+            id: 'prepOnly',
+            inputs: ['S','C','H₂O','D'],
+            outputs: ['M','L'],
+            boxes: [
+              { id:'mix', label:'Mix', inputs:['S','C','H₂O'], outputs:['M'] },
+              { id:'set', label:'Set', inputs:['D'], outputs:['L'] },
+            ],
+            wires: [
+              { from:{kind:'extIn',port:0}, to:{kind:'boxIn',box:'mix',port:0}, label:'S' },
+              { from:{kind:'extIn',port:1}, to:{kind:'boxIn',box:'mix',port:1}, label:'C' },
+              { from:{kind:'extIn',port:2}, to:{kind:'boxIn',box:'mix',port:2}, label:'H₂O' },
+              { from:{kind:'extIn',port:3}, to:{kind:'boxIn',box:'set',port:0}, label:'D' },
+              { from:{kind:'boxOut',box:'mix',port:0}, to:{kind:'extOut',port:0}, label:'M' },
+              { from:{kind:'boxOut',box:'set',port:0}, to:{kind:'extOut',port:1}, label:'L' },
+            ],
+            layout: { boxPositions: { mix:{x:0.30,y:0.38}, set:{x:0.30,y:0.70} } }
+          };
+
+          const prepFn = buildCompositeFunction(prepDiag, { mix, set });
+
+          // For operadHier, provide semantics for prep as the composite function above, and war as primitive
+          const hierFn = buildCompositeFunction(models.operadHier, {
+            prep: (ins) => prepFn([ins[0],ins[1],ins[2],ins[3]]), // S,C,H2O,D -> M,L
+            war
+          });
+
+          // Flat function uses mix, set, war directly
+          const flatFn = buildCompositeFunction(models.operadFlat, { mix, set, war });
+
+          // Evaluate both on a sample input vector
+          const sample = [3.0, 2.0, 1.0, 0.7, 12.0, 5.0]; // S,C,H2O,D,B,T
+          const outHier = hierFn(sample)[0];
+          const outFlat = flatFn(sample)[0];
+
+          const ok = Math.abs(outHier - outFlat) < 1e-9;
+          const status = document.getElementById('statusOperad');
+          setStatus(status, ok ? 'ok' : 'bad', ok ? 'Equal ✓ (same semantics)' : 'Not equal ✗');
+
+          const resultEl = document.getElementById('operadLawResult');
+          resultEl.textContent =
+            `Sample input [S,C,H₂O,D,B,T] = ${JSON.stringify(sample)}\n` +
+            `hierarchical output  = ${outHier.toFixed(8)}\n` +
+            `flattened output     = ${outFlat.toFixed(8)}\n` +
+            `difference           = ${(outHier - outFlat).toExponential(3)}\n` +
+            (ok ? '✅ Equal (matches operad algebra substitution law).' : '❌ Not equal (unexpected).');
+
+          toast(ok ? 'Operad-law check: equal (hierarchical = flattened).' : 'Operad-law check failed.', ok ? 'info' : 'warn', 5200);
+        } catch(e){
+          console.error(e);
+          setStatus(document.getElementById('statusOperad'), 'bad', 'Error');
+          document.getElementById('operadLawResult').textContent = 'Error while checking: ' + String(e);
+          toast('Operad-law check error — see console.', 'warn', 5200);
+        }
+      });
+
+      // Simulation controls
+      const params = Object.fromEntries(paramDefs.map(p => [p.key, p.value]));
+      params.wallUpdatePeriod = 1.0;
+
+      window.__appState = {
+        params,
+        lastSim: null,
+        models,
+        currentModelId: currentModel.id
+      };
+
+      renderControls(document.getElementById('controls'), params);
+
+      document.getElementById('btnRun').addEventListener('click', () => runSimulation(true));
+      document.getElementById('btnExportSim').addEventListener('click', () => {
+        const st = window.__appState;
+        if(!st.lastSim){
+          toast('Run the simulation first.', 'warn', 3200);
+          return;
+        }
+        downloadText('simulation.json', JSON.stringify({ params: st.params, sim: st.lastSim }, null, 2), 'application/json');
+        toast('Downloaded simulation.json', 'info', 2400);
+      });
+
+      // Julia copy buttons
+      for(const b of Array.from(document.querySelectorAll('.copyBtn'))){
+        b.addEventListener('click', async () => {
+          const target = b.getAttribute('data-copy');
+          try{
+            const ok = await copyFromSelector(target);
+            toast(ok ? 'Copied to clipboard.' : 'Copy failed (permission).', ok ? 'info' : 'warn', 2600);
+          } catch(e){
+            toast('Copy failed.', 'warn', 2600);
+          }
+        });
+      }
+
+      // initial sim run
+      runSimulation(false);
+
+      // resize rerender
+      const ro = new ResizeObserver(() => {
+        try{
+          renderMain();
+          renderWiringDiagram(svgInterA, models.interchangeA, { showGroups: true, height: 520 });
+          renderWiringDiagram(svgInterB, models.interchangeB, { showGroups: true, height: 520 });
+          renderWiringDiagram(svgOpHier, models.operadHier, { showGroups: true, height: 520 });
+          renderWiringDiagram(svgOpFlat, models.operadFlat, { showGroups: false, height: 520 });
+          renderWiringDiagram(svgDynSmall, models.dynamics, { showGroups: false, height: 520 });
+
+          if(window.__appState.lastSim){
+            renderSimPlots(window.__appState.lastSim);
+          }
+        } catch(e){
+          console.warn('resize render failed', e);
+        }
+      });
+      ro.observe(shell);
+
+      // Mark success for watchdog (both main container and descendant marker)
+      app.setAttribute('data-smoke', 'ok');
+      smokeMarker.setAttribute('data-smoke', 'ok');
+      window.__canvasStatus = 'ready';
+
+      toast('Loaded. Switch tabs to explore diagrams, proofs, and simulation.', 'info', 3400);
+    }
+
+    try{
+      init();
+    } catch(e){
+      fallback(e);
+    }
+  })();
+  </script>
+</body>
+</html>
