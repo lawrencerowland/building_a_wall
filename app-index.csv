@@ -1,2 +1,3 @@
 #,Name,Description,Category,Path
 1,Wall-building wiring diagram (W),Interactive wiring diagram for the wall-building process with drag-and-zoom canvas,Wiring diagrams,apps/wall-wiring-diagram/index.html
+2,SysML vs wiring diagram (construction),Interactive comparison of SysML internal block diagram and categorical wiring diagram with type checks and semantics,Wiring diagrams,apps/sysml-wiring-comparison/index.html
