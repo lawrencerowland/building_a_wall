@@ -1,2 +1,3 @@
 #,Name,Description,Category,Path
 1,Wall-building wiring diagram (W),Interactive wiring diagram for the wall-building process with drag-and-zoom canvas,Wiring diagrams,apps/wall-wiring-diagram/index.html
+2,Construction as an Operad Algebra,"Interactive wiring diagrams, equality checks, and hybrid simulation for a wall-and-roof operad model",Compositional modeling,apps/construction-operad-algebra/index.html
