@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SysML Block Diagram → Categorical Wiring Diagram (Construction)</title>
+<link rel="stylesheet" href="../../common.css" />
+<style>
+  :root{
+    --bg:#0b0d10;
+    --card:#12161b;
+    --card2:#0f1318;
+    --text:#e9eef3;
+    --muted:#a7b0bb;
+    --stroke:#2a3440;
+    --stroke2:#3a4450;
+    --accent:#6aa9ff;
+    --good:#2bd4a8;
+    --warn:#ffd166;
+    --bad:#ff5d5d;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f6f7f9;
+      --card:#ffffff;
+      --card2:#f2f4f7;
+      --text:#111827;
+      --muted:#4b5563;
+      --stroke:#d1d5db;
+      --stroke2:#cbd5e1;
+      --accent:#1d4ed8;
+      --good:#047857;
+      --warn:#b45309;
+      --bad:#b91c1c;
+    }
+  }
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    background:var(--bg);
+    color:var(--text);
+  }
+  .min-h-64{min-height:16rem;}
+  .container{
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 2rem 1rem 3rem;
+  }
+  header{
+    display:flex;
+    flex-direction:column;
+    gap:0.75rem;
+    margin-bottom:1.25rem;
+  }
+  h1{
+    font-size: clamp(1.35rem, 2.2vw, 2.1rem);
+    margin:0;
+    letter-spacing:0.2px;
+  }
+  .lead{
+    margin:0;
+    color:var(--muted);
+    max-width: 70ch;
+    line-height:1.45;
+  }
+  .pillRow{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.5rem;
+    align-items:center;
+  }
+  .pill{
+    font-size:0.85rem;
+    border:1px solid var(--stroke);
+    background:var(--card2);
+    padding:0.35rem 0.55rem;
+    border-radius:999px;
+    color:var(--text);
+    white-space:nowrap;
+  }
+  .pill code{font-family:var(--mono); font-size:0.85rem;}
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:1rem;
+  }
+  @media (max-width: 56rem){
+    .grid{grid-template-columns:1fr;}
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--stroke);
+    border-radius:1rem;
+    padding:1rem;
+    box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.08);
+  }
+  .card h2{
+    margin:0 0 0.75rem 0;
+    font-size: 1.05rem;
+  }
+  .card h3{
+    margin:0 0 0.5rem 0;
+    font-size: 1rem;
+  }
+  .svgWrap{
+    width:100%;
+    aspect-ratio: 11 / 5.2;
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+    border:1px solid var(--stroke2);
+    border-radius:0.85rem;
+    overflow:hidden;
+    position:relative;
+  }
+  svg{width:100%; height:100%; display:block;}
+  .hint{
+    margin:0.75rem 0 0;
+    color:var(--muted);
+    font-size:0.92rem;
+    line-height:1.4;
+  }
+  .controls{
+    display:flex;
+    flex-wrap:wrap;
+    gap:0.5rem;
+    align-items:center;
+    margin-top:0.75rem;
+  }
+  select, button, input[type="number"], input[type="text"]{
+    background:var(--card2);
+    border:1px solid var(--stroke2);
+    color:var(--text);
+    border-radius:0.65rem;
+    padding:0.55rem 0.7rem;
+    font-size:0.95rem;
+    outline:none;
+  }
+  button{cursor:pointer;}
+  button:focus, select:focus, input:focus{
+    border-color: var(--accent);
+    box-shadow: 0 0 0 0.2rem rgba(106,169,255,0.25);
+  }
+  .controls label{
+    display:flex;
+    gap:0.4rem;
+    align-items:center;
+    color:var(--muted);
+    font-size:0.95rem;
+  }
+  .controls input[type="checkbox"]{
+    width:1.05rem;
+    height:1.05rem;
+    accent-color: var(--accent);
+  }
+  .split{
+    display:grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap:1rem;
+  }
+  @media (max-width: 56rem){
+    .split{grid-template-columns:1fr;}
+  }
+  .detailBox{
+    border:1px dashed var(--stroke2);
+    border-radius:0.85rem;
+    padding:0.85rem;
+    background: rgba(0,0,0,0.02);
+    min-height: 10rem;
+  }
+  .detailTitle{
+    display:flex;
+    justify-content:space-between;
+    gap:0.5rem;
+    align-items:baseline;
+  }
+  .detailTitle h3{margin:0;}
+  .badge{
+    font-family:var(--mono);
+    font-size:0.8rem;
+    padding:0.2rem 0.45rem;
+    border-radius:0.5rem;
+    border:1px solid var(--stroke2);
+    background:var(--card2);
+    color:var(--muted);
+  }
+  .detailGrid{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:0.65rem;
+    margin-top:0.65rem;
+  }
+  .kv .k{
+    font-size:0.8rem;
+    color:var(--muted);
+    margin-bottom:0.2rem;
+  }
+  .kv .v{
+    font-size:0.95rem;
+    line-height:1.35;
+  }
+  code, pre{
+    font-family:var(--mono);
+  }
+  pre{
+    white-space:pre-wrap;
+    word-break:break-word;
+    background:var(--card2);
+    border:1px solid var(--stroke2);
+    border-radius:0.85rem;
+    padding:0.85rem;
+    margin:0.75rem 0 0;
+    line-height:1.35;
+    font-size:0.92rem;
+  }
+  .mapTable{
+    width:100%;
+    border-collapse:collapse;
+    font-size:0.95rem;
+    overflow:hidden;
+    border-radius:0.85rem;
+    border:1px solid var(--stroke2);
+  }
+  .mapTable th, .mapTable td{
+    padding:0.7rem 0.75rem;
+    border-bottom:1px solid var(--stroke2);
+    vertical-align:top;
+  }
+  .mapTable th{
+    text-align:left;
+    background: var(--card2);
+    font-size:0.85rem;
+    letter-spacing:0.2px;
+    color:var(--muted);
+  }
+  .mapTable tr:last-child td{border-bottom:none;}
+  .statusLine{
+    margin-top:0.65rem;
+    padding:0.65rem 0.75rem;
+    border-radius:0.85rem;
+    border:1px solid var(--stroke2);
+    background: var(--card2);
+    color: var(--text);
+    display:flex;
+    justify-content:space-between;
+    gap:0.75rem;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .statusLine .muted{color:var(--muted);}
+  .statusGood{color:var(--good); font-weight:600;}
+  .statusBad{color:var(--bad); font-weight:700;}
+  .statusWarn{color:var(--warn); font-weight:650;}
+  .semTable{
+    width:100%;
+    border-collapse:collapse;
+    border:1px solid var(--stroke2);
+    border-radius:0.85rem;
+    overflow:hidden;
+    font-size:0.95rem;
+  }
+  .semTable th,.semTable td{
+    padding:0.6rem 0.65rem;
+    border-bottom:1px solid var(--stroke2);
+    text-align:left;
+  }
+  .semTable th{
+    background: var(--card2);
+    font-size:0.85rem;
+    color:var(--muted);
+  }
+  .semTable tr:last-child td{border-bottom:none;}
+  .semTable input{
+    width: 100%;
+    box-sizing:border-box;
+  }
+  .resultsGrid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:0.75rem;
+    margin-top:0.9rem;
+  }
+  @media (max-width: 56rem){
+    .resultsGrid{grid-template-columns:1fr 1fr;}
+  }
+  @media (max-width: 30rem){
+    .resultsGrid{grid-template-columns:1fr;}
+  }
+  .resultCard{
+    background: rgba(0,0,0,0.02);
+    border:1px solid var(--stroke2);
+    border-radius:0.85rem;
+    padding:0.75rem;
+  }
+  .resultCard .k{
+    font-size:0.8rem;
+    color:var(--muted);
+    margin-bottom:0.3rem;
+  }
+  .resultCard .v{
+    font-size:1.05rem;
+    font-weight:650;
+  }
+  .footer{
+    margin-top:1.25rem;
+    color:var(--muted);
+    font-size:0.92rem;
+    line-height:1.45;
+  }
+  .hidden{display:none !important;}
+
+  /* SVG styling */
+  .svgFrame{fill:none; stroke:var(--stroke2); stroke-width:2; rx:14; ry:14;}
+  .svgTitle{font-size:18px; fill:var(--text); font-weight:700;}
+  .svgSub{font-size:13px; fill:var(--muted);}
+  .blockRect{fill:rgba(0,0,0,0.03); stroke:var(--stroke2); stroke-width:2; rx:12; ry:12;}
+  .blockName{font-size:14px; fill:var(--text); font-weight:700;}
+  .port{fill:var(--card2); stroke:var(--stroke2); stroke-width:2; rx:3; ry:3;}
+  .portLabel{font-size:12px; fill:var(--muted);}
+  .wire{fill:none; stroke:var(--stroke2); stroke-width:2.5;}
+  .wireLabel{font-size:12px; fill:var(--muted);}
+  .connLabel{font-size:12px; fill:var(--muted);}
+  .selectable{cursor:pointer;}
+  .is-selected .blockRect,
+  .is-selected.blockRect{stroke:var(--accent); stroke-width:4;}
+  .is-selected .port,
+  .is-selected.port{stroke:var(--accent); stroke-width:3;}
+  .is-selected.wire{stroke:var(--accent); stroke-width:4.2;}
+  .is-selected .wire{stroke:var(--accent); stroke-width:4.2;}
+  .is-related.wire{stroke:rgba(43,212,168,0.85); stroke-width:3.4;}
+  .is-related .wire{stroke:rgba(43,212,168,0.85); stroke-width:3.4;}
+  .is-related .port, .is-related.port{stroke:rgba(43,212,168,0.85); stroke-width:3;}
+  .is-related .blockRect{stroke:rgba(43,212,168,0.85); stroke-width:3;}
+  .is-error.wire{stroke:var(--bad); stroke-width:5;}
+  .is-error .wire{stroke:var(--bad); stroke-width:5;}
+  .is-error .port, .is-error.port{stroke:var(--bad); stroke-width:4;}
+
+  /* Error-mode label toggles (only for conn_M) */
+  .connMerr{display:none;}
+  .error-mode .connMok{display:none;}
+  .error-mode .connMerr{display:block;}
+
+  /* Toasts */
+  #toastHost{
+    position: fixed;
+    inset: auto 1rem 1rem auto;
+    display:flex;
+    flex-direction:column;
+    gap:0.5rem;
+    z-index: 9999;
+    max-width: min(22rem, 92vw);
+    pointer-events:none;
+  }
+  .toast{
+    pointer-events:auto;
+    border:1px solid var(--stroke2);
+    background: var(--card);
+    border-radius:0.85rem;
+    padding:0.65rem 0.75rem;
+    box-shadow: 0 0.35rem 1rem rgba(0,0,0,0.18);
+    transform: translateY(0.5rem);
+    opacity:0;
+    transition: opacity 180ms ease, transform 180ms ease;
+    color: var(--text);
+    font-size:0.92rem;
+    line-height:1.35;
+  }
+  .toast--show{opacity:1; transform: translateY(0);}
+  .toast--info{border-color: rgba(106,169,255,0.55);}
+  .toast--warn{border-color: rgba(255,209,102,0.7);}
+  .toast--error{border-color: rgba(255,93,93,0.7);}
+</style>
+</head>
+<body>
+<div id="app" class="min-h-64" data-timeout="3000">
+  <div class="container">
+    <nav class="site-nav">
+      <a href="../../index.html">Back to app index</a>
+    </nav>
+    <header>
+      <h1>Block-diagram comparison: SysML Internal Block Diagram → categorical wiring diagram (wall + roof)</h1>
+      <p class="lead">
+        The SysML view (left) and the categorical wiring-diagram view (right) look similar on purpose: both are “boxes and wires”.
+        This is the key observation emphasised in the <em>Semantics of Cyber-Physical Systems</em> paper: wiring diagrams deliberately resemble engineering block diagrams (e.g. SysML),
+        but add <em>formal compositional semantics</em>.
+        The difference is that the wiring diagram is not just a picture — it is a <em>compositional syntax</em> with a precise semantics.
+      </p>
+      <div class="pillRow" aria-label="Quick guide">
+        <span class="pill"><code>tap</code>/<code>click</code> a block or wire to highlight the correspondence</span>
+        <span class="pill">toggle <code>Introduce a type error</code> to see what formal checking catches</span>
+        <span class="pill">edit durations/costs to see a tiny “algebra on the diagram”</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card" aria-labelledby="sysmlTitle">
+        <h2 id="sysmlTitle">1) “Standard” SysML-style Internal Block Diagram (IBD)</h2>
+        <div class="svgWrap" aria-label="SysML diagram container">
+          <svg viewBox="0 0 1100 520" role="img" aria-label="SysML internal block diagram for constructing a weatherproof shell">
+            <defs>
+              <marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor"></path>
+              </marker>
+            </defs>
+
+            <rect x="40" y="40" width="1020" height="440" class="svgFrame"></rect>
+            <text x="60" y="68" class="svgTitle">ibd [block] ConstructWeatherproofShell</text>
+            <text x="60" y="92" class="svgSub">Parts (tasks) with flow ports; connectors carry item flows</text>
+
+            <!-- External ports on the frame (inputs) -->
+            <g class="selectable" data-select="wire:S" data-wire="S">
+              <rect x="40" y="84" width="12" height="12" class="port"></rect>
+              <text x="60" y="94" class="portLabel">Sand (S)</text>
+            </g>
+            <g class="selectable" data-select="wire:C" data-wire="C">
+              <rect x="40" y="124" width="12" height="12" class="port"></rect>
+              <text x="60" y="134" class="portLabel">Cement (C)</text>
+            </g>
+            <g class="selectable" data-select="wire:W" data-wire="W">
+              <rect x="40" y="164" width="12" height="12" class="port"></rect>
+              <text x="60" y="174" class="portLabel">Water (W)</text>
+            </g>
+
+            <g class="selectable" data-select="wire:B" data-wire="B">
+              <rect x="40" y="224" width="12" height="12" class="port"></rect>
+              <text x="60" y="234" class="portLabel">Bricks (B)</text>
+            </g>
+
+            <g class="selectable" data-select="wire:P" data-wire="P">
+              <rect x="40" y="284" width="12" height="12" class="port"></rect>
+              <text x="60" y="294" class="portLabel">Pegs+Line (P)</text>
+            </g>
+            <g class="selectable" data-select="wire:D" data-wire="D">
+              <rect x="40" y="324" width="12" height="12" class="port"></rect>
+              <text x="60" y="334" class="portLabel">Drawing (D)</text>
+            </g>
+
+            <g class="selectable" data-select="wire:T" data-wire="T">
+              <rect x="40" y="414" width="12" height="12" class="port"></rect>
+              <text x="60" y="424" class="portLabel">Roof trusses (T)</text>
+            </g>
+
+            <!-- External port on the frame (output) -->
+            <g class="selectable" data-select="wire:SH" data-wire="SH">
+              <rect x="1048" y="284" width="12" height="12" class="port"></rect>
+              <text x="980" y="294" class="portLabel">Shell (SH)</text>
+            </g>
+
+            <!-- Internal parts (tasks) -->
+            <g class="selectable" data-select="block:mix" data-block="mix">
+              <rect x="260" y="60" width="180" height="150" class="blockRect"></rect>
+              <text x="270" y="86" class="blockName">mix : MixMortar</text>
+
+              <!-- in ports -->
+              <rect x="248" y="84" width="12" height="12" class="port selectable" data-select="wire:S" data-wire="S"></rect>
+              <rect x="248" y="124" width="12" height="12" class="port selectable" data-select="wire:C" data-wire="C"></rect>
+              <rect x="248" y="164" width="12" height="12" class="port selectable" data-select="wire:W" data-wire="W"></rect>
+              <text x="268" y="108" class="portLabel">in: S, C, W</text>
+
+              <!-- out port -->
+              <rect x="440" y="124" width="12" height="12" class="port selectable" data-select="wire:M" data-wire="M"></rect>
+              <text x="268" y="188" class="portLabel">out: Mortar (M)</text>
+            </g>
+
+            <g class="selectable" data-select="block:set" data-block="set">
+              <rect x="260" y="260" width="180" height="100" class="blockRect"></rect>
+              <text x="270" y="286" class="blockName">set : SetOutLine</text>
+
+              <rect x="248" y="284" width="12" height="12" class="port selectable" data-select="wire:P" data-wire="P"></rect>
+              <rect x="248" y="324" width="12" height="12" class="port selectable" data-select="wire:D" data-wire="D"></rect>
+              <text x="268" y="308" class="portLabel">in: P, D</text>
+
+              <rect x="440" y="304" width="12" height="12" class="port selectable" data-select="wire:L" data-wire="L"></rect>
+              <text x="268" y="348" class="portLabel">out: Line (L)</text>
+            </g>
+
+            <g class="selectable" data-select="block:wall" data-block="wall">
+              <rect x="560" y="220" width="180" height="150" class="blockRect"></rect>
+              <text x="570" y="246" class="blockName">wall : BuildWall</text>
+
+              <rect x="548" y="244" width="12" height="12" class="port selectable" data-select="wire:M" data-wire="M"></rect>
+              <rect x="548" y="284" width="12" height="12" class="port selectable" data-select="wire:L" data-wire="L"></rect>
+              <rect x="548" y="324" width="12" height="12" class="port selectable" data-select="wire:B" data-wire="B"></rect>
+              <text x="570" y="266" class="portLabel">in: B, M, L</text>
+
+              <rect x="740" y="284" width="12" height="12" class="port selectable" data-select="wire:WL" data-wire="WL"></rect>
+              <text x="570" y="350" class="portLabel">out: Walls (WL)</text>
+            </g>
+
+            <g class="selectable" data-select="block:roof" data-block="roof">
+              <rect x="860" y="220" width="180" height="150" class="blockRect"></rect>
+              <text x="870" y="246" class="blockName">roof : InstallRoof</text>
+
+              <rect x="848" y="264" width="12" height="12" class="port selectable" data-select="wire:WL" data-wire="WL"></rect>
+              <rect x="848" y="304" width="12" height="12" class="port selectable" data-select="wire:T" data-wire="T"></rect>
+              <text x="870" y="266" class="portLabel">in: WL, T</text>
+
+              <rect x="1040" y="284" width="12" height="12" class="port selectable" data-select="wire:SH" data-wire="SH"></rect>
+              <text x="870" y="350" class="portLabel">out: Shell (SH)</text>
+            </g>
+
+            <!-- Connect external inputs to parts -->
+            <path class="wire selectable" data-select="wire:S" data-wire="S" d="M52 90 L248 90"></path>
+            <path class="wire selectable" data-select="wire:C" data-wire="C" d="M52 130 L248 130"></path>
+            <path class="wire selectable" data-select="wire:W" data-wire="W" d="M52 170 L248 170"></path>
+
+            <path class="wire selectable" data-select="wire:P" data-wire="P" d="M52 290 L248 290"></path>
+            <path class="wire selectable" data-select="wire:D" data-wire="D" d="M52 330 L248 330"></path>
+
+            <!-- Bricks routed to wall input (avoid passing through set block) -->
+            <path class="wire selectable" data-select="wire:B" data-wire="B" d="M52 230 L520 230 L520 330 L548 330"></path>
+
+            <!-- Trusses routed from bottom to roof input -->
+            <path class="wire selectable" data-select="wire:T" data-wire="T" d="M52 420 L840 420 L840 310 L848 310"></path>
+
+            <!-- Internal connectors -->
+            <path class="wire selectable" data-select="conn:conn_M" data-conn="conn_M" data-wire="M" d="M452 130 L520 130 L520 250 L548 250"></path>
+            <text x="468" y="118" class="connLabel connMok">Mortar (M)</text>
+            <text x="468" y="118" class="connLabel connMerr">Trusses (T)</text>
+
+            <path class="wire selectable" data-select="conn:conn_L" data-conn="conn_L" data-wire="L" d="M452 310 L520 310 L520 290 L548 290"></path>
+            <text x="468" y="298" class="connLabel">Line (L)</text>
+
+            <path class="wire selectable" data-select="conn:conn_WL" data-conn="conn_WL" data-wire="WL" d="M752 290 L820 290 L820 270 L848 270"></path>
+            <text x="768" y="278" class="connLabel">Walls (WL)</text>
+
+            <!-- Output connector -->
+            <path class="wire selectable" data-select="wire:SH" data-wire="SH" d="M1040 290 L1048 290"></path>
+
+          </svg>
+        </div>
+        <p class="hint">
+          This is a SysML <strong>internal block diagram</strong> style: the enclosing block contains parts (tasks) with ports,
+          connected by item flows.
+        </p>
+      </section>
+
+      <section class="card" aria-labelledby="wireTitle">
+        <h2 id="wireTitle">2) Categorical wiring diagram view (string diagram)</h2>
+        <div class="svgWrap" aria-label="Wiring diagram container">
+          <svg viewBox="0 0 1100 520" role="img" aria-label="Categorical wiring diagram for constructing a weatherproof shell">
+            <text x="40" y="46" class="svgTitle">Wiring diagram (SMC string diagram)</text>
+            <text x="40" y="70" class="svgSub">Boxes are morphisms; wires are typed interfaces (objects)</text>
+
+            <!-- Boxes (same geometry, different intent) -->
+            <g class="selectable" data-select="block:mix" data-block="mix">
+              <rect x="260" y="80" width="180" height="120" class="blockRect"></rect>
+              <text x="270" y="110" class="blockName">mix</text>
+              <text x="270" y="132" class="portLabel">S ⊗ C ⊗ W → M</text>
+
+              <rect x="248" y="104" width="12" height="12" class="port selectable" data-select="wire:S" data-wire="S"></rect>
+              <rect x="248" y="134" width="12" height="12" class="port selectable" data-select="wire:C" data-wire="C"></rect>
+              <rect x="248" y="164" width="12" height="12" class="port selectable" data-select="wire:W" data-wire="W"></rect>
+              <rect x="440" y="134" width="12" height="12" class="port selectable" data-select="wire:M" data-wire="M"></rect>
+            </g>
+
+            <g class="selectable" data-select="block:set" data-block="set">
+              <rect x="260" y="280" width="180" height="100" class="blockRect"></rect>
+              <text x="270" y="310" class="blockName">set</text>
+              <text x="270" y="332" class="portLabel">P ⊗ D → L</text>
+
+              <rect x="248" y="304" width="12" height="12" class="port selectable" data-select="wire:P" data-wire="P"></rect>
+              <rect x="248" y="334" width="12" height="12" class="port selectable" data-select="wire:D" data-wire="D"></rect>
+              <rect x="440" y="324" width="12" height="12" class="port selectable" data-select="wire:L" data-wire="L"></rect>
+            </g>
+
+            <g class="selectable" data-select="block:wall" data-block="wall">
+              <rect x="560" y="220" width="180" height="150" class="blockRect"></rect>
+              <text x="570" y="250" class="blockName">wall</text>
+              <text x="570" y="272" class="portLabel">B ⊗ M ⊗ L → WL</text>
+
+              <rect x="548" y="244" width="12" height="12" class="port selectable" data-select="wire:M" data-wire="M"></rect>
+              <rect x="548" y="284" width="12" height="12" class="port selectable" data-select="wire:L" data-wire="L"></rect>
+              <rect x="548" y="324" width="12" height="12" class="port selectable" data-select="wire:B" data-wire="B"></rect>
+              <rect x="740" y="284" width="12" height="12" class="port selectable" data-select="wire:WL" data-wire="WL"></rect>
+            </g>
+
+            <g class="selectable" data-select="block:roof" data-block="roof">
+              <rect x="860" y="220" width="180" height="150" class="blockRect"></rect>
+              <text x="870" y="250" class="blockName">roof</text>
+              <text x="870" y="272" class="portLabel">WL ⊗ T → SH</text>
+
+              <rect x="848" y="264" width="12" height="12" class="port selectable" data-select="wire:WL" data-wire="WL"></rect>
+              <rect x="848" y="304" width="12" height="12" class="port selectable" data-select="wire:T" data-wire="T"></rect>
+              <rect x="1040" y="284" width="12" height="12" class="port selectable" data-select="wire:SH" data-wire="SH"></rect>
+            </g>
+
+            <!-- Input wires (start at the left boundary) -->
+            <g class="selectable" data-select="wire:S" data-wire="S">
+              <text x="40" y="114" class="wireLabel">S</text>
+              <path class="wire" d="M60 110 L248 110"></path>
+            </g>
+            <g class="selectable" data-select="wire:C" data-wire="C">
+              <text x="40" y="144" class="wireLabel">C</text>
+              <path class="wire" d="M60 140 L248 140"></path>
+            </g>
+            <g class="selectable" data-select="wire:W" data-wire="W">
+              <text x="40" y="174" class="wireLabel">W</text>
+              <path class="wire" d="M60 170 L248 170"></path>
+            </g>
+
+            <g class="selectable" data-select="wire:P" data-wire="P">
+              <text x="40" y="314" class="wireLabel">P</text>
+              <path class="wire" d="M60 310 L248 310"></path>
+            </g>
+            <g class="selectable" data-select="wire:D" data-wire="D">
+              <text x="40" y="344" class="wireLabel">D</text>
+              <path class="wire" d="M60 340 L248 340"></path>
+            </g>
+
+            <!-- Bricks input routed to wall -->
+            <g class="selectable" data-select="wire:B" data-wire="B">
+              <text x="40" y="234" class="wireLabel">B</text>
+              <path class="wire" d="M60 230 L520 230 L520 330 L548 330"></path>
+            </g>
+
+            <!-- Trusses input routed from bottom to roof -->
+            <g class="selectable" data-select="wire:T" data-wire="T">
+              <text x="40" y="424" class="wireLabel">T</text>
+              <path class="wire" d="M60 420 L840 420 L840 310 L848 310"></path>
+            </g>
+
+            <!-- Internal wires -->
+            <path class="wire selectable" data-select="conn:conn_M" data-conn="conn_M" data-wire="M" d="M452 140 L520 140 L520 250 L548 250"></path>
+            <text x="468" y="128" class="connLabel connMok">M</text>
+            <text x="468" y="128" class="connLabel connMerr">T</text>
+
+            <path class="wire selectable" data-select="conn:conn_L" data-conn="conn_L" data-wire="L" d="M452 330 L520 330 L520 290 L548 290"></path>
+            <text x="468" y="318" class="connLabel">L</text>
+
+            <path class="wire selectable" data-select="conn:conn_WL" data-conn="conn_WL" data-wire="WL" d="M752 290 L820 290 L820 270 L848 270"></path>
+            <text x="768" y="278" class="connLabel">WL</text>
+
+            <!-- Output wire -->
+            <g class="selectable" data-select="wire:SH" data-wire="SH">
+              <path class="wire" d="M1052 290 L1070 290"></path>
+              <text x="1076" y="294" class="wireLabel">SH</text>
+            </g>
+
+          </svg>
+        </div>
+        <p class="hint">
+          Same structure, different status: in the categorical view the picture <em>is</em> a compositional term in a symmetric monoidal category.
+        </p>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:1rem;" aria-labelledby="mapTitle">
+      <h2 id="mapTitle">3) Mapping: SysML → categorical wiring diagram</h2>
+
+      <div class="controls" aria-label="Interactive controls">
+        <select id="selectEl" aria-label="Select an element">
+          <option value="block:wall">block:wall</option>
+        </select>
+
+        <button id="resetBtn" type="button">Reset highlight</button>
+
+        <label>
+          <input id="errorMode" type="checkbox" />
+          Introduce a type error (mislabel “Mortar” as “Trusses”)
+        </label>
+
+        <button id="checkBtn" type="button">Run type-check</button>
+      </div>
+
+      <div class="split" style="margin-top:0.9rem;">
+        <div>
+          <table class="mapTable" aria-label="Mapping table from SysML concepts to wiring diagram concepts">
+            <thead>
+              <tr><th>SysML block-diagram idea</th><th>Categorical wiring-diagram idea</th><th>Why it matters</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Part (block inside an IBD)</strong></td>
+                <td><strong>Box / morphism</strong> with a typed interface</td>
+                <td>Each task becomes a well-typed component you can compose.</td>
+              </tr>
+              <tr>
+                <td><strong>Ports / flow ports</strong> (what can flow in/out)</td>
+                <td><strong>Wires typed by objects</strong> (e.g. <code>M</code>, <code>WL</code>)</td>
+                <td>Type information can be checked automatically; mismatches are explicit.</td>
+              </tr>
+              <tr>
+                <td><strong>Connectors + item flow annotations</strong></td>
+                <td><strong>Wiring</strong> (the syntax that defines composition)</td>
+                <td>The interconnection itself is a first-class object you can reason about.</td>
+              </tr>
+              <tr>
+                <td><strong>“System of parts”</strong> (enclosing block)</td>
+                <td><strong>Composite morphism</strong> obtained by ∘ and ⊗</td>
+                <td>The whole is determined by its parts and their wiring (compositionality).</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div id="typeStatus" class="statusLine" aria-live="polite">
+            <span class="muted">Type-check status will appear here.</span>
+          </div>
+        </div>
+
+        <aside class="detailBox" aria-label="Selected element details">
+          <div class="detailTitle">
+            <h3>Selected element</h3>
+            <span id="detailBadge" class="badge">—</span>
+          </div>
+          <div id="detailBox" class="detailGrid">
+            <div class="kv">
+              <div class="k">Tip</div>
+              <div class="v">Click any block / wire in either diagram, or choose one from the dropdown.</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:1rem;" aria-labelledby="formalTitle">
+      <h2 id="formalTitle">4) Formalism for this particular diagram</h2>
+      <p class="hint" style="margin-top:0;">
+        Take the wire labels as <em>objects</em> in a symmetric monoidal category, and the tasks as <em>morphisms</em>.
+        The full construction is then a single composite morphism built from ⊗ (parallel) and ∘ (series).
+      </p>
+
+      <pre aria-label="Formal signatures">
+Objects (types):
+  S, C, W, P, D, B, T, M, L, WL, SH
+
+Generating morphisms (tasks):
+  mix  : S ⊗ C ⊗ W      → M
+  set  : P ⊗ D          → L
+  wall : B ⊗ M ⊗ L      → WL
+  roof : WL ⊗ T         → SH
+
+Composite (read from the rightmost box “roof” back to the inputs):
+  buildShell : S ⊗ C ⊗ W ⊗ P ⊗ D ⊗ B ⊗ T → SH
+
+  buildShell  = roof ∘ (wall ⊗ id_T) ∘ (id_B ⊗ mix ⊗ set ⊗ id_T) ∘ σ
+
+where σ is the symmetry (wire-reordering) that routes the input bundle to the right boxes.</pre>
+
+      <p class="hint">
+        In practice, you rarely need to write <code>σ</code> by hand: it is precisely what the wiring diagram picture records.
+      </p>
+    </section>
+
+    <section class="card" style="margin-top:1rem;" aria-labelledby="semTitle" data-interactive-only="true">
+      <h2 id="semTitle">5) Tiny semantics demo: compositional schedule, cost, and traceability</h2>
+      <p class="hint" style="margin-top:0;">
+        A categorical “semantics” assigns meaning to each box, then computes the meaning of the whole by composition.
+        Below is a toy example: edit numbers/tags and watch the composite update.
+      </p>
+
+      <table class="semTable" aria-label="Semantics inputs">
+        <thead>
+          <tr>
+            <th>Task (box)</th>
+            <th>Duration (days)</th>
+            <th>Cost (£)</th>
+            <th>Trace tags (comma-separated)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>mix</code> — Mix mortar</td>
+            <td><input id="dur-mix" type="number" step="0.25" min="0" value="0.5"/></td>
+            <td><input id="cost-mix" type="number" step="10" min="0" value="200"/></td>
+            <td><input id="tag-mix" type="text" value="RQ-01, WBS-2.1"/></td>
+          </tr>
+          <tr>
+            <td><code>set</code> — Set out line</td>
+            <td><input id="dur-set" type="number" step="0.25" min="0" value="0.25"/></td>
+            <td><input id="cost-set" type="number" step="10" min="0" value="150"/></td>
+            <td><input id="tag-set" type="text" value="RQ-02, WBS-2.2"/></td>
+          </tr>
+          <tr>
+            <td><code>wall</code> — Build wall</td>
+            <td><input id="dur-wall" type="number" step="0.25" min="0" value="2"/></td>
+            <td><input id="cost-wall" type="number" step="10" min="0" value="1000"/></td>
+            <td><input id="tag-wall" type="text" value="RQ-03, WBS-3.1"/></td>
+          </tr>
+          <tr>
+            <td><code>roof</code> — Install roof</td>
+            <td><input id="dur-roof" type="number" step="0.25" min="0" value="1"/></td>
+            <td><input id="cost-roof" type="number" step="10" min="0" value="1200"/></td>
+            <td><input id="tag-roof" type="text" value="RQ-04, WBS-3.2"/></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="resultsGrid" aria-label="Composed results">
+        <div class="resultCard">
+          <div class="k">Total duration (mix ∥ set)</div>
+          <div id="resDurPar" class="v">—</div>
+        </div>
+        <div class="resultCard">
+          <div class="k">Total duration (all sequential)</div>
+          <div id="resDurSeq" class="v">—</div>
+        </div>
+        <div class="resultCard">
+          <div class="k">Total cost</div>
+          <div id="resCost" class="v">—</div>
+        </div>
+        <div class="resultCard">
+          <div class="k">Trace union</div>
+          <div id="resTrace" class="v" style="font-size:0.95rem; font-weight:600; line-height:1.3;">—</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">
+      <p style="margin:0;">
+        If you want, the next step is to extend the type set beyond materials: labour crews, tools, temporary works, permits,
+        inspections, weather windows, and safety constraints — they all become wires too, and the same compositional check still applies.
+      </p>
+    </div>
+  </div>
+
+  <div id="toastHost" aria-live="polite" aria-atomic="true"></div>
+
+  <noscript>
+    <div class="container">
+      <div class="card">
+        <h2>Static view</h2>
+        <p class="hint">
+          JavaScript is disabled, so the diagrams are static. The core idea still holds:
+          identify each SysML block's inputs/outputs (ports), treat them as typed wires, and then the wiring layout is the categorical composition.
+        </p>
+      </div>
+    </div>
+  </noscript>
+</div>
+
+<script>
+(function(){
+  const root = document.getElementById('app');
+  const toastHost = document.getElementById('toastHost');
+  const timeoutMs = Math.max(500, parseInt(root.getAttribute('data-timeout') || '3000', 10));
+  window.__canvasStatus = 'loading';
+
+  function toast(message, kind){
+    const el = document.createElement('div');
+    el.className = 'toast toast--' + (kind || 'info');
+    el.textContent = message;
+    toastHost.appendChild(el);
+    requestAnimationFrame(()=> el.classList.add('toast--show'));
+    setTimeout(()=> el.classList.remove('toast--show'), 3600);
+    setTimeout(()=> el.remove(), 4200);
+  }
+
+  function fallback(reason){
+    console.error('[canvas] fallback', reason);
+    if (window.__canvasStatus !== 'ready'){
+      window.__canvasStatus = (reason === 'timeout') ? 'fallback' : 'error';
+    }
+    toast('Interactive mode unavailable — showing static diagrams.', 'warn');
+    // Hide interactive-only panels (static diagrams remain)
+    root.querySelectorAll('[data-interactive-only]').forEach(el => el.classList.add('hidden'));
+  }
+
+  function parseSelectValue(v){
+    const parts = String(v || '').split(':');
+    if (parts.length < 2) return null;
+    return { kind: parts[0], id: parts.slice(1).join(':') };
+  }
+
+  function findSelectableTarget(start){
+    let el = start;
+    for (let i = 0; i < 8 && el; i++){
+      if (el instanceof Element && el.hasAttribute('data-select')) return el;
+      el = el.parentNode;
+    }
+    return null;
+  }
+
+  try {
+    const MODEL = {
+      types: {
+        S:{name:'Sand'},
+        C:{name:'Cement'},
+        W:{name:'Water'},
+        P:{name:'Pegs+line kit'},
+        D:{name:'Design drawing'},
+        B:{name:'Bricks'},
+        T:{name:'Roof trusses'},
+        M:{name:'Mortar'},
+        L:{name:'Set-out line'},
+        WL:{name:'Built walls'},
+        SH:{name:'Weatherproof shell'}
+      },
+      blocks: {
+        mix: { label:'Mix mortar', sysmlPart:'mix : MixMortar', in:['S','C','W'], out:['M'] },
+        set: { label:'Set out line', sysmlPart:'set : SetOutLine', in:['P','D'], out:['L'] },
+        wall:{ label:'Build wall', sysmlPart:'wall : BuildWall', in:['B','M','L'], out:['WL'] },
+        roof:{ label:'Install roof', sysmlPart:'roof : InstallRoof', in:['WL','T'], out:['SH'] }
+      },
+      connections: [
+        { id:'conn_M', from:{block:'mix', port:'M'}, to:{block:'wall', port:'M'}, labelOk:'Mortar (M)', labelErr:'Trusses (T)' },
+        { id:'conn_L', from:{block:'set', port:'L'}, to:{block:'wall', port:'L'}, labelOk:'Line (L)' },
+        { id:'conn_WL', from:{block:'wall', port:'WL'}, to:{block:'roof', port:'WL'}, labelOk:'Walls (WL)' }
+      ],
+      overall: { inputs:['S','C','W','P','D','B','T'], outputs:['SH'] }
+    };
+
+    const selectEl = document.getElementById('selectEl');
+    const resetBtn = document.getElementById('resetBtn');
+    const errorMode = document.getElementById('errorMode');
+    const checkBtn = document.getElementById('checkBtn');
+    const typeStatus = document.getElementById('typeStatus');
+    const detailBox = document.getElementById('detailBox');
+    const detailBadge = document.getElementById('detailBadge');
+
+    const state = { kind:'block', id:'wall', error:false };
+
+    // Populate dropdown with blocks, wires, connectors
+    const options = [];
+    Object.keys(MODEL.blocks).forEach(b=>{
+      options.push({value:`block:${b}`, label:`block:${b} — ${MODEL.blocks[b].label}`});
+    });
+    Object.keys(MODEL.types).forEach(t=>{
+      options.push({value:`wire:${t}`, label:`wire:${t} — ${MODEL.types[t].name}`});
+    });
+    MODEL.connections.forEach(c=>{
+      options.push({value:`conn:${c.id}`, label:`conn:${c.id}`});
+    });
+
+    selectEl.innerHTML = options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+    selectEl.value = 'block:wall';
+
+    function esc(s){
+      return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
+    }
+
+    function cssEscape(s){
+      try{
+        if (window.CSS && typeof CSS.escape === 'function') return CSS.escape(String(s));
+      } catch(_e){}
+      return String(s).replace(/[^a-zA-Z0-9_-]/g, (ch) => '\\' + ch);
+    }
+
+    function clearClass(sel, cls){
+      root.querySelectorAll(sel).forEach(el=>el.classList.remove(cls));
+    }
+
+    function setSelection(kind, id, syncDropdown){
+      state.kind = kind;
+      state.id = id;
+
+      if (syncDropdown){
+        const v = `${kind}:${id}`;
+        if (selectEl.value !== v) selectEl.value = v;
+      }
+
+      applyHighlights();
+      renderDetails();
+    }
+
+    function relatedTypesForBlock(blockId){
+      const b = MODEL.blocks[blockId];
+      return b ? Array.from(new Set([...(b.in||[]), ...(b.out||[])])) : [];
+    }
+
+    function applyHighlights(){
+      clearClass('[data-block], [data-wire], [data-conn]', 'is-selected');
+      clearClass('[data-block], [data-wire], [data-conn]', 'is-related');
+
+      if (state.kind === 'block'){
+        root.querySelectorAll(`[data-block="${cssEscape(state.id)}"]`).forEach(el=>el.classList.add('is-selected'));
+        // related wires + connectors
+        relatedTypesForBlock(state.id).forEach(t=>{
+          root.querySelectorAll(`[data-wire="${cssEscape(t)}"]`).forEach(el=>el.classList.add('is-related'));
+        });
+        MODEL.connections.forEach(c=>{
+          if (c.from.block === state.id || c.to.block === state.id){
+            root.querySelectorAll(`[data-conn="${cssEscape(c.id)}"]`).forEach(el=>el.classList.add('is-related'));
+          }
+        });
+      } else if (state.kind === 'wire'){
+        root.querySelectorAll(`[data-wire="${cssEscape(state.id)}"]`).forEach(el=>el.classList.add('is-selected'));
+      } else if (state.kind === 'conn'){
+        root.querySelectorAll(`[data-conn="${cssEscape(state.id)}"]`).forEach(el=>el.classList.add('is-selected'));
+      }
+    }
+
+    function pillList(typeCodes){
+      if (!typeCodes || !typeCodes.length) return '<span class="muted">none</span>';
+      return typeCodes.map(t => `<span class="pill"><code>${esc(t)}</code> — ${esc(MODEL.types[t]?.name || t)}</span>`).join(' ');
+    }
+
+    function renderDetails(){
+      if (state.kind === 'block'){
+        const b = MODEL.blocks[state.id];
+        detailBadge.textContent = `block:${state.id}`;
+        const inSig = (b.in || []).join(' ⊗ ') || 'I';
+        const outSig = (b.out || []).join(' ⊗ ') || 'I';
+        detailBox.innerHTML = `
+          <div class="kv">
+            <div class="k">SysML part</div>
+            <div class="v"><code>${esc(b.sysmlPart)}</code></div>
+          </div>
+          <div class="kv">
+            <div class="k">Categorical morphism</div>
+            <div class="v"><code>${esc(state.id)} : ${esc(inSig)} → ${esc(outSig)}</code></div>
+          </div>
+          <div class="kv">
+            <div class="k">Inputs (ports)</div>
+            <div class="v">${pillList(b.in)}</div>
+          </div>
+          <div class="kv">
+            <div class="k">Outputs (ports)</div>
+            <div class="v">${pillList(b.out)}</div>
+          </div>
+        `;
+      } else if (state.kind === 'wire'){
+        const t = state.id;
+        detailBadge.textContent = `wire:${t}`;
+        const usedBy = [];
+        Object.keys(MODEL.blocks).forEach(bid=>{
+          const b = MODEL.blocks[bid];
+          if ((b.in||[]).includes(t) || (b.out||[]).includes(t)){
+            usedBy.push(`${bid} (${b.label})`);
+          }
+        });
+        detailBox.innerHTML = `
+          <div class="kv">
+            <div class="k">Type</div>
+            <div class="v"><code>${esc(t)}</code> — ${esc(MODEL.types[t]?.name || t)}</div>
+          </div>
+          <div class="kv">
+            <div class="k">Appears on</div>
+            <div class="v">${usedBy.length ? usedBy.map(x=>`<span class="pill">${esc(x)}</span>`).join(' ') : '<span class="muted">not used</span>'}</div>
+          </div>
+        `;
+      } else if (state.kind === 'conn'){
+        const c = MODEL.connections.find(x=>x.id===state.id);
+        detailBadge.textContent = `conn:${state.id}`;
+        const shown = (state.error && c && c.id==='conn_M') ? 'Trusses (T)' : (c ? c.labelOk : state.id);
+        detailBox.innerHTML = `
+          <div class="kv">
+            <div class="k">Connector</div>
+            <div class="v"><code>${esc(state.id)}</code></div>
+          </div>
+          <div class="kv">
+            <div class="k">From → To</div>
+            <div class="v">${c ? `<code>${esc(c.from.block)}.${esc(c.from.port)}</code> → <code>${esc(c.to.block)}.${esc(c.to.port)}</code>` : '<span class="muted">unknown</span>'}</div>
+          </div>
+          <div class="kv">
+            <div class="k">Displayed item flow label</div>
+            <div class="v">${esc(shown)}</div>
+          </div>
+        `;
+      } else {
+        detailBadge.textContent = '—';
+      }
+    }
+
+    function runTypeCheck(showToast){
+      // clear old errors
+      clearClass('[data-conn]', 'is-error');
+
+      const mismatches = [];
+      MODEL.connections.forEach(c=>{
+        const displayedType = (state.error && c.id==='conn_M') ? 'T' : c.from.port; // ok label aligns with the port
+        const fromType = c.from.port;
+        const toType = c.to.port;
+
+        if (displayedType !== fromType || displayedType !== toType){
+          mismatches.push({conn:c.id, displayed:displayedType, from:fromType, to:toType});
+          root.querySelectorAll(`[data-conn="${cssEscape(c.id)}"]`).forEach(el=>el.classList.add('is-error'));
+        }
+      });
+
+      if (mismatches.length === 0){
+        typeStatus.innerHTML = `<span class="statusGood">Type check: OK ✅</span><span class="muted">All connector labels match their port types.</span>`;
+        if (showToast) toast('Type check passed.', 'info');
+      } else {
+        const m = mismatches[0];
+        typeStatus.innerHTML = `
+          <span class="statusBad">Type check: FAIL ❌</span>
+          <span class="muted">Example: <code>${esc(m.conn)}</code> says <code>${esc(m.displayed)}</code> but connects <code>${esc(m.from)}</code> → <code>${esc(m.to)}</code>.</span>
+        `;
+        if (showToast) toast('Type mismatch detected (highlighted in red).', 'error');
+      }
+    }
+
+    // Event: dropdown change
+    selectEl.addEventListener('change', ()=>{
+      const p = parseSelectValue(selectEl.value);
+      if (!p) return;
+      setSelection(p.kind, p.id, false);
+    });
+
+    // Event: reset
+    resetBtn.addEventListener('click', ()=>{
+      state.error = false;
+      errorMode.checked = false;
+      root.classList.remove('error-mode');
+      setSelection('block', 'wall', true);
+      runTypeCheck(false);
+      updateSemantics();
+      toast('Reset.', 'info');
+    });
+
+    // Event: error mode
+    errorMode.addEventListener('change', ()=>{
+      state.error = !!errorMode.checked;
+      root.classList.toggle('error-mode', state.error);
+      runTypeCheck(false);
+      renderDetails();
+      toast(state.error ? 'Introduced an inconsistent connector label.' : 'Removed the simulated error.', 'warn');
+    });
+
+    checkBtn.addEventListener('click', ()=> runTypeCheck(true));
+
+    // Click selection inside diagrams
+    root.addEventListener('click', (e)=>{
+      const hit = findSelectableTarget(e.target);
+      if (!hit) return;
+      const p = parseSelectValue(hit.getAttribute('data-select'));
+      if (!p) return;
+      setSelection(p.kind, p.id, true);
+    });
+
+    // Semantics demo
+    const semEls = {
+      durMix: document.getElementById('dur-mix'),
+      durSet: document.getElementById('dur-set'),
+      durWall: document.getElementById('dur-wall'),
+      durRoof: document.getElementById('dur-roof'),
+      costMix: document.getElementById('cost-mix'),
+      costSet: document.getElementById('cost-set'),
+      costWall: document.getElementById('cost-wall'),
+      costRoof: document.getElementById('cost-roof'),
+      tagMix: document.getElementById('tag-mix'),
+      tagSet: document.getElementById('tag-set'),
+      tagWall: document.getElementById('tag-wall'),
+      tagRoof: document.getElementById('tag-roof'),
+      outPar: document.getElementById('resDurPar'),
+      outSeq: document.getElementById('resDurSeq'),
+      outCost: document.getElementById('resCost'),
+      outTrace: document.getElementById('resTrace')
+    };
+
+    function num(el){
+      const v = parseFloat(el.value);
+      return Number.isFinite(v) ? v : 0;
+    }
+    function tags(el){
+      return String(el.value || '')
+        .split(',')
+        .map(s=>s.trim())
+        .filter(Boolean);
+    }
+
+    function updateSemantics(){
+      // If semantics panel has been hidden due to fallback, skip.
+      if (!semEls.outPar) return;
+
+      const dMix = num(semEls.durMix);
+      const dSet = num(semEls.durSet);
+      const dWall = num(semEls.durWall);
+      const dRoof = num(semEls.durRoof);
+
+      const par = Math.max(dMix, dSet) + dWall + dRoof;
+      const seq = dMix + dSet + dWall + dRoof;
+
+      const cost = num(semEls.costMix) + num(semEls.costSet) + num(semEls.costWall) + num(semEls.costRoof);
+
+      const union = new Set([
+        ...tags(semEls.tagMix),
+        ...tags(semEls.tagSet),
+        ...tags(semEls.tagWall),
+        ...tags(semEls.tagRoof),
+      ]);
+
+      semEls.outPar.textContent = par.toFixed(2) + ' days';
+      semEls.outSeq.textContent = seq.toFixed(2) + ' days';
+      semEls.outCost.textContent = '£' + cost.toFixed(0);
+      semEls.outTrace.textContent = Array.from(union).join(', ') || '—';
+    }
+
+    ['input','change'].forEach(evt=>{
+      [
+        semEls.durMix, semEls.durSet, semEls.durWall, semEls.durRoof,
+        semEls.costMix, semEls.costSet, semEls.costWall, semEls.costRoof,
+        semEls.tagMix, semEls.tagSet, semEls.tagWall, semEls.tagRoof
+      ].forEach(el=>{
+        if (!el) return;
+        el.addEventListener(evt, updateSemantics);
+      });
+    });
+
+    // Initial render
+    setSelection('block','wall', true);
+    runTypeCheck(false);
+    updateSemantics();
+
+    // Mark success for watchdog
+    root.setAttribute('data-smoke', 'ok');
+    // Also add a hidden descendant so the watchdog can see it even if it only checks children.
+    const smoke = document.createElement('span');
+    smoke.setAttribute('data-smoke', 'ok');
+    smoke.className = 'hidden';
+    root.appendChild(smoke);
+    window.__canvasStatus = 'ready';
+  } catch (e){
+    fallback(e);
+  }
+
+  // Visibility watchdog: ensure something marked data-smoke="ok" appears
+  (function watchdog(){
+    const start = Date.now();
+    function tick(){
+      if (root.getAttribute('data-smoke') === 'ok' || root.querySelector('[data-smoke="ok"]')) return;
+      if (Date.now() - start >= timeoutMs){
+        fallback('timeout');
+        return;
+      }
+      setTimeout(tick, 500);
+    }
+    setTimeout(tick, 500);
+  })();
+})();
+</script>
+</body>
+</html>
