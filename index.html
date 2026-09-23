@@ -3,8 +3,58 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Building a Wall · compositional project models</title>
+  <meta name="description" content="Foray 160 explores project wiring diagrams: explicit interfaces, readiness conditions and reusable blocks, beginning with a small construction example." />
+  <title>Building a Wall · Project wiring diagrams</title>
   <link rel="stylesheet" href="common.css" />
+  <style>
+    :root { color-scheme: light; --paper:#f8f6ef; --ink:#23382e; --muted:#56645a; --line:#c9cfc2; --wash:#e9eddf; --accent:#90652b; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:Inter,Arial,sans-serif; }
+    a { color:inherit; text-underline-offset:.22em; }
+    a:hover { text-decoration-thickness:2px; }
+    a:focus-visible { outline:3px solid var(--accent); outline-offset:5px; border-radius:2px; }
+    .skip { position:absolute; left:1rem; top:-5rem; background:var(--ink); color:var(--paper); padding:.8rem; z-index:2; }
+    .skip:focus { top:1rem; }
+    .wrap { max-width:1160px; margin:auto; padding:0 clamp(22px,5vw,70px); }
+    header { border-bottom:1px solid var(--line); }
+    .masthead { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1.2rem 2rem; padding-top:25px; padding-bottom:25px; }
+    .brand { font-weight:600; text-decoration:none; }
+    nav { display:flex; flex-wrap:wrap; gap:1rem 1.7rem; font-size:.9rem; }
+    nav a { text-decoration:none; }
+    .intro { padding-top:clamp(50px,8vw,92px); padding-bottom:44px; max-width:810px; }
+    .eyebrow { font-size:.74rem; font-weight:600; letter-spacing:.13em; text-transform:uppercase; }
+    h1,h2,h3,p { margin-top:0; }
+    h1,h2 { font-family:Georgia,'Times New Roman',serif; font-weight:400; letter-spacing:-.035em; }
+    h1 { display:block; border:0; padding:0; font-size:clamp(2.6rem,6.1vw,4.8rem); line-height:1.04; margin-bottom:25px; }
+    .intro .lead { max-width:680px; font-size:1.15rem; line-height:1.7; color:var(--muted); }
+    .feature { display:grid; grid-template-columns:1.3fr 1fr; gap:clamp(24px,4vw,54px); padding:clamp(25px,4vw,46px); border:1px solid var(--line); border-radius:4px; background:var(--wash); }
+    .feature h2 { font-size:clamp(2rem,4vw,3.25rem); line-height:1.09; margin-bottom:23px; max-width:590px; }
+    .feature p { line-height:1.7; }
+    .feature .eyebrow { color:var(--muted); }
+    .button { display:inline-flex; align-items:center; gap:20px; background:var(--ink); color:var(--paper); text-decoration:none; padding:14px 20px; margin-top:10px; border-radius:3px; font-size:.95rem; font-weight:600; }
+    .button:hover { background:#354f40; }
+    .steps { margin:4px 0 0; padding:0; list-style:none; }
+    .steps li { display:grid; grid-template-columns:28px 1fr; gap:12px; padding:20px 0; border-top:1px solid #bdc7b3; }
+    .steps li:first-child { border-top:0; padding-top:0; }
+    .step-number { font-family:Georgia,serif; font-size:1.4rem; color:var(--accent); }
+    .steps strong { display:block; margin:0 0 6px; }
+    .steps p { font-size:.91rem; color:var(--muted); margin:0; }
+    .direction { padding:62px 0 52px; }
+    .direction > h2,.earlier h2 { font-size:clamp(1.9rem,3vw,2.5rem); margin-bottom:18px; }
+    .direction > p { max-width:760px; color:var(--muted); }
+    .ewm { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:32px; margin-top:30px; }
+    .ewm article { border-top:1px solid var(--line); padding-top:19px; }
+    .ewm h3 { font-size:1rem; font-weight:600; margin-bottom:10px; }
+    .ewm p { color:var(--muted); font-size:.95rem; }
+    .earlier { display:grid; grid-template-columns:1fr 1.15fr; gap:42px; border-top:1px solid var(--line); padding:42px 0 52px; }
+    .earlier p { color:var(--muted); }
+    .earlier ul { margin:0 0 25px; padding-left:1.1rem; }
+    .earlier li { padding:0 0 12px 5px; line-height:1.6; }
+    .scope { font-size:.87rem; color:var(--muted); max-width:830px; border-top:1px solid var(--line); padding:22px 0 34px; }
+    footer { border-top:1px solid var(--line); }
+    footer .wrap { padding-top:23px; padding-bottom:26px; display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; font-size:.82rem; color:var(--muted); }
+    @media(max-width:720px) { .feature,.earlier { grid-template-columns:1fr; } .ewm { grid-template-columns:1fr; gap:12px; } .intro { padding-bottom:30px; } .feature { gap:32px; } .direction { padding-top:44px; } .earlier { gap:14px; } }
+  </style>
 <style>
 /* Scenario-first orientation: scoped to avoid changing the models below. */
 .pw-scenario{box-sizing:border-box;display:grid;grid-template-columns:minmax(150px,240px) minmax(0,1fr);gap:clamp(18px,3vw,32px);align-items:center;width:100%;max-width:1100px;margin:24px auto;padding:clamp(18px,3vw,28px);background:#f3f0e6;color:#203e3b;border:1px solid #d5dacf;border-radius:16px;text-align:left;font-family:system-ui,sans-serif;line-height:1.55}
@@ -13,32 +63,70 @@
 </style>
 </head>
 <body>
-  <div class="page">
-    <nav class="site-nav">
-      <strong>Innovation Collaboration Hub</strong>
-      <a href="index.html">Home</a>
-      <a href="app-index.html">App Index</a>
-      <a href="projects/">Projects</a>
-      <a href="sandbox/">Contracts as Algebras</a>
-      <a href="ai-tools/">AI Tools</a>
-      <a href="systems/">Systems Thinking</a>
-      <a href="lifecycle/">Lifecycle</a>
-      <a href="insights/">Insights</a>
-    </nav>
-    <main class="section">
-      <h1>Building a Wall</h1>
-<section class="pw-scenario" aria-label="Scenario and motivating question">
+  <a class="skip" href="#main">Skip to content</a>
+  <header>
+    <div class="wrap masthead">
+      <a class="brand" href="index.html" aria-current="page">Building a Wall</a>
+      <nav aria-label="Main navigation">
+        <a href="apps/wall-roof-wiring-smc/">Interactive essay</a>
+        <a href="app-index.html">All nine experiments</a>
+        <a href="https://lawrencerowland.github.io/side-projects.html">Side projects ↗</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap" id="main">
+    <section class="intro" aria-labelledby="title">
+      <p class="eyebrow">Foray 160 · Building a Wall</p>
+      <h1 id="title">Project wiring diagrams.</h1>
+      <p class="lead">What must one piece of work provide before another can begin? Make those interfaces explicit, then explore how small project blocks can fit together and be reused.</p>
+    </section>
+
+    <section class="pw-scenario" aria-label="Scenario and motivating question">
   <figure><img src="https://lawrencerowland.github.io/images/scenarios/wall.svg" alt="Brick wall, pitched roof and scaffold showing connected construction packages" width="640" height="400" decoding="async"><figcaption>Illustrative scene; the experiments below state their own assumptions.</figcaption></figure>
   <div><p class="pw-kicker">Toy scenario</p><h2>Build a wall that is ready to receive a roof.</h2><p>Brickwork needs materials, labour and access. Roof work needs a wall with the right readiness and support. The examples make these package interfaces explicit so that connecting two diagrams also means connecting compatible conditions and promises.</p><p class="pw-question">When do individually acceptable work packages make an acceptable whole?</p></div>
 </section>
-
-      <p><a href="app-index.html">Explore the wall-building experiments →</a></p>
-      <div class="card-grid">
-        <div class="card">Explore project portfolios.</div>
-        <div class="card">Try interactive tools.</div>
-        <div class="card">Browse our learning hub.</div>
+<section class="feature" aria-labelledby="essay-title">
+      <div>
+        <p class="eyebrow">Start here · Interactive essay</p>
+        <h2 id="essay-title">Build a house.<br>Keep the interfaces honest.</h2>
+        <p>Follow a small construction example from materials and preparation to a wall and roof. Inspect what each process needs and produces, change its readiness conditions, and see what those choices mean downstream.</p>
+        <a class="button" href="apps/wall-roof-wiring-smc/">Open the essay <span aria-hidden="true">→</span></a>
       </div>
-    </main>
-  </div>
+      <ol class="steps" aria-label="What to explore">
+        <li><span class="step-number" aria-hidden="true">01</span><div><strong>Readiness at the interface</strong><p>Separate a correctly connected diagram from work whose stated preconditions are satisfied.</p></div></li>
+        <li><span class="step-number" aria-hidden="true">02</span><div><strong>A reusable project block</strong><p>Explore a module through its inputs and outputs, and open it to inspect the work inside.</p></div></li>
+        <li><span class="step-number" aria-hidden="true">03</span><div><strong>Checks you can inspect</strong><p>Read computed checks against the model’s explicit rules and see the limits of what they establish.</p></div></li>
+      </ol>
+    </section>
+
+    <section class="direction" aria-labelledby="direction-title">
+      <p class="eyebrow">The wider enquiry</p>
+      <h2 id="direction-title">From one wall to reusable project blocks.</h2>
+      <p>The construction example is a starting point. The larger question is whether a project can be assembled from understandable blocks, each with a clear boundary and an account of how it behaves.</p>
+      <div class="ewm">
+        <article><h3>Ends · What we want</h3><p>Make project dependencies, hand-offs and readiness conditions visible enough to question, explain and reuse.</p></article>
+        <article><h3>Ways · How we explore</h3><p>Connect typed inputs and outputs, attach explicit conditions, and compare a module with the work it contains.</p></article>
+        <article><h3>Means · What we use</h3><p>Small interactive models, wiring diagrams, port tables and computed checks, supported by the language of composition.</p></article>
+      </div>
+    </section>
+
+    <section class="earlier" aria-labelledby="earlier-title">
+      <div>
+        <p class="eyebrow">Earlier explorations</p>
+        <h2 id="earlier-title">Follow the other paths.</h2>
+        <p>The catalogue keeps all nine experiments reachable. The eight companion experiments explore related ideas in their earlier forms; the revised essay above is the current starting point.</p>
+      </div>
+      <div>
+        <ul>
+          <li>Wall-building diagrams and guarded processes</li>
+          <li>Operad algebras, contracts and the SysML comparison</li>
+          <li>Cliff-shed processes, project states and Petri-to-WBS mappings</li>
+        </ul>
+        <a href="app-index.html">Browse all nine experiments <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
+    <p class="scope">These are exploratory teaching models. Their checks concern the rules represented in each model; they do not establish engineering safety, a complete schedule or suitability for a real project. The revision of the featured essay does not imply that the earlier experiments have been reviewed.</p>
+  </main>
+  <footer><div class="wrap"><span>Building a Wall · Project wiring diagrams</span><a href="https://lawrencerowland.github.io/side-projects.html">Back to the wider portfolio</a></div></footer>
 </body>
 </html>
