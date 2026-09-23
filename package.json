@@ -28,7 +28,7 @@
     "build": "node scripts/bundle-wiring.js && node scripts/build-all.js",
     "preview": "vite preview",
     "test": "vitest",
-    "test:wiring": "node --test tests/wiring-model.test.mjs"
+    "test:wiring": "node --test tests/wiring-model.test.mjs tests/wiring-layout.test.mjs"
   },
   "eslintConfig": {
     "extends": [

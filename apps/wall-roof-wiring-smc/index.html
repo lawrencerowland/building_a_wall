@@ -1,11 +1,24 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="An interactive house-and-roof wiring essay: reusable wall modules, symmetric monoidal composition and explicit readiness checks."><title>Build a house. Keep the interfaces honest. · Project wiring diagrams</title><link rel="stylesheet" href="../../common.css"><link rel="stylesheet" href="style.css"></head>
-<body><a class="skip" href="#workbench">Skip to the experiment</a><header><a href="../../index.html">← Building a Wall</a><span>PROJECT WIRING DIAGRAMS · FORAY 160</span><a href="https://lawrencerowland.github.io/side-projects.html">All side projects ↗</a></header>
-<main><section class="hero"><div><p class="eyebrow">Essay 01 / revised September 2026</p><h1>Build a house.<br>Keep the interfaces honest.</h1><p class="lede">A roof needs more than a wall-shaped output. It needs a wall that is ready to receive it.</p><p>Start with a small house shell. Open its wall-building module, follow the resources, and change the evidence at the roof handoff. The question is what a reusable block must preserve when it becomes part of a larger project.</p><a class="button primary" href="#workbench">Try the handoff ↓</a></div><figure class="house"><svg viewBox="0 0 360 300" role="img" aria-label="Simplified one-storey house shell: supporting wall assembly below a roof"><path d="M44 234 191 280 323 221 177 179Z" fill="#dfdacd"/><path d="M69 137 190 176 190 260 69 221Z" fill="#deb49b" stroke="#835c47" stroke-width="2"/><path d="M190 176 296 126 296 212 190 260Z" fill="#c79377" stroke="#835c47" stroke-width="2"/><g stroke="#996c55" opacity=".65" fill="none"><path d="m69 164 121 39 106-50M69 193l121 39 106-50M109 150v26m43-12v26m-59-6v27m43-13v28m88-66v28m39-48v27m-18 14v28"/></g><path d="m62 136 122-86 121 76-114 60Z" fill="#cdd5d9" stroke="#385770" stroke-width="3" id="houseRoof"/><path d="m184 50 7 136" stroke="#385770" stroke-width="3"/><path d="m127 94 120 76M91 118l120 60m24-96 8 62" stroke="#fff" stroke-width="2" opacity=".6"/><circle cx="286" cy="62" r="28" fill="#ebf3ee" stroke="#17634d"/><text x="286" y="68" text-anchor="middle" font-size="18" fill="#17634d" id="houseBadge">?</text><path d="M287 94v24" stroke="#17634d" stroke-dasharray="4 4"/><text x="32" y="281" fill="#5e665f" font-size="12">Illustration — geometry is not a structural calculation</text></svg><figcaption id="houseCaption">A teaching model of a roofed structural shell.</figcaption></figure></section>
+<body><a class="skip" href="#wiring">Skip to the diagram</a><header><a href="../../index.html">← Building a Wall</a><span>PROJECT WIRING DIAGRAMS · FORAY 160</span><a href="https://lawrencerowland.github.io/side-projects.html">All side projects ↗</a></header>
+<main><section class="hero"><div><p class="eyebrow">Essay 01 / revised September 2026</p><h1>Build a house.<br>Keep the interfaces honest.</h1><p class="lede">A roof needs more than a wall-shaped output. It needs a wall that is ready to receive it.</p><a class="button primary" href="#wiring">Explore the wiring ↓</a></div><figure class="house"><svg viewBox="0 0 360 300" role="img" aria-label="Simplified one-storey house shell: supporting wall assembly below a roof"><path d="M44 234 191 280 323 221 177 179Z" fill="#dfdacd"/><path d="M69 137 190 176 190 260 69 221Z" fill="#deb49b" stroke="#835c47" stroke-width="2"/><path d="M190 176 296 126 296 212 190 260Z" fill="#c79377" stroke="#835c47" stroke-width="2"/><g stroke="#996c55" opacity=".65" fill="none"><path d="m69 164 121 39 106-50M69 193l121 39 106-50M109 150v26m43-12v26m-59-6v27m43-13v28m88-66v28m39-48v27m-18 14v28"/></g><path d="m62 136 122-86 121 76-114 60Z" fill="#cdd5d9" stroke="#385770" stroke-width="3" id="houseRoof"/><path d="m184 50 7 136" stroke="#385770" stroke-width="3"/><path d="m127 94 120 76M91 118l120 60m24-96 8 62" stroke="#fff" stroke-width="2" opacity=".6"/><circle cx="286" cy="62" r="28" fill="#ebf3ee" stroke="#17634d"/><text x="286" y="68" text-anchor="middle" font-size="18" fill="#17634d" id="houseBadge">?</text><path d="M287 94v24" stroke="#17634d" stroke-dasharray="4 4"/><text x="32" y="281" fill="#5e665f" font-size="12">Illustration — geometry is not a structural calculation</text></svg><figcaption id="houseCaption">A teaching model of a roofed structural shell.</figcaption></figure></section>
+<section id="wiring" class="wiring-section" aria-labelledby="wiring-heading">
+<div class="sectionhead wiring-heading"><div><p class="eyebrow">THE COMPLETE WIRING DIAGRAM</p><h2 id="wiring-heading">Every connection. Every return.</h2></div><a href="#workbench">Change the conditions ↓</a></div>
+<div id="canvasHome"><div id="canvasStage" class="canvas-stage">
+<div class="canvas-toolbar"><label><input id="expanded" type="checkbox" checked> Open the wall-building module</label><div class="canvas-tools"><button id="zoomOut" aria-label="Zoom out">−</button><output id="zoomValue" aria-label="Diagram zoom">Fit</output><button id="zoomIn" aria-label="Zoom in">+</button><button id="fitDiagram">Fit whole diagram</button><button id="readableDiagram">Read the labels</button><button id="enlargeDiagram">Larger view ↗</button></div></div>
+<div class="canvas-meta"><span id="diagramTitle"></span><span id="diagramCount"></span></div>
+<div id="diagramViewport" class="diagramViewport" tabindex="0" role="region" aria-label="Complete wiring diagram. Use arrow keys or drag to pan; use the zoom buttons to enlarge."><svg id="diagram" role="group" aria-labelledby="svgTitle svgDescription"></svg></div>
+<div id="wireReadout" class="wire-readout" aria-live="polite">Select a wire or port to follow its connection. Select a process to see its boundary.</div>
+<div class="wire-legend" aria-label="Highlight a resource family"><button data-family="all" aria-pressed="true">All wires</button><button data-family="labour" aria-pressed="false"><i style="--swatch:#7c55b3"></i>People</button><button data-family="materials" aria-pressed="false"><i style="--swatch:#b67a25"></i>Materials</button><button data-family="information" aria-pressed="false"><i style="--swatch:#367bbe"></i>Drawing &amp; evidence</button><button data-family="equipment" aria-pressed="false"><i style="--swatch:#298879"></i>Tools &amp; access</button><button data-family="structure" aria-pressed="false"><i style="--swatch:#bb553f"></i>Wall &amp; shell</button></div>
+<p class="canvas-note">Every line is one actual wire. Coloured circles are typed ports. Crossing wires do not join. Left → right shows dependencies, not elapsed time. Drag the background to pan, or use the scrollbars.</p>
+</div></div><dialog id="canvasDialog" aria-label="Large wiring diagram"></dialog>
+<div id="boxButtons" class="boxButtons" aria-label="Inspect a process"></div>
+</section>
+<p>Start with a small house shell. Open its wall-building module, follow the resources, and change the evidence at the roof handoff. The question is what a reusable block must preserve when it becomes part of a larger project.</p>
 <section class="bridge" aria-label="Purpose, method and evidence"><div><span class="eyebrow">END</span><h2>Reusable work blocks</h2><p>Recurring packages should connect across projects without hiding their requirements. This house is a first example, not the final use case.</p></div><div><span class="eyebrow">WAY</span><h2>Wiring + interpretation</h2><p>A typed, acyclic diagram supplies the connections. An SMC supplies composition; explicit relations supply the small model’s accepted behaviour.</p></div><div><span class="eyebrow">MEANS</span><h2>Open it and challenge it</h2><p>Collapse or expand the wall package. Try a missing release or a replacement with stronger requirements. Inspect the actual ports and results.</p></div></section>
 <section class="section" id="workbench"><div class="sectionhead"><div><p class="eyebrow">01 / THE WORKING EXAMPLE</p><h2>What can pass this boundary?</h2></div><button id="reset">Reset example</button></div><p>The wall box represents the <strong>whole supporting wall assembly</strong> of a prepared, one-storey shell. Foundations, structural design, skills and site provision are assumed. The access box checks a supplied access record; it does not erect scaffolding. Nothing here issues a real construction release.</p>
-<div class="controls"><fieldset><legend>Inspect the composition</legend><label><input id="expanded" type="checkbox"> Open the wall-building module</label><label for="replacement">Wall package</label><select id="replacement"><option value="standard">Original requirements · revision A or B</option><option value="strict">Replacement · revision B only</option></select><label for="revision">Drawing revision</label><select id="revision"><option>A</option><option>B</option></select><p class="small">Release evidence is bound to the selected drawing revision in this example.</p></fieldset><fieldset><legend>Declared conditions</legend><label><input id="released" type="checkbox" checked> Load-readiness release supplied</label><label><input id="geometryOK" type="checkbox" checked> Wall geometry matches the design</label><label><input id="accessOK" type="checkbox" checked> Access available and inspected</label><label><input id="mortarOK" type="checkbox" checked> Mortar declared workable</label><label><input id="roofFits" type="checkbox" checked> Roof kit matches the assembly</label></fieldset><fieldset><legend>Challenge the model</legend><label><input id="sameWorker" type="checkbox"> Supply one worker as both labour inputs</label><label for="fault">Change the actual wiring</label><select id="fault"><option value="none">Correct wiring</option><option value="duplicate-worker">Duplicate a labour wire</option><option value="missing-wire">Remove a required wire</option><option value="wrong-type">Connect incompatible types</option></select><p class="small">Two people share the type <code>BL</code>; they still need distinct identities. This interface requires two people; a single-worker version would need different, serial wiring.</p></fieldset></div>
-<div id="result" class="result" role="status" aria-live="polite"></div><div class="diagramhead"><h3 id="diagramTitle">One package, several obligations</h3><span>Left → right = dependency, not elapsed time</span></div><div class="diagramViewport" tabindex="0" role="region" aria-label="Wiring diagram; scroll horizontally on narrow screens"><svg id="diagram" role="img" aria-label="Computed internal wiring diagram"></svg></div><p class="small">This overview shows <strong>internal connections and the supplied release evidence</strong>. A line can bundle several ports; its label names their types. The outer inputs, returns and every individual wire are listed below. Select a process using these buttons or the diagram.</p><div id="boxButtons" class="boxButtons" aria-label="Inspect a process"></div><div class="split"><aside id="inspector" class="panel"></aside><div class="panel"><h3>Computed handoffs</h3><ol id="trace" class="trace"></ol><p class="small">These are model evaluations, not work performed on a site. A rejected relation has no accepted outer output; the trace only explains where its conditions failed.</p></div></div>
+<div class="controls"><fieldset><legend>Inspect the composition</legend><label for="replacement">Wall package</label><select id="replacement"><option value="standard">Original requirements · revision A or B</option><option value="strict">Replacement · revision B only</option></select><label for="revision">Drawing revision</label><select id="revision"><option>A</option><option>B</option></select><p class="small">Release evidence is bound to the selected drawing revision in this example.</p></fieldset><fieldset><legend>Declared conditions</legend><label><input id="released" type="checkbox" checked> Load-readiness release supplied</label><label><input id="geometryOK" type="checkbox" checked> Wall geometry matches the design</label><label><input id="accessOK" type="checkbox" checked> Access available and inspected</label><label><input id="mortarOK" type="checkbox" checked> Mortar declared workable</label><label><input id="roofFits" type="checkbox" checked> Roof kit matches the assembly</label></fieldset><fieldset><legend>Challenge the model</legend><label><input id="sameWorker" type="checkbox"> Supply one worker as both labour inputs</label><label for="fault">Change the actual wiring</label><select id="fault"><option value="none">Correct wiring</option><option value="duplicate-worker">Duplicate a labour wire</option><option value="missing-wire">Remove a required wire</option><option value="wrong-type">Connect incompatible types</option></select><p class="small">Two people share the type <code>BL</code>; they still need distinct identities. This interface requires two people; a single-worker version would need different, serial wiring.</p></fieldset></div>
+<div id="result" class="result" role="status" aria-live="polite"></div><div class="split"><aside id="inspector" class="panel"></aside><div class="panel"><h3>Computed handoffs</h3><ol id="trace" class="trace"></ol><p class="small">These are model evaluations, not work performed on a site. A rejected relation has no accepted outer output; the trace only explains where its conditions failed.</p></div></div>
 <details><summary>Outer boundary and exact wiring table</summary><div class="split"><div><h3>Supplied to the composite</h3><ul id="inputs"></ul></div><div><h3>Returned by the composite</h3><ul id="outputs"></ul></div></div><p>Sand, cement, water, bricks and lintels are represented as adequate package inputs, not quantities. Trusses, roof coverings and fasteners are bundled as <code>RoofKit</code>; the model installs that kit in the shell. Waste, unused material and detailed quantities are outside this example. The drawing is threaded through successive processes, not silently copied.</p><div class="tablewrap"><table><caption>Every wire in the selected diagram</caption><thead><tr><th>Source port</th><th>Type</th><th>Destination port</th></tr></thead><tbody id="wires"></tbody></table></div><h3>Accepted output record</h3><pre id="outputRecord"></pre></details>
 </section>
 <section class="section" id="mathematics"><p class="eyebrow">02 / THE MATHEMATICS YOU CAN SEE</p><h2>Three layers, with different jobs</h2><div class="concepts"><article><span class="number">1</span><h3>The wiring is a recipe</h3><p>A box has named, typed input and output ports. Each port has exactly one attachment in the chosen syntax. Connections are directed and acyclic. A crossing does not join two wires; a branch would need an explicit operation.</p><p><strong>Operadic substitution:</strong> replace <code>Walling_One_Storey</code> with its internal diagram, matching every boundary port. The expanded picture is produced by that substitution in the code.</p><p class="formula">Φ[Walling ← Ψ] = the expanded wiring</p></article><article><span class="number">2</span><h3>The SMC combines processes</h3><p>Inside the module, a worker-identity check supplies two distinct labour instances to mixing and setting out. They can be placed alongside each other with <strong>⊗</strong>. Their outputs feed later work through sequential composition <strong>∘</strong>. Wires that bypass a step act as identities.</p><div class="smc" aria-label="Mix and Set are parallel processes; their outputs feed Build wall"><div><span>BL ⊗ S ⊗ C ⊗ H2O → <b>Mix</b> → BL ⊗ M</span><span>BL ⊗ P ⊗ D → <b>Set</b> → BL ⊗ L ⊗ P ⊗ D</span></div><strong>↓ routing + other inputs ↓</strong><span><b>Build wall</b> → BuiltWall + returned resources</span></div><p>The symbol <strong>⊗</strong> means a joint resource interface. Distinct workers are enforced by our explicit identity-check relation, not by <code>Rel</code> or tensor alone. It does not promise simultaneous execution, a duration, or spare capacity.</p></article><article><span class="number">3</span><h3>Relations give it meaning</h3><p>Here each type denotes model records; the checks explore a finite fixture family. Each implemented process is a partial function on the selected records, viewed as a relation in <strong>Rel</strong>. Tensor uses Cartesian product. Sequential composition hides a matching intermediate value:</p><p class="formula">(x,z) ∈ S ∘ R ⇔ ∃y: (x,y) ∈ R and (y,z) ∈ S</p><p>The implementation evaluates these deterministic relations. Missing release evidence gives no accepted output at the readiness box. The readiness type records a passed model guard, not a finding about concrete strength.</p></article></div>
@@ -414,43 +427,310 @@ function checkEquivalence(replacement = 'standard') {
   return { ok: failures.length === 0, checked: scenarios.length, accepted, rejected: scenarios.length - accepted, failures };
 }
 
+const {layoutDiagram}=(()=>{/** Geometry only: every model wire keeps its own route and named end ports. */
+function layoutDiagram(diagram) {
+  const expanded = diagram.boxes.some(box => box.id.includes('/'));
+  const width = expanded ? 2500 : 2140, height = 1000;
+  const positions = expanded ? {
+    IN: [30, 220], access: [390, 80], 'walling/crew': [390, 360],
+    'walling/mix': [750, 240], 'walling/set': [750, 600],
+    'walling/wall': [1110, 370], ready: [1470, 280], roof: [1830, 350], OUT: [2190, 300]
+  } : {
+    IN: [30, 220], access: [390, 80], walling: [750, 260],
+    ready: [1110, 280], roof: [1470, 350], OUT: [1830, 300]
+  };
+  const definitions = [
+    { id: 'IN', label: 'Supplied to the whole composition', inputs: [], outputs: diagram.inputs },
+    ...diagram.boxes,
+    { id: 'OUT', label: 'Returned by the whole composition', inputs: diagram.outputs, outputs: [] }
+  ];
+  const nodes = definitions.map(box => {
+    const position = positions[box.id];
+    if (!position) throw new Error(`No teaching-diagram position for ${box.id}.`);
+    const [x, y] = position, nodeWidth = 260;
+    const ports = (items, output) => items.map((port, index) => ({ ...port,
+      x: x + (output ? nodeWidth : 0), y: y + 70 + index * 32 }));
+    return { id: box.id, label: box.label, x, y, width: nodeWidth,
+      height: 92 + Math.max(box.inputs.length, box.outputs.length) * 32,
+      inputs: ports(box.inputs, false), outputs: ports(box.outputs, true) };
+  });
+  const sources = new Map(), targets = new Map();
+  const endpointKey = endpoint => JSON.stringify(endpoint);
+  for (const node of nodes) {
+    for (const port of node.outputs) sources.set(endpointKey([node.id, port.id]), port);
+    for (const port of node.inputs) targets.set(endpointKey([node.id, port.id]), port);
+  }
+  const sourceUses = new Map(), targetUses = new Map();
+  for (const wire of diagram.wires) {
+    for (const [uses, endpoint] of [[sourceUses, wire.from], [targetUses, wire.to]]) {
+      const key = endpointKey(endpoint); uses.set(key, (uses.get(key) ?? 0) + 1);
+    }
+  }
+  const router = makeRouter(nodes, width, height);
+  const wires = diagram.wires.map((wire, index) => {
+    const sourceKey = endpointKey(wire.from), targetKey = endpointKey(wire.to);
+    const source = sources.get(sourceKey), target = targets.get(targetKey);
+    if (!source || !target) throw new Error(`Cannot draw dangling wire ${index + 1}.`);
+    return { index, from: [...wire.from], to: [...wire.to], type: source.type,
+      points: router.route(source, target),
+      bad: source.type !== target.type || sourceUses.get(sourceKey) !== 1 || targetUses.get(targetKey) !== 1 };
+  });
+  return { width, height, nodes, wires };
+}
+
+function makeRouter(nodes, width, height) {
+  const stub = 28, clearance = 16;
+  const obstacles = nodes.map(node => ({
+    left: node.x - clearance, right: node.x + node.width + clearance,
+    top: node.y - clearance, bottom: node.y + node.height + clearance
+  }));
+  const portStubs = nodes.flatMap(node => [
+    ...node.inputs.map(port => ({ y: port.y, left: port.x - stub, right: port.x })),
+    ...node.outputs.map(port => ({ y: port.y, left: port.x, right: port.x + stub }))
+  ]);
+  const xValues = new Set([12, width - 12]), yValues = new Set([12, height - 12]);
+  // Quiet routing lanes cover every gap, including paths around intervening boxes.
+  for (let x = 12; x < width - 12; x += 24) xValues.add(x);
+  for (let y = 12; y < height - 12; y += 24) yValues.add(y);
+  for (const node of nodes) {
+    xValues.add(node.x - stub); xValues.add(node.x + node.width + stub);
+    for (const port of [...node.inputs, ...node.outputs]) yValues.add(port.y);
+  }
+  for (const rect of obstacles) {
+    xValues.add(rect.left); xValues.add(rect.right);
+    yValues.add(rect.top); yValues.add(rect.bottom);
+  }
+  const xs = [...xValues].filter(x => x > 0 && x < width).sort((a, b) => a - b);
+  const ys = [...yValues].filter(y => y > 0 && y < height).sort((a, b) => a - b);
+  const nx = xs.length, ny = ys.length, size = nx * ny;
+  const xIndex = new Map(xs.map((x, i) => [x, i])), yIndex = new Map(ys.map((y, i) => [y, i]));
+  const point = index => [xs[index % nx], ys[Math.floor(index / nx)]];
+  const indexOf = (x, y) => yIndex.get(y) * nx + xIndex.get(x);
+  const inside = (x, y, rect) => x > rect.left && x < rect.right && y > rect.top && y < rect.bottom;
+  const valid = new Uint8Array(size);
+  for (let index = 0; index < size; index++) {
+    const [x, y] = point(index); valid[index] = !obstacles.some(rect => inside(x, y, rect));
+  }
+  const edgeClear = (a, b) => {
+    const [ax, ay] = point(a), [bx, by] = point(b);
+    // Keep every short port attachment leg available to that port alone.
+    if (ay === by && portStubs.some(leg => ay === leg.y &&
+      Math.max(ax, bx) > leg.left && Math.min(ax, bx) < leg.right)) return false;
+    return !obstacles.some(rect => ax === bx
+      ? ax > rect.left && ax < rect.right && Math.max(ay, by) > rect.top && Math.min(ay, by) < rect.bottom
+      : ay > rect.top && ay < rect.bottom && Math.max(ax, bx) > rect.left && Math.min(ax, bx) < rect.right);
+  };
+  const neighbors = Array.from({ length: size }, () => []);
+  for (let a = 0; a < size; a++) if (valid[a]) {
+    const ix = a % nx, iy = Math.floor(a / nx);
+    for (const b of [ix + 1 < nx ? a + 1 : -1, iy + 1 < ny ? a + nx : -1]) {
+      if (b < 0 || !valid[b] || !edgeClear(a, b)) continue;
+      const direction = b === a + 1 ? 1 : 2;
+      const length = direction === 1 ? xs[ix + 1] - xs[ix] : ys[iy + 1] - ys[iy];
+      neighbors[a].push({ next: b, direction, length });
+      neighbors[b].push({ next: a, direction, length });
+    }
+  }
+  const usedEdges = new Map(), usedDirections = new Uint8Array(size);
+  const edgeKey = (a, b) => a < b ? `${a}:${b}` : `${b}:${a}`;
+  return { route(source, target) {
+    const start = indexOf(source.x + stub, source.y), end = indexOf(target.x - stub, target.y);
+    const costs = new Float64Array(size * 3).fill(Infinity);
+    const previous = new Int32Array(size * 3).fill(-1);
+    const startState = start * 3; costs[startState] = 0;
+    const heap = new MinHeap(); heap.push(startState, 0);
+    let found = -1;
+    while (heap.length) {
+      const [state, score] = heap.pop();
+      const at = Math.floor(state / 3), priorDirection = state % 3;
+      const [x, y] = point(at);
+      const heuristic = Math.abs(x - (target.x - stub)) + Math.abs(y - target.y);
+      if (score > costs[state] + heuristic + 0.001 && state !== startState) continue;
+      if (at === end) { found = state; break; }
+      for (const { next, direction, length } of neighbors[at]) {
+        const turn = priorDirection && priorDirection !== direction ? 20 : 0;
+        const reused = usedEdges.get(edgeKey(at, next)) ?? 0;
+        const crossing = usedDirections[next] && !(usedDirections[next] & direction) ? 12 : 0;
+        const cost = costs[state] + length + turn + reused * (length * 10 + 120) + crossing;
+        const nextState = next * 3 + direction;
+        if (cost >= costs[nextState]) continue;
+        costs[nextState] = cost; previous[nextState] = state;
+        const [px, py] = point(next);
+        heap.push(nextState, cost + Math.abs(px - (target.x - stub)) + Math.abs(py - target.y));
+      }
+    }
+    if (found < 0) throw new Error(`No clear route between (${source.x},${source.y}) and (${target.x},${target.y}).`);
+    const route = [];
+    for (let state = found; state >= 0; state = previous[state]) route.push(Math.floor(state / 3));
+    route.reverse();
+    for (let i = 1; i < route.length; i++) {
+      const key = edgeKey(route[i - 1], route[i]);
+      usedEdges.set(key, (usedEdges.get(key) ?? 0) + 1);
+      const a = point(route[i - 1]), b = point(route[i]);
+      const direction = a[0] === b[0] ? 2 : 1;
+      usedDirections[route[i - 1]] |= direction; usedDirections[route[i]] |= direction;
+    }
+    const points = [[source.x, source.y], ...route.map(point), [target.x, target.y]];
+    return points.filter((p, i) => i === 0 || i === points.length - 1 ||
+      !((points[i - 1][0] === p[0] && p[0] === points[i + 1][0]) ||
+        (points[i - 1][1] === p[1] && p[1] === points[i + 1][1])));
+  } };
+}
+
+class MinHeap {
+  constructor() { this.items = []; }
+  get length() { return this.items.length; }
+  push(state, score) {
+    const entry = [state, score]; this.items.push(entry);
+    let index = this.items.length - 1;
+    while (index > 0) {
+      const parent = Math.floor((index - 1) / 2);
+      if (this.items[parent][1] <= score) break;
+      this.items[index] = this.items[parent]; index = parent;
+    }
+    this.items[index] = entry;
+  }
+  pop() {
+    const first = this.items[0], last = this.items.pop();
+    if (!this.items.length) return first;
+    let index = 0;
+    while (index * 2 + 1 < this.items.length) {
+      let child = index * 2 + 1;
+      if (child + 1 < this.items.length && this.items[child + 1][1] < this.items[child][1]) child++;
+      if (this.items[child][1] >= last[1]) break;
+      this.items[index] = this.items[child]; index = child;
+    }
+    this.items[index] = last; return first;
+  }
+}
+
+return {layoutDiagram};})();
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let selected='walling';
-let current;
+let selected=null, current, currentLayout, currentResult, zoom='fit', family='all';
 const fields=['accessOK','mortarOK','geometryOK','released','roofFits','sameWorker'];
-function endpointLabel(endpoint){const [id,port]=endpoint;return `${id==='IN'?'Supplied':id==='OUT'?'Returned':current.boxes.find(b=>b.id===id)?.label??id} · ${port}`;}
-function typeAt(endpoint){const [id,port]=endpoint;return (id==='IN'?current.inputs:current.boxes.find(b=>b.id===id)?.outputs??[]).find(p=>p.id===port)?.type??'?';}
-function inspect(id){selected=id;const b=current.boxes.find(b=>b.id===id);if(!b)return;
- $('inspector').innerHTML=`<p class="eyebrow">SELECTED PROCESS</p><h3>${esc(b.label)}</h3><p>${esc(b.description)}</p><p class="small">Input types → output types</p><div class="signature">${b.inputs.map(p=>esc(p.type)).join(' ⊗ ')}\n→ ${b.outputs.map(p=>esc(p.type)).join(' ⊗ ')}</div><details><summary>Named ports and meanings</summary><h4>Inputs</h4><ul>${b.inputs.map(p=>`<li><code>${esc(p.id)} : ${esc(p.type)}</code> — ${esc(TYPE[p.type])}</li>`).join('')}</ul><h4>Outputs</h4><ul>${b.outputs.map(p=>`<li><code>${esc(p.id)} : ${esc(p.type)}</code> — ${esc(TYPE[p.type])}</li>`).join('')}</ul></details>`;
- document.querySelectorAll('[data-box]').forEach(el=>{const active=el.dataset.box===id;if(el.tagName==='BUTTON')el.setAttribute('aria-pressed',String(active));else el.classList.toggle('selected',active);});
+const colours={labour:'#7c55b3',materials:'#b67a25',information:'#367bbe',equipment:'#298879',structure:'#bb553f'};
+const familyOf=t=>t==='BL'?'labour':['D','Evidence'].includes(t)?'information':['P','Sc','ScRaw'].includes(t)?'equipment':['BuiltWall','ReadyWall','Roofed'].includes(t)?'structure':'materials';
+function endpointLabel([id,port]) {return `${id==='IN'?'Supplied':id==='OUT'?'Returned':current.boxes.find(b=>b.id===id)?.label??id} · ${port}`;}
+function typeAt([id,port]) {return (id==='IN'?current.inputs:current.boxes.find(b=>b.id===id)?.outputs??[]).find(p=>p.id===port)?.type??'?';}
+function highlight(indices=null) {
+  document.querySelectorAll('#diagram .wire-group').forEach(g=>{
+    const active=indices?indices.has(Number(g.dataset.wireIndex)):family==='all'||g.dataset.family===family;
+    g.classList.toggle('faded',!active);g.classList.toggle('followed',active&&(indices!==null||family!=='all'));
+  });
+  document.querySelectorAll('.wire-legend button[data-family]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.family===family)));
 }
-function draw(){const expanded=$('expanded').checked;const svg=$('diagram');svg.dataset.expanded=String(expanded);svg.replaceChildren();svg.setAttribute('viewBox',expanded?'0 0 1510 620':'0 0 1220 450');
- const ns='http://www.w3.org/2000/svg';const el=(tag,attrs={},parent=svg,text)=>{const e=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));if(text!==undefined)e.textContent=text;parent.append(e);return e;};
- const defs=el('defs');const marker=el('marker',{id:'arrow',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse'},defs);el('path',{d:'M0 0L10 5L0 10Z',fill:'#66897e'},marker);
- const positions=expanded?{access:[45,30],'walling/crew':[45,350],'walling/mix':[350,205],'walling/set':[350,400],'walling/wall':[660,230],ready:[965,230],roof:[1265,230]}:{access:[70,40],walling:[385,180],ready:[700,180],roof:[1000,180]};
- const grouped=new Map();current.wires.filter(w=>w.from[0]!=='IN'&&w.to[0]!=='OUT').forEach(w=>{const k=w.from[0]+'|'+w.to[0];if(!grouped.has(k))grouped.set(k,[]);grouped.get(k).push(w);});
- grouped.forEach(wires=>{const f=wires[0].from[0],t=wires[0].to[0],a=positions[f],b=positions[t];if(!a||!b)return;const x=a[0]+180,y=a[1]+42,tx=b[0],ty=b[1]+42;const bypass=(f==='walling'||f==='walling/wall')&&t==='roof';const sy=bypass?y+55:y,ey=bypass?ty+55:ty;let d=bypass?`M ${x-55} ${sy} C ${x-55} ${sy+155}, ${tx+70} ${ey+155}, ${tx+70} ${ey}`:`M${x} ${y} C${x+80} ${y}, ${tx-80} ${ty}, ${tx} ${ty}`;
- el('path',{d,class:'wire','marker-end':'url(#arrow)'});const types=wires.map(w=>typeAt(w.from));const label=types.join(' · ');const lx=bypass?(x+tx)/2:(x+tx)/2,ly=bypass?sy+120:(y+ty)/2-12;el('text',{x:lx,y:ly,'text-anchor':'middle',class:'wirelabel'},svg,label);
- });
- const ready=positions.ready;el('path',{d:`M${ready[0]+90} ${ready[1]-62} L${ready[0]+90} ${ready[1]-4}`,class:'wire','marker-end':'url(#arrow)'});el('text',{x:ready[0]+90,y:ready[1]-75,'text-anchor':'middle',class:'wirelabel'},svg,'Supplied release evidence');
- if($('fault').value!=='none')el('text',{x:35,y:expanded?595:432,fill:'#9b3328','font-size':14},svg,'Outer input wiring altered: '+$('fault').selectedOptions[0].textContent+'. See the exact wire table below.');
- current.boxes.forEach(b=>{const pos=positions[b.id];if(!pos)return;const g=el('g',{class:'node','data-box':b.id,role:'button',tabindex:0,'aria-label':`Inspect ${b.label}`});el('rect',{x:pos[0],y:pos[1],width:180,height:84,rx:10},g);const words=b.id==='walling'?['Walling','One Storey']:b.id==='walling/crew'?['Check two','worker identities']:b.id==='ready'?['Check wall','readiness']:b.id==='roof'?['Put roof on']:b.id==='access'?['Check supplied','access']:b.label==='Set out · revision B only'?['Set out','revision B only']:b.label==='Build wall assembly'?['Build wall','assembly']:[b.label];words.forEach((s,i)=>el('text',{x:pos[0]+90,y:pos[1]+29+i*19,'text-anchor':'middle'},g,s));el('text',{x:pos[0]+90,y:pos[1]+73,'text-anchor':'middle',class:'subtitle'},g,`${b.inputs.length} inputs → ${b.outputs.length} outputs`);g.addEventListener('click',()=>inspect(b.id));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inspect(b.id);}});});
- $('diagramTitle').textContent=expanded?'Open the module: the same outer boundary':'One package, several obligations';
+function inspect(id) {
+  selected=id;const b=current.boxes.find(b=>b.id===id);if(!b)return;
+  $('inspector').innerHTML=`<p class="eyebrow">SELECTED PROCESS</p><h3>${esc(b.label)}</h3><p>${esc(b.description)}</p><p class="small">Input types → output types</p><div class="signature">${b.inputs.map(p=>esc(p.type)).join(' ⊗ ')}\n→ ${b.outputs.map(p=>esc(p.type)).join(' ⊗ ')}</div><details><summary>Named ports and meanings</summary><h4>Inputs</h4><ul>${b.inputs.map(p=>`<li><code>${esc(p.id)} : ${esc(p.type)}</code> — ${esc(TYPE[p.type])}</li>`).join('')}</ul><h4>Outputs</h4><ul>${b.outputs.map(p=>`<li><code>${esc(p.id)} : ${esc(p.type)}</code> — ${esc(TYPE[p.type])}</li>`).join('')}</ul></details>`;
+  document.querySelectorAll('[data-box]').forEach(el=>{const active=el.dataset.box===id;el.setAttribute('aria-pressed',String(active));el.classList.toggle('selected',active);});
+  const indices=new Set(current.wires.flatMap((w,i)=>w.from[0]===id||w.to[0]===id?[i]:[]));
+  highlight(indices);$('wireReadout').textContent=`${b.label} — ${b.inputs.length} input ports, ${b.outputs.length} output ports. Connected wires highlighted; process details are below the conditions.`;
 }
-function render(){const scenario={...DEFAULT_SCENARIO,...Object.fromEntries(fields.map(k=>[k,$(k).checked])),revision:$('revision').value,evidenceRevision:$('revision').value};
- current=buildDiagram({expanded:$('expanded').checked,fault:$('fault').value,replacement:$('replacement').value});const syntax=validate(current);const result=run(current,scenario);
- $('result').classList.toggle('bad',!result.ok);$('result').innerHTML=`<strong>${!syntax.ok?'Wiring rejected':result.ok?'Model accepts a roofed structural shell':'Wiring fits; the model rejects this handoff'}</strong><p>${syntax.ok?'Every port is connected once, types match, and the diagram is acyclic.':'The altered diagram fails a structural check.'}</p>${result.errors.length?`<ul>${result.errors.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>`:'<p>The supplied conditions admit this boundary result. Both worker identities, the peg kit, drawing and access are returned.</p>'}`;
- $('houseRoof').setAttribute('fill',result.ok?'#638d82':'#cdd5d9');$('houseBadge').textContent=result.ok?'✓':'?';$('houseCaption').textContent=result.ok?'Accepted by the teaching model — not engineering approval.':'The selected model has no accepted roofed-shell output.';
- $('trace').innerHTML=result.trace.length?result.trace.map(row=>`<li class="${row.status==='fail'?'fail':''}"><b>${row.status==='pass'?'✓':row.status==='fail'?'×':'—'} ${esc(row.label)}</b>${esc(row.detail)}</li>`).join(''):'<li>Fix the wiring before interpreting its behaviour.</li>';
- $('boxButtons').innerHTML=current.boxes.map(b=>`<button data-box="${esc(b.id)}" aria-pressed="false">${esc(b.label)}</button>`).join('');$('boxButtons').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>inspect(b.dataset.box)));
- $('inputs').innerHTML=current.inputs.map(p=>`<li>${esc(p.label)} <code>${esc(p.type)}</code></li>`).join('');$('outputs').innerHTML=current.outputs.map(p=>`<li>${esc(p.label)} <code>${esc(p.type)}</code></li>`).join('');
- $('wires').innerHTML=current.wires.map(w=>`<tr><td>${esc(endpointLabel(w.from))}</td><td><code>${esc(typeAt(w.from))}</code></td><td>${esc(endpointLabel(w.to))}</td></tr>`).join('');$('outputRecord').textContent=result.ok?JSON.stringify(result.outputs,null,2):'No accepted outer output for this input assignment.';
- draw();if(!current.boxes.some(b=>b.id===selected))selected=$('expanded').checked?'walling/wall':'walling';inspect(selected);$('verification').textContent='Compare the expanded and collapsed boundary results over the model’s finite fixture family.';
+function followWire(index) {
+  const wire=current.wires[index];if(!wire)return;selected=null;family='all';highlight(new Set([index]));
+  document.querySelectorAll('[data-box]').forEach(el=>{el.classList.remove('selected');el.setAttribute('aria-pressed','false');});
+  $('wireReadout').textContent=`${endpointLabel(wire.from)} → ${endpointLabel(wire.to)}. ${typeAt(wire.from)}: ${TYPE[typeAt(wire.from)]??'Unknown type'}.`;
+}
+function showAll() {family='all';selected=null;highlight();document.querySelectorAll('[data-box]').forEach(el=>{el.classList.remove('selected');el.setAttribute('aria-pressed','false');});$('wireReadout').textContent='Every actual wire is visible. Select a wire or port to follow its connection; select a process to highlight its boundary.';}
+function applyZoom() {
+  if(!currentLayout)return;const v=$('diagramViewport');
+  const fit=Math.min(1,(v.clientWidth-20)/currentLayout.width,(v.clientHeight-20)/currentLayout.height);
+  const scale=zoom==='fit'?Math.max(.08,fit):zoom;
+  $('diagram').style.width=`${currentLayout.width*scale}px`;$('diagram').style.height=`${currentLayout.height*scale}px`;
+  $('zoomValue').textContent=`${Math.round(scale*100)}%`;
+  $('zoomValue').dataset.scale=String(scale);
+  if(zoom==='fit'){v.scrollLeft=0;v.scrollTop=0;}
+}
+function draw() {
+  currentLayout=layoutDiagram(current);const svg=$('diagram');svg.replaceChildren();
+  svg.setAttribute('viewBox',`0 0 ${currentLayout.width} ${currentLayout.height}`);
+  svg.dataset.wireCount=String(current.wires.length);
+  const ns='http://www.w3.org/2000/svg';
+  const el=(tag,attrs={},parent=svg,text)=>{const e=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));if(text!==undefined)e.textContent=text;parent.append(e);return e;};
+  el('title',{id:'svgTitle'},svg,'Complete house-shell wiring diagram');
+  el('desc',{id:'svgDescription'},svg,`${current.inputs.length} supplied inputs, ${current.boxes.length} processes, ${current.wires.length} individual wires and ${current.outputs.length} returned outputs. Every boundary and internal connection in the selected model is drawn. Crossing lines are not junctions.`);
+  const defs=el('defs');
+  for(const [name,colour] of Object.entries({...colours,error:'#ba302d'})){
+    const marker=el('marker',{id:`arrow-${name}`,viewBox:'0 0 10 10',refX:10,refY:5,markerWidth:5,markerHeight:5,orient:'auto'},defs);el('path',{d:'M0 0L10 5L0 10Z',fill:colour},marker);
+  }
+  // The outer process boundary is a visual enclosure, not an extra process.
+  el('rect',{x:300,y:40,width:currentLayout.width-610,height:currentLayout.height-80,rx:24,class:'outer-enclosure'});
+  el('text',{x:326,y:74,class:'enclosure-label'},svg,'BUILD THE ROOFED SHELL · COMPOSITE PROCESS');
+  const inners=currentLayout.nodes.filter(n=>n.id.startsWith('walling/'));
+  if(inners.length){
+    const x=Math.min(...inners.map(n=>n.x))-24,y=Math.min(...inners.map(n=>n.y))-24;
+    const right=Math.max(...inners.map(n=>n.x+n.width))+24,bottom=Math.max(...inners.map(n=>n.y+n.height))+28;
+    el('rect',{x,y,width:right-x,height:bottom-y,rx:16,class:'module-enclosure'});
+    el('text',{x:x+18,y:y+25,class:'module-label'},svg,'WALLING_ONE_STOREY · OPENED OUT');
+  }
+  for(const wire of currentLayout.wires){
+    const wf=familyOf(wire.type),colour=wire.bad?'#ba302d':colours[wf];
+    const points=wire.points;const d=points.map(([x,y],i)=>`${i?'L':'M'}${x},${y}`).join(' ');
+    const g=el('g',{class:`wire-group${wire.bad?' invalid-wire':''}`,'data-wire-index':wire.index,'data-from':JSON.stringify(wire.from),'data-to':JSON.stringify(wire.to),'data-family':wf,tabindex:0,role:'button','aria-label':`Follow wire: ${endpointLabel(wire.from)} to ${endpointLabel(wire.to)}, type ${wire.type}`});
+    el('title',{},g,`${endpointLabel(wire.from)} → ${endpointLabel(wire.to)} · ${wire.type}`);
+    el('path',{d,class:'wire-halo'},g);el('path',{d,class:'wire-line',stroke:colour,'marker-end':`url(#arrow-${wire.bad?'error':wf})`},g);
+    el('path',{d,class:'wire-hit'},g);
+    g.addEventListener('click',e=>{e.stopPropagation();followWire(wire.index);});
+    g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();followWire(wire.index);}});
+    g.addEventListener('mouseenter',()=>{g.classList.add('hovered');});g.addEventListener('mouseleave',()=>g.classList.remove('hovered'));
+  }
+  for(const node of currentLayout.nodes){
+    const boundary=['IN','OUT'].includes(node.id);const state=currentResult.trace.find(r=>r.id===node.id)?.status;
+    const g=el('g',{class:`process-node${boundary?' boundary-node':''}${state==='fail'?' failed-node':''}`,...(boundary?{}:{'data-box':node.id})});
+    el('rect',{x:node.x,y:node.y,width:node.width,height:node.height,rx:12,class:'node-body'},g);
+    const header=el('g',boundary?{}:{role:'button',tabindex:0,'data-box':node.id,'aria-pressed':'false','aria-label':`Inspect ${node.label}`},g);
+    el('rect',{x:node.x,y:node.y,width:node.width,height:61,rx:12,class:'node-header'},header);
+    const name=boundary?(node.id==='IN'?'SUPPLIED INPUTS':'RETURNED OUTPUTS'):node.label.replace('Walling_One_Storey','Walling · One Storey');
+    const words=name.length>28?name.split(' '):[name];
+    const lines=words.length>1?[words.slice(0,Math.ceil(words.length/2)).join(' '),words.slice(Math.ceil(words.length/2)).join(' ')]:words;
+    lines.forEach((line,i)=>el('text',{x:node.x+node.width/2,y:node.y+25+i*20,'text-anchor':'middle',class:'process-title'},header,line));
+    if(lines.length===1)el('text',{x:node.x+node.width/2,y:node.y+47,'text-anchor':'middle',class:'process-subtitle'},header,boundary?'Outer boundary':state==='fail'?'Condition not met':state==='blocked'?'Waiting for an input':`${node.inputs.length} inputs · ${node.outputs.length} outputs`);
+    for(const side of ['inputs','outputs'])for(const port of node[side]){
+      const matches=current.wires.flatMap((w,i)=>{const endpoint=side==='outputs'?w.from:w.to;return endpoint[0]===node.id&&endpoint[1]===port.id?[i]:[];});
+      const colour=matches.length===1?colours[familyOf(port.type)]:'#ba302d';
+      const pg=el('g',{class:`diagram-port${matches.length!==1?' invalid-port':''}`,'data-node':node.id,'data-direction':side,'data-port':port.id,'data-type':port.type,role:'button',tabindex:0,'aria-label':`Follow ${node.label} ${side==='inputs'?'input':'output'} ${port.id}, type ${port.type}`},g);
+      el('title',{},pg,`${port.label??port.id}: ${port.type} · ${matches.length} connection${matches.length===1?'':'s'}`);
+      el('circle',{cx:port.x,cy:port.y,r:6,fill:'#fffdf8',stroke:colour,'stroke-width':3},pg);
+      const short=({builder:'builder',mixer:'mixer',roofkit:'roof kit',evidence:'release',drawing:'drawing',access:'access',cement:'cement',sand:'sand',water:'water',bricks:'bricks',lintels:'lintels',peg:'peg kit',shell:'shell',wall:'wall',mortar:'mortar',line:'line'})[port.id]??port.id;
+      const input=side==='inputs';
+      el('text',{x:port.x+(input?12:-12),y:port.y+5,'text-anchor':input?'start':'end',class:'port-label',fill:colour},pg,`${short} · ${port.type}`);
+      const selectPort=()=>{showAll();highlight(new Set(matches));$('wireReadout').textContent=`${node.label} · ${port.id}: ${TYPE[port.type]}. ${matches.length} attached wire${matches.length===1?'':'s'}${matches.length===1?'':'; this violates the one-wire-per-port rule'}.`;};
+      pg.addEventListener('click',e=>{e.stopPropagation();selectPort();});pg.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();selectPort();}});
+    }
+    if(!boundary){header.addEventListener('click',()=>inspect(node.id));header.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inspect(node.id);}});}
+  }
+  $('diagramTitle').textContent=$('expanded').checked?'Wall module expanded':'Wall module composed';
+  $('diagramCount').textContent=`${current.inputs.length} supplied inputs · ${current.boxes.length} processes · ${current.wires.length} wires · ${current.outputs.length} returns`;
+  applyZoom();
+}
+function render() {
+  const scenario={...DEFAULT_SCENARIO,...Object.fromEntries(fields.map(k=>[k,$(k).checked])),revision:$('revision').value,evidenceRevision:$('revision').value};
+  current=buildDiagram({expanded:$('expanded').checked,fault:$('fault').value,replacement:$('replacement').value});const syntax=validate(current);const result=currentResult=run(current,scenario);
+  $('result').classList.toggle('bad',!result.ok);$('result').innerHTML=`<strong>${!syntax.ok?'Wiring rejected':result.ok?'Model accepts a roofed structural shell':'Wiring fits; the model rejects this handoff'}</strong><p>${syntax.ok?'Every port is connected once, types match, and the diagram is acyclic.':'The altered diagram fails a structural check.'}</p>${result.errors.length?`<ul>${result.errors.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>`:'<p>The supplied conditions admit this boundary result. Both worker identities, the peg kit, drawing and access are returned.</p>'}`;
+  $('houseRoof').setAttribute('fill',result.ok?'#638d82':'#cdd5d9');$('houseBadge').textContent=result.ok?'✓':'?';$('houseCaption').textContent=result.ok?'Accepted by the teaching model — not engineering approval.':'The selected model has no accepted roofed-shell output.';
+  $('trace').innerHTML=result.trace.length?result.trace.map(row=>`<li class="${row.status==='fail'?'fail':''}"><b>${row.status==='pass'?'✓':row.status==='fail'?'×':'—'} ${esc(row.label)}</b>${esc(row.detail)}</li>`).join(''):'<li>Fix the wiring before interpreting its behaviour.</li>';
+  $('boxButtons').innerHTML=current.boxes.map(b=>`<button data-box="${esc(b.id)}" aria-pressed="false">${esc(b.label)}</button>`).join('');$('boxButtons').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>inspect(b.dataset.box)));
+  $('inputs').innerHTML=current.inputs.map(p=>`<li>${esc(p.label)} <code>${esc(p.type)}</code></li>`).join('');$('outputs').innerHTML=current.outputs.map(p=>`<li>${esc(p.label)} <code>${esc(p.type)}</code></li>`).join('');
+  $('wires').innerHTML=current.wires.map(w=>`<tr><td>${esc(endpointLabel(w.from))}</td><td><code>${esc(typeAt(w.from))}</code></td><td>${esc(endpointLabel(w.to))}</td></tr>`).join('');$('outputRecord').textContent=result.ok?JSON.stringify(result.outputs,null,2):'No accepted outer output for this input assignment.';
+  draw();const initial=$('expanded').checked?'walling/wall':'walling';inspect(current.boxes.some(b=>b.id===selected)?selected:initial);showAll();$('verification').textContent='Compare the expanded and collapsed boundary results over the model’s finite fixture family.';
 }
 [...fields,'expanded','replacement','revision','fault'].forEach(id=>$(id).addEventListener('change',render));
-$('reset').addEventListener('click',()=>{fields.forEach(k=>$(k).checked=DEFAULT_SCENARIO[k]);$('expanded').checked=false;$('replacement').value='standard';$('revision').value='A';$('fault').value='none';selected='walling';render();});
-$('verify').addEventListener('click',()=>{const report=checkEquivalence($('replacement').value);$('verification').textContent=`${report.ok?'PASS':'FAIL'}: ${report.checked} fixture assignments compared; ${report.accepted} accepted and ${report.rejected} rejected. Expanded and collapsed ${report.ok?'agree':'disagree'} on acceptance and the complete outer output. This check uses correct wiring and both drawing/evidence revisions, independently of the currently selected faults. It does not prove arbitrary replacements or physical adequacy.`;});
+$('reset').addEventListener('click',()=>{fields.forEach(k=>$(k).checked=DEFAULT_SCENARIO[k]);$('expanded').checked=true;$('replacement').value='standard';$('revision').value='A';$('fault').value='none';selected=null;zoom='fit';render();});
+$('verify').addEventListener('click',()=>{const r=checkEquivalence($('replacement').value);$('verification').textContent=`${r.ok?'PASS':'FAIL'}: ${r.checked} fixture assignments compared; ${r.accepted} accepted and ${r.rejected} rejected. Expanded and collapsed ${r.ok?'agree':'disagree'} on acceptance and the complete outer output. This check uses correct wiring and both drawing/evidence revisions, independently of the currently selected faults. It does not prove arbitrary replacements or physical adequacy.`;});
+$('zoomIn').addEventListener('click',()=>{zoom=Math.min(1.8,Number($('zoomValue').dataset.scale)*1.3);applyZoom();});
+$('zoomOut').addEventListener('click',()=>{zoom=Math.max(.08,Number($('zoomValue').dataset.scale)/1.3);applyZoom();});
+$('fitDiagram').addEventListener('click',()=>{zoom='fit';applyZoom();});
+$('readableDiagram').addEventListener('click',()=>{zoom=1;applyZoom();});
+const dialog=$('canvasDialog'),stage=$('canvasStage');
+$('enlargeDiagram').addEventListener('click',()=>{if(dialog.open)dialog.close();else{dialog.append(stage);dialog.showModal();$('enlargeDiagram').textContent='Close large view ×';applyZoom();}});
+dialog.addEventListener('close',()=>{$('canvasHome').append(stage);$('enlargeDiagram').textContent='Larger view ↗';applyZoom();$('enlargeDiagram').focus();});
+new ResizeObserver(()=>applyZoom()).observe($('diagramViewport'));
+document.querySelectorAll('.wire-legend button[data-family]').forEach(b=>b.addEventListener('click',()=>{showAll();family=b.dataset.family;highlight();$('wireReadout').textContent=family==='all'?'Every actual wire is visible. Select a connection to follow it.':`${b.textContent.trim()} highlighted. Other wires remain visible in the background.`;}));
+const viewport=$('diagramViewport');let drag=null;
+viewport.addEventListener('pointerdown',e=>{if(e.target.closest('.wire-group,.process-node'))return;if(e.pointerType==='touch')return;drag={x:e.clientX,y:e.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};viewport.setPointerCapture(e.pointerId);viewport.classList.add('dragging');});
+viewport.addEventListener('pointermove',e=>{if(!drag)return;viewport.scrollLeft=drag.left+drag.x-e.clientX;viewport.scrollTop=drag.top+drag.y-e.clientY;});
+const endDrag=()=>{drag=null;viewport.classList.remove('dragging');};viewport.addEventListener('pointerup',endDrag);viewport.addEventListener('pointercancel',endDrag);
 render();
 
 })();
