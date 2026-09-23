@@ -527,6 +527,7 @@
     <a href="../../index.html">Back to app index</a>
   </div>
   <div id="app" class="app min-h-64 frame" data-timeout="3000">
+    <p class="card small" role="note"><strong>Current reading:</strong> <a href="../wall-roof-wiring-smc/">resources and reusable boundaries</a> · <a href="../wiring-algebra/">wiring and its algebra</a> · <a href="../course-by-course/">course-by-course dynamics</a>. This supporting working retains the static-relation interpretation: component predicates compose by hiding internal values. It concerns a toy load/acceptance relation, distinct from the resource-flow construction sequence and from a full assume–guarantee contract theory.</p>
     <noscript>
       <div style="padding:1rem">
         Interactive visualisation (requires JavaScript). Below you will still find the static diagram and formalism text.
@@ -552,6 +553,7 @@
         <strong>Scope note (important):</strong>
         <p>
           This is a deliberately simplified, didactic safety model: one scalar “design load” flows from roof to wall.
+          The code-check flags and capacities are supplied assumptions; the page does not evaluate building codes or issue engineering approval.
           Real structural design requires jurisdiction-specific codes, load combinations, detailing, and professional judgement.
         </p>
       </aside>
@@ -721,6 +723,7 @@
               <p>
                 This wiring diagram is the <em>syntax</em> (how subsystems connect). The contracts are the <em>semantics</em> (what must be true).
               </p>
+              <p class="small">Wire colours indicate roles or the current check result, not exact types. The signatures distinguish nonnegative real values from Boolean values; a green wire means the selected toy predicate holds, not that a physical handoff is approved.</p>
               <p>
                 In operad language: a wiring diagram is a multi-input “arrangement” of inner boxes into an outer box, and an algebra evaluates that arrangement. In our case, the evaluation produces a <em>predicate</em> (a set of allowed I/O pairs).
               </p>
@@ -841,7 +844,7 @@ that makes all component constraints true."
             </div>
 
             <p class="small">
-              In this example we mainly use the “existential over internal wires” intuition (and you can see it computed explicitly below).
+              This generic formula belongs to a wiring category that can express feedback; it is not a definition of the narrower acyclic, one-attachment-per-port syntax used in the current resource essay. The example below uses an acyclic connection and computes the existential elimination explicitly. Here “contract” means a static allowed relation, not a separately established assume–guarantee calculus.
             </p>
           </div>
 

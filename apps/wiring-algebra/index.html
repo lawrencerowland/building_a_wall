@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>One diagram, several meanings · Building a Wall</title><meta name="description" content="An interactive essay separating wiring, operads and their algebras, with typed composition laws and a small wall-and-roof relation."><link rel="stylesheet" href="../../common.css"><link rel="stylesheet" href="style.css"></head>
+<body><a class="skip" href="#main">Skip to essay</a><header><a href="../../index.html">Building a Wall</a><nav aria-label="Related essays"><a href="../wall-roof-wiring-smc/">Build a house</a><a href="../course-by-course/">Course by course</a></nav></header>
+<main id="main"><div class="hero"><p class="eyebrow">Project wiring diagrams · Essay 02</p><h1>One diagram,<br>several meanings.</h1><p class="lede">A roof sends a load to a wall. The picture says what connects. A model says what the connection means—and whether the whole arrangement meets its stated conditions.</p><p class="reading">Begin with a deliberately small example: the roof passes its entire load to one wall. We compare available capacity with a factored load, then hide the internal reaction to obtain one condition at the outer boundary. This is a teaching calculation, not a structural design.</p></div>
+<section aria-labelledby="picture-title"><h2 id="picture-title">Follow the reaction</h2><div class="diagram-scroll" tabindex="0" role="region" aria-label="Typed roof and wall diagram; scroll horizontally on a small screen"><svg viewBox="0 0 980 390" role="img" aria-labelledby="load-title load-desc"><title id="load-title">Roof, wall and a Boolean combiner</title><desc id="load-desc">Roof inputs are S of type Load, Cap R of type Capacity, and flag R of type Bool. Its outputs are reaction r of type Load into Wall and ok R of type Bool into AND. Wall also receives Cap W of type Capacity and flag W of type Bool, and outputs ok W of type Bool to AND. AND returns ok S of type Bool. Factors gamma R and gamma W are fixed positive parameters for each calculation.</desc><defs><marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 8 4 0 8z" fill="#34725a"/></marker></defs>
+<rect x="18" y="18" width="944" height="350" fill="none" stroke="#a2b69f" stroke-dasharray="6 5" rx="10"/><text x="36" y="43" class="smalltext">OUTER INTERFACE · external inputs → Bool</text>
+<rect x="230" y="113" width="165" height="140" class="box"/><text x="250" y="143" class="title">Roof</text><text x="250" y="169" class="typed">r = S</text><text x="250" y="191" class="typed">Cap_R ≥ γ_R S</text><text x="250" y="215" class="typed">flag_R; ok_R = true</text><text x="250" y="237" class="smalltext">parameter γ_R &gt; 0</text>
+<path d="M40 145H230 M40 182H230 M40 220H230" class="wire" marker-end="url(#arr)"/><text x="50" y="136" class="typed">S : Load</text><text x="50" y="173" class="typed">Cap_R : Capacity</text><text x="50" y="211" class="typed">flag_R : Bool</text>
+<rect x="505" y="113" width="165" height="140" class="box"/><text x="525" y="143" class="title">Wall</text><text x="525" y="170" class="typed">Cap_W ≥ γ_W r</text><text x="525" y="194" class="typed">flag_W; ok_W = true</text><text x="525" y="237" class="smalltext">parameter γ_W &gt; 0</text>
+<path d="M395 165H505" class="wire" marker-end="url(#arr)"/><text x="417" y="153" class="typed">r : Load</text><path d="M545 65V113 M638 65V113" class="wire" marker-end="url(#arr)"/><text x="441" y="60" class="typed">Cap_W : Capacity</text><text x="620" y="60" class="typed">flag_W : Bool</text>
+<rect x="772" y="170" width="78" height="100" class="box"/><text x="793" y="214" class="title">AND</text><path d="M670 194H772" class="wire" marker-end="url(#arr)"/><text x="680" y="182" class="typed">ok_W : Bool</text><path d="M395 228H430V303H735V246H772" class="wire" marker-end="url(#arr)"/><text x="454" y="293" class="typed">ok_R : Bool</text><path d="M850 219H947" class="wire" marker-end="url(#arr)"/><text x="862" y="205" class="typed">ok_S : Bool</text><text x="38" y="345" class="smalltext">Load and Capacity have nonnegative numerical values in the same toy load unit U. Bool = {false, true}.</text></svg></div><p class="caption">Every wire is typed. Load and Capacity are distinct named port types even though both use nonnegative numbers. Left → right is dependency, not elapsed time. Flags are supplied assertions, not checks of a building code.</p></section>
+<section class="bridge" aria-label="End, way and means"><div><p class="eyebrow">End</p><h2>Meaning that survives assembly</h2><p>Understand which conditions a larger work package inherits when smaller packages connect.</p></div><div><p class="eyebrow">Way</p><h2>Separate syntax and interpretation</h2><p>Use an operad of typed, acyclic wiring; interpret its boxes with relations and its wiring with relational composition.</p></div><div><p class="eyebrow">Means</p><h2>Make the calculation visible</h2><p>Inspect a derived boundary condition, vary inputs, and compare two ways of evaluating the same wiring.</p></div></section>
+<section class="section" id="contracts"><p class="eyebrow">01 / FROM THREE BOXES TO ONE CONDITION</p><h2>Hide the wires, retain their obligations</h2><p>Fix positive factors γ_R and γ_W. The roof relation permits an output only when its flag and capacity condition hold; the wall relation does the same. AND joins their Boolean outputs. The algebra combines all three predicates and eliminates their internal variables.</p>
+<div class="math" aria-label="Component predicates">P_R(S, Cap_R, flag_R; r, ok_R)
+  ⇔ flag_R ∧ r = S ∧ Cap_R ≥ γ_R·S ∧ ok_R = true
+P_W(r, Cap_W, flag_W; ok_W)
+  ⇔ flag_W ∧ Cap_W ≥ γ_W·r ∧ ok_W = true
+P_∧(ok_R, ok_W; ok_S)
+  ⇔ ok_S = (ok_R ∧ ok_W)</div>
+<div class="math" aria-label="Existential composition and elimination">P_shell(S, Cap_R, flag_R, Cap_W, flag_W; ok_S)
+  ⇔ ∃ r, ok_R, ok_W : P_R ∧ P_W ∧ P_∧
+  ⇔ flag_R ∧ flag_W ∧ Cap_R ≥ γ_R·S
+     ∧ Cap_W ≥ γ_W·S ∧ ok_S = true
+  ⇔ flag_R ∧ flag_W ∧ S ≤ min(Cap_R/γ_R, Cap_W/γ_W)
+     ∧ ok_S = true</div>
+<p class="small">The first line suppresses repeated arguments only to keep it readable; they are exactly the arguments in the three component predicates above. Substitution of r = S and ok_R = ok_W = true gives the second line. Dividing the two inequalities is valid because both factors are strictly positive.</p>
+<form id="scenario" aria-label="Wall and roof illustrative calculation"><div class="controls"><label for="load">Load S (U)<input type="number" id="load" min="0" max="10000" step="any" value="80" required></label><label for="capR">Roof capacity Cap_R (U)<input type="number" id="capR" min="0" max="10000" step="any" value="140" required></label><label for="capW">Wall capacity Cap_W (U)<input type="number" id="capW" min="0" max="10000" step="any" value="220" required></label><label for="gammaR">Positive factor γ_R<input type="number" id="gammaR" min="0.01" max="100" step="any" value="1.5" required></label><label for="gammaW">Positive factor γ_W<input type="number" id="gammaW" min="0.01" max="100" step="any" value="1.5" required></label></div><div class="flags"><label><input type="checkbox" id="flagR" checked>Roof assertion supplied</label><label><input type="checkbox" id="flagW" checked>Wall assertion supplied</label></div><div class="actions"><button type="button" id="reset">Restore example</button><button type="button" id="edge">Try exact limit</button><button type="button" id="fail">Overload the wall</button></div></form>
+<p class="small">U is an invented common load unit. Factors are dimensionless. The controls calculate with finite numbers; the written derivation assumes nonnegative real load/capacities and positive real factors.</p><div id="scenarioResult" class="result" role="status" aria-live="polite"><h3>Example awaiting calculation</h3><p>Enable JavaScript to evaluate the entered numbers.</p></div><dl class="facts"><div><dt>Roof permits up to</dt><dd id="maxR">—</dd></div><div><dt>Wall permits up to</dt><dd id="maxW">—</dd></div><div><dt>Joint numerical bound</dt><dd id="bound">—</dd></div></dl><div class="math" id="derivation" aria-label="Live substitution">The live calculation will appear here.</div>
+<p><strong>A diagnostic is a different relation.</strong> A total diagnostic computes r := S, ok_R := flag_R ∧ (Cap_R ≥ γ_R·S), ok_W := flag_W ∧ (Cap_W ≥ γ_W·r), and ok_S := ok_R ∧ ok_W. It can return false. The acceptance contract above permits only true; a failed condition gives an empty set of permitted outputs. A false diagnostic is not a witness satisfying that contract.</p></section>
+<section class="section" id="algebra"><p class="eyebrow">02 / WHAT IS THE OPERAD? WHAT IS ITS ALGEBRA?</p><h2>A box shape is not its behaviour</h2><div class="split"><article class="panel"><h3>The compositional grammar</h3><p>Choose a finite ordered input list I and output list O of named port types. The pair B = (I, O) is one <strong>colour of the wiring operad</strong>. A diagram Φ ∈ W(B₁,…,Bₙ; B) connects n inner box interfaces inside one outer interface B.</p><p>The operadic “one output” is this whole outer interface. It may have many output ports. Substitution replaces an inner box by a matching diagram; it does not silently copy a physical resource.</p><p>Here W uses acyclic directed wiring with one-to-one port attachments. In the interpreting SMC, a passing wire is identity; independent juxtaposition gives the tensor product. The operadic unit instead has one inner box wired unchanged to a matching outer interface. <a href="https://arxiv.org/abs/2101.12046">Patterson, Spivak &amp; Vagner, §§4–5</a>, supplies this syntax.</p></article><article class="panel"><h3>A specific relational algebra</h3><p>Assign each port type t a value set V_t. Write V_I = ∏<sub>i∈I</sub> V_i and V_O = ∏<sub>o∈O</sub> V_o; the empty product is a singleton. Then:</p><div class="math">A(I,O) = Rel(V_I,V_O)
+       = 𝒫(V_I × V_O)
+A(Φ) : A(B₁) × ⋯ × A(Bₙ) → A(B)</div><p>A(B) is the <em>set of all relations</em> with that interface. For a supplied relation in each inner box, A(Φ) returns the relation obtained by conjoining box predicates and wire equalities, then existentially hiding internal port values. Rel is notation for a set of relations here, not one chosen relation.</p></article></div>
+<div class="math">(x,y) ∈ A(Φ)(R₁,…,Rₙ)
+ ⇔ ∃ internal values z :
+      every box satisfies its Rᵢ
+      and every connected source/target value is equal.</div><p>An algebra must respect substitution: interpreting an inner diagram first and then its surroundings gives the same relation as interpreting the flattened wiring. Its operadic unit acts as the identity on the set A(B). This definition explains the preceding calculation. A different diagram hides different values; a different relation changes what the same interface permits. The relational construction is informed by <a href="https://arxiv.org/abs/2010.08003">Bakirtzis, Fleming &amp; Vasilakopoulou, §3.3.1</a>. We use its timeless relational idea with our chosen acyclic syntax, rather than importing its feedback-capable wiring theory wholesale.</p>
+<div class="tablewrap"><table><caption>Three possible interpretations of the same acyclic interfaces</caption><thead><tr><th>Interpretation</th><th>What fills a box</th><th>What it can express</th></tr></thead><tbody><tr><td>Total functions in Set</td><td>f : V_I → V_O</td><td>Exactly one output tuple per input. Several physical output ports are represented by one tuple. The total diagnostic is an example.</td></tr><tr><td>Partial functions</td><td>f : V_I ⇀ V_O</td><td>At most one output tuple; some inputs have no result. A checked work step can reject an input. Its graph is a relation.</td></tr><tr><td>Relations</td><td>R ⊆ V_I × V_O</td><td>Zero, one or many permitted tuples. Suitable for static constraints or alternatives. A relation alone supplies no probabilities or preferred choice.</td></tr></tbody></table></div><p>Each interpretation has its own composition. Choosing an algebra does not make differently interpreted outputs interchangeable. It also does not establish behavioural substitutability: identical ports can conceal incompatible requirements.</p></section>
+<section class="section" id="rules"><p class="eyebrow">03 / THE LAWS, VISIBLE</p><h2>Regroup the same work</h2><p>All named letters below are port types. For associativity, take functions or relations f : X → Y, g : Y → Z, h : Z → T; the adjacent types must match. The interchange panel declares its own two chains. Equations use g ∘ f for “f, then g”. Grouping boxes changes neither the wires nor their order.</p><div class="law-grid">
+<article class="panel"><h3>1. Unit</h3><div class="diagram-scroll law" tabindex="0" role="region" aria-label="Unit law diagram"><svg viewBox="0 0 500 150" role="img" aria-label="X goes through f to Y then identity Y to Y, equal to X through f to Y"><path class="wire" d="M25 43H470 M25 115H470"/><rect class="box" x="115" y="25" width="75" height="36"/><text x="147" y="49">f</text><rect class="box" x="330" y="25" width="75" height="36"/><text x="351" y="49">id_Y</text><rect class="box" x="215" y="97" width="75" height="36"/><text x="246" y="121">f</text><text x="45" y="32" class="typed">X →</text><text x="234" y="32" class="typed">Y →</text><text x="435" y="32" class="typed">Y</text><text x="45" y="104" class="typed">X →</text><text x="435" y="104" class="typed">Y</text><text x="244" y="85">=</text></svg></div><p class="math">id_Y ∘ f = f = f ∘ id_X
+id_X = {(x,x) | x ∈ X}</p><p class="small">An unchanged wire is identity. Storage is identity only in an abstraction that forgets its effects.</p><p class="law-result" id="unitResult">Finite check not yet run.</p></article>
+<article class="panel"><h3>2. Associativity</h3><div class="diagram-scroll law" tabindex="0" role="region" aria-label="Two groupings of the same typed chain"><svg viewBox="0 0 500 190" role="img" aria-label="X f Y g Z h T, with f and g grouped above and g and h grouped below"><rect class="group" x="62" y="12" width="248" height="65"/><rect class="group" x="205" y="109" width="248" height="65"/><path class="wire" d="M15 45H485 M15 141H485"/><g><rect class="box" x="80" y="28" width="68" height="34"/><rect class="box" x="223" y="28" width="68" height="34"/><rect class="box" x="366" y="28" width="68" height="34"/><text x="108" y="51">f</text><text x="251" y="51">g</text><text x="394" y="51">h</text><rect class="box" x="80" y="124" width="68" height="34"/><rect class="box" x="223" y="124" width="68" height="34"/><rect class="box" x="366" y="124" width="68" height="34"/><text x="108" y="147">f</text><text x="251" y="147">g</text><text x="394" y="147">h</text></g><g class="typed"><text x="22" y="35">X →</text><text x="162" y="35">Y →</text><text x="307" y="35">Z →</text><text x="465" y="35">T</text><text x="22" y="131">X →</text><text x="162" y="131">Y →</text><text x="307" y="131">Z →</text><text x="465" y="131">T</text></g><text x="246" y="98">=</text></svg></div><p class="math">h ∘ (g ∘ f) = (h ∘ g) ∘ f</p><p class="small">Both hide the same intermediate Y and Z values. This law does not license doing h before f.</p><p class="law-result" id="assocResult">Finite check not yet run.</p></article>
+<article class="panel"><h3>3. Symmetry</h3><div class="diagram-scroll law" tabindex="0" role="region" aria-label="Swapping twice restores the order of two typed wires"><svg viewBox="0 0 500 170" role="img" aria-label="X and A wires cross to A and X, then cross again to X and A; crossings do not join"><path class="wire" d="M25 48H100L230 117H270L400 48H475 M25 117H100L230 48H270L400 117H475"/><circle cx="165" cy="82.5" r="6" fill="#fffdf8"/><path class="wire" d="M145 72L185 93"/><circle cx="335" cy="82.5" r="6" fill="#fffdf8"/><path class="wire" d="M315 93L355 72"/><g class="typed"><text x="33" y="38">X →</text><text x="33" y="140">A →</text><text x="243" y="38">A</text><text x="243" y="140">X</text><text x="452" y="38">X</text><text x="452" y="140">A</text></g><text x="130" y="159" class="smalltext">σ_X,A</text><text x="300" y="159" class="smalltext">σ_A,X</text></svg></div><p class="math">σ_A,X ∘ σ_X,A = id_(X⊗A)
+σ_X,A(x,a) = (a,x)</p><p class="small">Reorder ports while retaining their values. Crossing wires do not merge, copy, or imply an action sequence.</p><p class="law-result" id="symmetryResult">Finite check not yet run.</p></article>
+<article class="panel"><h3>4. Interchange</h3><div class="diagram-scroll law" tabindex="0" role="region" aria-label="Independent typed chains grouped by lane or stage"><svg viewBox="0 0 500 180" role="img" aria-labelledby="interchange-title"><title id="interchange-title">X f Y g Z above A h B k C; grouping changes with the button</title><g id="groupLanes"><rect class="group" x="70" y="17" width="360" height="62"/><rect class="group" x="70" y="107" width="360" height="62"/></g><g id="groupStages" hidden><rect class="group" x="85" y="15" width="110" height="155"/><rect class="group" x="305" y="15" width="110" height="155"/></g><path class="wire" d="M20 48H478 M20 138H478"/><rect class="box" x="105" y="30" width="70" height="36"/><rect class="box" x="325" y="30" width="70" height="36"/><rect class="box" x="105" y="120" width="70" height="36"/><rect class="box" x="325" y="120" width="70" height="36"/><text x="135" y="54">f</text><text x="355" y="54">g</text><text x="135" y="144">h</text><text x="355" y="144">k</text><g class="typed"><text x="29" y="38">X →</text><text x="235" y="38">Y →</text><text x="457" y="38">Z</text><text x="29" y="128">A →</text><text x="235" y="128">B →</text><text x="457" y="128">C</text></g></svg></div><button type="button" id="grouping" aria-pressed="false">Show grouping by stages</button><p class="math">(g ∘ f) ⊗ (k ∘ h)
+ = (g ⊗ k) ∘ (f ⊗ h)</p><p class="small">The pair of lanes has type X⊗A → Z⊗C. Independence here concerns the model; it does not assert simultaneous use of a shared worker.</p><p class="law-result" id="interchangeResult">Finite check not yet run.</p></article></div>
+<div class="result"><div class="check-intro"><h3>Try the finite interpretation</h3><button id="checkLaws" type="button">Run relation checks</button></div><p id="lawStatus" role="status" aria-live="polite">Six distinct Boolean relations include rejection, partiality, branching, identity and unrestricted choice. The checks compute both sides independently with serial composition and tensor.</p><p class="small">These illustrative finite checks exercise this implementation; they are not proofs for arbitrary sets. The general relational laws follow from equality, conjunction and reordering existential quantifiers. Operadic substitution likewise flattens nested wiring; the unit passes the boundary unchanged. The diagrams above display the corresponding SMC laws.</p></div>
+<details><summary>See a relation that is not a function</summary><p>For one supplied Boolean input, two outputs may be allowed. Select an input and compare three different box interpretations, all with interface (Bool, Bool).</p><label for="relationInput">Input<select id="relationInput"><option value="false">false</option><option value="true">true</option></select></label><div class="math">Identity: {(false,false), (true,true)}
+Partial:  {(true,true)}
+Choice:   {(false,false), (false,true), (true,true)}</div><p id="relationResult" role="status" aria-live="polite">Choose an input to inspect the permitted outputs.</p></details></section>
+<section class="section" id="limits"><p class="eyebrow">04 / WHERE THE INTERPRETATION ENDS</p><h2>More meanings need stated rules</h2><div class="split"><div><h3>Resource, time, feedback</h3><p>A scaffold may pass through several processes and return with the same identity. That conservation belongs in their relations; a matching colour alone does not enforce it. Quantities, readiness, wear, duration and competing uses need further state or constraints.</p><p>Our syntax is acyclic. Feedback-capable dynamical wiring and undirected shared-variable diagrams use different composition rules. Adding a backwards arrow to this example would not supply a valid dynamical model.</p></div><div><h3>An experimental route onward</h3><p>The retained <a href="../construction-operad-algebra/">construction operad and dynamics working</a> explores discrete/continuous behaviour and includes a Julia/AlgebraicDynamics notebook template. Its own record says the Julia template was not executed. It remains experimental material; this essay neither runs nor validates that solver.</p><p>For the distinct mathematical route, <a href="https://arxiv.org/abs/2105.12282">Libkind, Baas, Patterson &amp; Fairbanks, <cite>Operadic Modeling of Dynamical Systems: Mathematics and Computation</cite></a>, separates directed and undirected composition and associated dynamics. Those results have their own hypotheses.</p></div></div>
+<p><strong>What this construction contributes:</strong> explicit typed rule drawings, a finite relation evaluator, the visible elimination of the wall/roof predicate, and a clear distinction between diagnostic output and permitted behaviour. The scalar load transfer and supplied flags are our toy assumptions. This model omits real load combinations, geometry, materials, detailed standards and evidence of physical adequacy. It is not an engineering approval, schedule optimizer or human-use validation.</p>
+<p><a href="../wall-roof-wiring-smc/source-map.html">Source map for the consolidated essays</a></p><details><summary>Sources and the scope of borrowing</summary><ul><li><a href="https://arxiv.org/abs/2101.12046">Patterson, Spivak &amp; Vagner (2021)</a>, introduction and §§4–5: acyclic wiring, operadic substitution and interpretation through SMCs. The finite implementation here is independent teaching code, not Catlab.</li><li><a href="https://arxiv.org/abs/2010.08003">Bakirtzis, Fleming &amp; Vasilakopoulou (2021)</a>, §3.3.1: static relational contracts. Their Cat-valued construction and broader wiring category are richer than our set-of-relations presentation. Static constraints are not automatically assume–guarantee or temporal contracts.</li><li><a href="https://arxiv.org/abs/1408.1598">Vagner, Spivak &amp; Lerman (2015)</a>, definitions 2.1–2.3: operads and algebras distinguish compositional architecture from a supplied interpretation. Their dynamical algebra is a separate example.</li><li><a href="../contracts-algebras-wall-roof/">Earlier wall/roof contract working</a>: the three predicates and boundary inequality retained here, with explicit numerical domain, units and verdict distinction.</li></ul></details></section>
+<footer><p>Portfolio Wave · FORAY-PROJECT-WIRING · Essay 02 · Published 23 September 2026</p><p><a href="../../index.html">Foray home</a> · <a href="../wall-roof-wiring-smc/">Build a house</a> · <a href="../course-by-course/">Course by course</a></p><p class="small">Controls are temporary, reset on reload, and store or send no entered data. The text and diagrams remain readable without JavaScript.</p></footer></main><noscript><p class="panel">JavaScript is needed for the live calculations and finite checks.</p></noscript>
+<!-- ALGEBRA-BUNDLE-START -->
+<script>
+(()=>{
+/** Finite relations for an illustrative algebra of typed, acyclic wiring.
+ * Composition is existential matching; tensor is independent juxtaposition.
+ * A record is not a construction specification or a theorem prover.
+ */
+const key = value => JSON.stringify(value);
+const same = (a, b) => key(a) === key(b);
+const scalar = x => typeof x === 'boolean' || typeof x === 'string' || (typeof x === 'number' && Number.isFinite(x));
+function relation(inputs, outputs, pairs) {
+  if (![...inputs, ...outputs].every(t => typeof t === 'string' && t.length)) throw new TypeError('Types must be nonempty names.');
+  const entries = new Map();
+  for (const pair of pairs) {
+    if (!Array.isArray(pair) || pair.length !== 2 || !Array.isArray(pair[0]) || !Array.isArray(pair[1]) ||
+        pair[0].length !== inputs.length || pair[1].length !== outputs.length || !pair.flat().every(scalar))
+      throw new TypeError('A relation pair must match its declared input/output tuple.');
+    entries.set(key(pair), [pair[0].slice(), pair[1].slice()]);
+  }
+  return { inputs: inputs.slice(), outputs: outputs.slice(), pairs: [...entries.values()].sort((a,b) => key(a).localeCompare(key(b))) };
+}
+/** compose(f,g) means g after f, conventionally g ∘ f. */
+function compose(f, g) {
+  if (!same(f.outputs, g.inputs)) throw new TypeError('Composition requires identical ordered port types.');
+  const pairs = [];
+  for (const [x,y] of f.pairs) for (const [y2,z] of g.pairs) if (same(y,y2)) pairs.push([x,z]);
+  return relation(f.inputs, g.outputs, pairs);
+}
+function tensor(f, g) {
+  return relation([...f.inputs,...g.inputs], [...f.outputs,...g.outputs],
+    f.pairs.flatMap(([x,y]) => g.pairs.map(([u,v]) => [[...x,...u],[...y,...v]])));
+}
+const identity = (types, tuples) => relation(types, types, tuples.map(t => [t,t]));
+const symmetry = (aTypes,bTypes,aTuples,bTuples) => relation([...aTypes,...bTypes],[...bTypes,...aTypes],
+  aTuples.flatMap(a => bTuples.map(b => [[...a,...b],[...b,...a]])));
+const equal = (f,g) => same(f.inputs,g.inputs) && same(f.outputs,g.outputs) && same(f.pairs,g.pairs);
+const outputsFor = (f,input) => f.pairs.filter(([x]) => same(x,input)).map(([,y]) => y);
+function booleanRelations() {
+  const pairs = [[[false],[false]],[[false],[true]],[[true],[false]],[[true],[true]]];
+  return Array.from({length:16},(_,mask) => relation(['Bool'],['Bool'],pairs.filter((_,i) => mask & (1<<i))));
+}
+function finiteLawChecks() {
+  const all = booleanRelations();
+  const fixtures = [all[0], all[1], all[6], all[9], all[11], all[15]];
+  const tuples = [[false],[true]], id = identity(['Bool'], tuples);
+  let units=0, regroupings=0, interchanges=0, symmetries=0;
+  for (const f of fixtures) {
+    if (!equal(compose(id,f),f) || !equal(compose(f,id),f)) throw Error('Unit check failed.'); units++;
+    for (const g of fixtures) for (const h of fixtures) {
+      if (!equal(compose(compose(f,g),h),compose(f,compose(g,h)))) throw Error('Associativity check failed.'); regroupings++;
+    }
+  }
+  for (const f of fixtures) for (const g of fixtures) for (const h of fixtures) for (const k of fixtures) {
+    if (!equal(tensor(compose(f,g),compose(h,k)),compose(tensor(f,h),tensor(g,k)))) throw Error('Interchange check failed.'); interchanges++;
+  }
+  const swap = symmetry(['Bool'],['Bool'],tuples,tuples);
+  const pairTuples=tuples.flatMap(a=>tuples.map(b=>[...a,...b]));
+  if (!equal(compose(swap,swap),identity(['Bool','Bool'],pairTuples))) throw Error('Symmetry inverse check failed.'); symmetries++;
+  for (const f of fixtures) for (const g of fixtures) {
+    if (!equal(compose(tensor(f,g),swap),compose(swap,tensor(g,f)))) throw Error('Symmetry naturality check failed.'); symmetries++;
+  }
+  return {units,regroupings,symmetries,interchanges};
+}
+const DEFAULT_CONTRACT = Object.freeze({load:80,capR:140,capW:220,gammaR:1.5,gammaW:1.5,flagR:true,flagW:true});
+function contractScenario(p) {
+  for (const name of ['load','capR','capW']) if (!Number.isFinite(p[name]) || p[name]<0) throw new RangeError('Load and capacities must be finite, nonnegative numbers.');
+  for (const name of ['gammaR','gammaW']) if (!Number.isFinite(p[name]) || p[name]<=0) throw new RangeError('Both factors must be finite and strictly positive.');
+  for (const name of ['flagR','flagW']) if (typeof p[name]!=='boolean') throw new TypeError('The two supplied flags must be Boolean.');
+  const reaction=p.load, needR=p.gammaR*p.load, needW=p.gammaW*reaction;
+  if (![needR,needW].every(Number.isFinite)) throw new RangeError('Numbers are too large for this calculation.');
+  const roof=p.flagR && p.capR>=needR, wall=p.flagW && p.capW>=needW;
+  const maxR=p.capR/p.gammaR,maxW=p.capW/p.gammaW;
+  if (![maxR,maxW].every(Number.isFinite)) throw new RangeError('Numbers are too large for this calculation.');
+  return {reaction,needR,needW,maxR,maxW,bound:Math.min(maxR,maxW),roof,wall,
+    diagnostic:roof && wall,allowedOutputs:roof && wall ? [true] : [],
+    witness:roof && wall ? {r:reaction,okR:true,okW:true} : null};
+}
+/** Independent existential check: enumerate internal booleans after r=S. */
+function contractPredicate(p,output) {
+  contractScenario(p); // validates the numerical domain
+  for (const okR of [false,true]) for (const okW of [false,true]) {
+    const r=p.load;
+    if (p.flagR && r===p.load && p.capR>=p.gammaR*p.load && okR===true &&
+        p.flagW && p.capW>=p.gammaW*r && okW===true && output===(okR && okW)) return true;
+  }
+  return false;
+}
+
+const $ = id => document.getElementById(id);
+const numberNames=['load','capR','capW','gammaR','gammaW'];
+const fmt=n=>Number.isInteger(n)?String(n):n.toLocaleString('en-GB',{maximumFractionDigits:3});
+function readScenario(){
+  return Object.fromEntries([...numberNames.map(id=>[id,$(id).value.trim()===''?NaN:Number($(id).value)]),['flagR',$('flagR').checked],['flagW',$('flagW').checked]]);
+}
+function updateScenario(){
+  const p=readScenario(), panel=$('scenarioResult');
+  try{
+    const r=contractScenario(p);
+    panel.classList.toggle('bad',!r.diagnostic);
+    panel.replaceChildren();
+    const heading=document.createElement('h3');
+    heading.textContent=r.diagnostic?'A permitted result exists':'No permitted result for these inputs';
+    const text=document.createElement('p');
+    text.textContent=r.diagnostic?`Allowed output set: {true}. Internal witness: r = ${fmt(r.reaction)} U, ok_R = true, ok_W = true.`:`Allowed output set: ∅. ${!r.roof?'The roof predicate fails. ':''}${!r.wall?'The wall predicate fails. ':''}The separate diagnostic returns false.`;
+    panel.append(heading,text);
+    $('maxR').textContent=`${fmt(r.maxR)} U`; $('maxW').textContent=`${fmt(r.maxW)} U`; $('bound').textContent=`${fmt(r.bound)} U`;
+    $('derivation').textContent=`Reaction: r = S = ${fmt(p.load)} U\nRoof: ${fmt(p.capR)} ≥ ${fmt(p.gammaR)} × ${fmt(p.load)} = ${fmt(r.needR)}; flag_R = ${p.flagR} → ${r.roof}\nWall: ${fmt(p.capW)} ≥ ${fmt(p.gammaW)} × ${fmt(r.reaction)} = ${fmt(r.needW)}; flag_W = ${p.flagW} → ${r.wall}\nBoundary: ${fmt(p.load)} ≤ min(${fmt(p.capR)}/${fmt(p.gammaR)}, ${fmt(p.capW)}/${fmt(p.gammaW)})\nJoint bound = ${fmt(r.bound)} U; both supplied flags = ${p.flagR && p.flagW}\nTotal diagnostic output = ${r.diagnostic}; acceptance relation outputs = ${r.diagnostic?'{true}':'∅'}`;
+  }catch(error){
+    panel.classList.add('bad'); panel.textContent=`No calculation: ${error.message}`;
+    for(const id of ['maxR','maxW','bound'])$(id).textContent='—';
+    $('derivation').textContent='Correct the inputs to obtain a new result. The previous calculation is not retained.';
+  }
+}
+function setScenario(values){
+  for(const name of numberNames)$(name).value=values[name];
+  $('flagR').checked=values.flagR; $('flagW').checked=values.flagW; updateScenario();
+}
+$('scenario').addEventListener('input',updateScenario);
+$('scenario').addEventListener('submit',event=>event.preventDefault());
+$('reset').addEventListener('click',()=>setScenario(DEFAULT_CONTRACT));
+$('edge').addEventListener('click',()=>setScenario({...DEFAULT_CONTRACT,load:100,capR:150,capW:150}));
+$('fail').addEventListener('click',()=>setScenario({...DEFAULT_CONTRACT,capW:100}));
+$('grouping').addEventListener('click',()=>{
+  const stages=$('grouping').getAttribute('aria-pressed')!=='true';
+  $('grouping').setAttribute('aria-pressed',String(stages));
+  $('grouping').textContent=stages?'Show grouping by lanes':'Show grouping by stages';
+  $('groupStages').style.display=stages?'':'none'; $('groupLanes').style.display=stages?'none':'';
+  $('interchange-title').textContent=`X f Y g Z above A h B k C; grouped by ${stages?'stages':'lanes'}`;
+});
+$('groupStages').removeAttribute('hidden'); $('groupStages').style.display='none';
+$('checkLaws').addEventListener('click',async()=>{
+  $('checkLaws').disabled=true; $('lawStatus').textContent='Computing both sides on six finite Boolean relations…';
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  try{
+    const result=finiteLawChecks();
+    $('unitResult').textContent=`Agreed for ${result.units} relations, on both sides.`;
+    $('assocResult').textContent=`Agreed for ${result.regroupings} triples of relations.`;
+    $('symmetryResult').textContent=`Agreed in ${result.symmetries} inverse/naturality comparisons.`;
+    $('interchangeResult').textContent=`Agreed for ${result.interchanges} quadruples of relations.`;
+    $('lawStatus').textContent='All finite comparisons agree. These checks cover the stated fixture family; they do not prove the laws for all relations.';
+  }catch(error){$('lawStatus').textContent=`A finite check failed: ${error.message}`;}
+  finally{$('checkLaws').disabled=false;}
+});
+function inspectRelation(){
+  const x=$('relationInput').value==='true';
+  const fixtures=[['Identity',[[[false],[false]],[[true],[true]]]],['Partial',[[[true],[true]]]],['Choice',[[[false],[false]],[[false],[true]],[[true],[true]]]]];
+  $('relationResult').textContent=fixtures.map(([name,pairs])=>{
+    const out=outputsFor(relation(['Bool'],['Bool'],pairs),[x]).map(y=>y[0]);
+    return `${name}(${x}): ${out.length?`{${out.join(', ')}}`:'∅'}`;
+  }).join(' · ');
+}
+$('relationInput').addEventListener('change',inspectRelation);
+updateScenario(); inspectRelation();
+
+})();
+</script>
+<!-- ALGEBRA-BUNDLE-END -->
+</body></html>

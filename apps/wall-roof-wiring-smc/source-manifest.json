@@ -1,0 +1,86 @@
+{
+  "date": "2026-09-23",
+  "scope": "Folders 11 and 13 plus February Wiring Diagram Formalism",
+  "files": [
+    {
+      "source": "11 Wiring Diagram for Bricklaying Process/code-block-01.dot",
+      "original_bytes": 2209,
+      "original_sha256": "8d3b031c6c447736947dd501480156c65f4a2e4fc3c8b0432dbc7c8dcc1c15fb",
+      "published_bytes": 2209,
+      "published_sha256": "8d3b031c6c447736947dd501480156c65f4a2e4fc3c8b0432dbc7c8dcc1c15fb",
+      "preservation": "Exact original bytes"
+    },
+    {
+      "source": "11 Wiring Diagram for Bricklaying Process/transcript.md",
+      "original_bytes": 116586,
+      "original_sha256": "dcfc545c15f7db775a2513018ab1da19729ea0b03af6fa0bae670f15d5352dc9",
+      "published_bytes": 91008,
+      "published_sha256": "5ebd4149c6752416612e7c52680afbc5b5fda041a2dd46467ff160e928018627",
+      "preservation": "Public workings derivative: metadata and internal generation commentary removed; mathematical and construction workings retained"
+    },
+    {
+      "source": "13 Building Shell Construction Diagram with Scaffolding/artifact - Colored Operads for Construction Process Modularization.mmd",
+      "original_bytes": 983,
+      "original_sha256": "5d966c10e26e94eb3d2b7bfd6f99fbfa2616874d8eb320f31451d09345796ed1",
+      "published_bytes": 983,
+      "published_sha256": "5d966c10e26e94eb3d2b7bfd6f99fbfa2616874d8eb320f31451d09345796ed1",
+      "preservation": "Exact original bytes"
+    },
+    {
+      "source": "13 Building Shell Construction Diagram with Scaffolding/artifact - Colored Operads for Construction Processes.md",
+      "original_bytes": 3869,
+      "original_sha256": "3bf45c478e5a7cb807d131ac4ee51c46aac9876ad307653f23a8d2e3dbf0f343",
+      "published_bytes": 3869,
+      "published_sha256": "3bf45c478e5a7cb807d131ac4ee51c46aac9876ad307653f23a8d2e3dbf0f343",
+      "preservation": "Exact original bytes"
+    },
+    {
+      "source": "13 Building Shell Construction Diagram with Scaffolding/artifact - Colored Operads in Building Construction.svg",
+      "original_bytes": 6071,
+      "original_sha256": "80d599f25b5e4d12b9ca05c80897a2a86b84c19e7e21a2135187772d8f4e7317",
+      "published_bytes": 6071,
+      "published_sha256": "80d599f25b5e4d12b9ca05c80897a2a86b84c19e7e21a2135187772d8f4e7317",
+      "preservation": "Exact original bytes"
+    },
+    {
+      "source": "13 Building Shell Construction Diagram with Scaffolding/artifact - Operad Algebra in Construction.svg",
+      "original_bytes": 11362,
+      "original_sha256": "772a229318839b8db347fca36a4b9b8353c45d8fc612dccd29a5744a672014fc",
+      "published_bytes": 11362,
+      "published_sha256": "772a229318839b8db347fca36a4b9b8353c45d8fc612dccd29a5744a672014fc",
+      "preservation": "Exact original bytes"
+    },
+    {
+      "source": "13 Building Shell Construction Diagram with Scaffolding/artifact - Operad Rules Visualization - earlier-version-1.svg",
+      "original_bytes": 2042,
+      "original_sha256": "40bfb7ceacc4cf698bc6d33f87565156169133930b710b983ddb640e5920a715",
+      "published_bytes": 2042,
+      "published_sha256": "40bfb7ceacc4cf698bc6d33f87565156169133930b710b983ddb640e5920a715",
+      "preservation": "Exact original bytes"
+    },
+    {
+      "source": "13 Building Shell Construction Diagram with Scaffolding/artifact - Operad Rules Visualization.svg",
+      "original_bytes": 9209,
+      "original_sha256": "5131769c51c2f00423b91444b1e64eddee3544b8fdb624305189ff73131fc21f",
+      "published_bytes": 9209,
+      "published_sha256": "5131769c51c2f00423b91444b1e64eddee3544b8fdb624305189ff73131fc21f",
+      "preservation": "Exact original bytes"
+    },
+    {
+      "source": "13 Building Shell Construction Diagram with Scaffolding/transcript.md",
+      "original_bytes": 67139,
+      "original_sha256": "27c0567716bc983a763796043620d75e386c270490755e897b1af5afe8fb7619",
+      "published_bytes": 65330,
+      "published_sha256": "9de38662c4f6d61acfd6a601cf24b6ee2a3f8da006cdf7c4abd3b576e194f664",
+      "preservation": "Public workings derivative: metadata and internal generation commentary removed; mathematical and construction workings retained"
+    },
+    {
+      "source": "2026-02-02 Wiring Diagram Formalism.md",
+      "original_bytes": 6055,
+      "original_sha256": "043b32321cd2d13fef18804f38a6650ea51afdaf8ff66a2d30cbc49f3f99bbce",
+      "published_bytes": 5001,
+      "published_sha256": "89ea7a0dbdec35b950966b14824ff5632ac9b49c9e7fd5e3520e024f198a874c",
+      "preservation": "Public workings derivative: metadata and internal generation commentary removed; mathematical and construction workings retained"
+    }
+  ]
+}

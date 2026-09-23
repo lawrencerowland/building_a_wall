@@ -100,7 +100,7 @@ function draw() {
   applyZoom();
 }
 function render() {
-  const scenario={...DEFAULT_SCENARIO,...Object.fromEntries(fields.map(k=>[k,$(k).checked])),revision:$('revision').value,evidenceRevision:$('revision').value};
+  const scenario={...DEFAULT_SCENARIO,...Object.fromEntries(fields.map(k=>[k,$(k).checked])),revision:$('revision').value,evidenceRevision:$('evidenceRevision').value};
   current=buildDiagram({expanded:$('expanded').checked,fault:$('fault').value,replacement:$('replacement').value});const syntax=validate(current);const result=currentResult=run(current,scenario);
   $('result').classList.toggle('bad',!result.ok);$('result').innerHTML=`<strong>${!syntax.ok?'Wiring rejected':result.ok?'Model accepts a roofed structural shell':'Wiring fits; the model rejects this handoff'}</strong><p>${syntax.ok?'Every port is connected once, types match, and the diagram is acyclic.':'The altered diagram fails a structural check.'}</p>${result.errors.length?`<ul>${result.errors.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>`:'<p>The supplied conditions admit this boundary result. Both worker identities, the peg kit, drawing and access are returned.</p>'}`;
   $('houseRoof').setAttribute('fill',result.ok?'#638d82':'#cdd5d9');$('houseBadge').textContent=result.ok?'✓':'?';$('houseCaption').textContent=result.ok?'Accepted by the teaching model — not engineering approval.':'The selected model has no accepted roofed-shell output.';
@@ -110,8 +110,8 @@ function render() {
   $('wires').innerHTML=current.wires.map(w=>`<tr><td>${esc(endpointLabel(w.from))}</td><td><code>${esc(typeAt(w.from))}</code></td><td>${esc(endpointLabel(w.to))}</td></tr>`).join('');$('outputRecord').textContent=result.ok?JSON.stringify(result.outputs,null,2):'No accepted outer output for this input assignment.';
   draw();const initial=$('expanded').checked?'walling/wall':'walling';inspect(current.boxes.some(b=>b.id===selected)?selected:initial);showAll();$('verification').textContent='Compare the expanded and collapsed boundary results over the model’s finite fixture family.';
 }
-[...fields,'expanded','replacement','revision','fault'].forEach(id=>$(id).addEventListener('change',render));
-$('reset').addEventListener('click',()=>{fields.forEach(k=>$(k).checked=DEFAULT_SCENARIO[k]);$('expanded').checked=true;$('replacement').value='standard';$('revision').value='A';$('fault').value='none';selected=null;zoom='fit';render();});
+[...fields,'expanded','replacement','revision','evidenceRevision','fault'].forEach(id=>$(id).addEventListener('change',render));
+$('reset').addEventListener('click',()=>{fields.forEach(k=>$(k).checked=DEFAULT_SCENARIO[k]);$('expanded').checked=true;$('replacement').value='standard';$('revision').value='A';$('evidenceRevision').value='A';$('fault').value='none';selected=null;zoom='fit';render();});
 $('verify').addEventListener('click',()=>{const r=checkEquivalence($('replacement').value);$('verification').textContent=`${r.ok?'PASS':'FAIL'}: ${r.checked} fixture assignments compared; ${r.accepted} accepted and ${r.rejected} rejected. Expanded and collapsed ${r.ok?'agree':'disagree'} on acceptance and the complete outer output. This check uses correct wiring and both drawing/evidence revisions, independently of the currently selected faults. It does not prove arbitrary replacements or physical adequacy.`;});
 $('zoomIn').addEventListener('click',()=>{zoom=Math.min(1.8,Number($('zoomValue').dataset.scale)*1.3);applyZoom();});
 $('zoomOut').addEventListener('click',()=>{zoom=Math.max(.08,Number($('zoomValue').dataset.scale)/1.3);applyZoom();});

@@ -4,6 +4,29 @@ import { TYPE, DEFAULT_SCENARIO, buildDiagram, wallingDiagram, substitute, valid
   scenarioInputs, interpret, finiteScenarios, checkEquivalence } from '../apps/wall-roof-wiring-smc/model.mjs';
 
 const copy = value => structuredClone(value);
+
+test('two nested substitution orders retain the same whole-house wiring and relation', () => {
+  const house = buildDiagram({ expanded: false });
+  const wrapper = {
+    inputs: copy(house.inputs), outputs: copy(house.outputs),
+    boxes: [{ id: 'house', label: 'House module', rule: 'compound',
+      inputs: copy(house.inputs), outputs: copy(house.outputs), diagram: copy(house) }],
+    wires: [
+      ...house.inputs.map(p => ({ from: ['IN', p.id], to: ['house', p.id] })),
+      ...house.outputs.map(p => ({ from: ['house', p.id], to: ['OUT', p.id] }))
+    ]
+  };
+  const outsideFirst = substitute(substitute(wrapper, 'house', house), 'house/walling', wallingDiagram());
+  const insideFirst = substitute(wrapper, 'house', substitute(house, 'walling', wallingDiagram()));
+  const signature = d => ({ inputs: d.inputs, outputs: d.outputs,
+    boxes: d.boxes.map(b => ({ id: b.id, inputs: b.inputs, outputs: b.outputs, rule: b.rule })),
+    wires: d.wires.map(w => JSON.stringify(w)).sort() });
+  assert.deepEqual(signature(outsideFirst), signature(insideFirst));
+  for (const scenario of finiteScenarios()) {
+    assert.deepEqual(run(outsideFirst, scenario).outputs, run(insideFirst, scenario).outputs);
+    assert.equal(run(outsideFirst, scenario).ok, run(insideFirst, scenario).ok);
+  }
+});
 const endpoint = (wire, side, node, port) => wire[side][0] === node && wire[side][1] === port;
 const checkReject = (diagram, pattern) => {
   const checked = validate(diagram);
