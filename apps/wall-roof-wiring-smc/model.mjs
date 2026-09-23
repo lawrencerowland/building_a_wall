@@ -1,27 +1,10 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="An interactive house-and-roof wiring essay: reusable wall modules, symmetric monoidal composition and explicit readiness checks."><title>Build a house. Keep the interfaces honest. · Project wiring diagrams</title><link rel="stylesheet" href="../../common.css"><link rel="stylesheet" href="style.css"></head>
-<body><a class="skip" href="#workbench">Skip to the experiment</a><header><a href="../../index.html">← Building a Wall</a><span>PROJECT WIRING DIAGRAMS · FORAY 160</span><a href="https://lawrencerowland.github.io/side-projects.html">All side projects ↗</a></header>
-<main><section class="hero"><div><p class="eyebrow">Essay 01 / revised September 2026</p><h1>Build a house.<br>Keep the interfaces honest.</h1><p class="lede">A roof needs more than a wall-shaped output. It needs a wall that is ready to receive it.</p><p>Start with a small house shell. Open its wall-building module, follow the resources, and change the evidence at the roof handoff. The question is what a reusable block must preserve when it becomes part of a larger project.</p><a class="button primary" href="#workbench">Try the handoff ↓</a></div><figure class="house"><svg viewBox="0 0 360 300" role="img" aria-label="Simplified one-storey house shell: supporting wall assembly below a roof"><path d="M44 234 191 280 323 221 177 179Z" fill="#dfdacd"/><path d="M69 137 190 176 190 260 69 221Z" fill="#deb49b" stroke="#835c47" stroke-width="2"/><path d="M190 176 296 126 296 212 190 260Z" fill="#c79377" stroke="#835c47" stroke-width="2"/><g stroke="#996c55" opacity=".65" fill="none"><path d="m69 164 121 39 106-50M69 193l121 39 106-50M109 150v26m43-12v26m-59-6v27m43-13v28m88-66v28m39-48v27m-18 14v28"/></g><path d="m62 136 122-86 121 76-114 60Z" fill="#cdd5d9" stroke="#385770" stroke-width="3" id="houseRoof"/><path d="m184 50 7 136" stroke="#385770" stroke-width="3"/><path d="m127 94 120 76M91 118l120 60m24-96 8 62" stroke="#fff" stroke-width="2" opacity=".6"/><circle cx="286" cy="62" r="28" fill="#ebf3ee" stroke="#17634d"/><text x="286" y="68" text-anchor="middle" font-size="18" fill="#17634d" id="houseBadge">?</text><path d="M287 94v24" stroke="#17634d" stroke-dasharray="4 4"/><text x="32" y="281" fill="#5e665f" font-size="12">Illustration — geometry is not a structural calculation</text></svg><figcaption id="houseCaption">A teaching model of a roofed structural shell.</figcaption></figure></section>
-<section class="bridge" aria-label="Purpose, method and evidence"><div><span class="eyebrow">END</span><h2>Reusable work blocks</h2><p>Recurring packages should connect across projects without hiding their requirements. This house is a first example, not the final use case.</p></div><div><span class="eyebrow">WAY</span><h2>Wiring + interpretation</h2><p>A typed, acyclic diagram supplies the connections. An SMC supplies composition; explicit relations supply the small model’s accepted behaviour.</p></div><div><span class="eyebrow">MEANS</span><h2>Open it and challenge it</h2><p>Collapse or expand the wall package. Try a missing release or a replacement with stronger requirements. Inspect the actual ports and results.</p></div></section>
-<section class="section" id="workbench"><div class="sectionhead"><div><p class="eyebrow">01 / THE WORKING EXAMPLE</p><h2>What can pass this boundary?</h2></div><button id="reset">Reset example</button></div><p>The wall box represents the <strong>whole supporting wall assembly</strong> of a prepared, one-storey shell. Foundations, structural design, skills and site provision are assumed. The access box checks a supplied access record; it does not erect scaffolding. Nothing here issues a real construction release.</p>
-<div class="controls"><fieldset><legend>Inspect the composition</legend><label><input id="expanded" type="checkbox"> Open the wall-building module</label><label for="replacement">Wall package</label><select id="replacement"><option value="standard">Original requirements · revision A or B</option><option value="strict">Replacement · revision B only</option></select><label for="revision">Drawing revision</label><select id="revision"><option>A</option><option>B</option></select><p class="small">Release evidence is bound to the selected drawing revision in this example.</p></fieldset><fieldset><legend>Declared conditions</legend><label><input id="released" type="checkbox" checked> Load-readiness release supplied</label><label><input id="geometryOK" type="checkbox" checked> Wall geometry matches the design</label><label><input id="accessOK" type="checkbox" checked> Access available and inspected</label><label><input id="mortarOK" type="checkbox" checked> Mortar declared workable</label><label><input id="roofFits" type="checkbox" checked> Roof kit matches the assembly</label></fieldset><fieldset><legend>Challenge the model</legend><label><input id="sameWorker" type="checkbox"> Supply one worker as both labour inputs</label><label for="fault">Change the actual wiring</label><select id="fault"><option value="none">Correct wiring</option><option value="duplicate-worker">Duplicate a labour wire</option><option value="missing-wire">Remove a required wire</option><option value="wrong-type">Connect incompatible types</option></select><p class="small">Two people share the type <code>BL</code>; they still need distinct identities. This interface requires two people; a single-worker version would need different, serial wiring.</p></fieldset></div>
-<div id="result" class="result" role="status" aria-live="polite"></div><div class="diagramhead"><h3 id="diagramTitle">One package, several obligations</h3><span>Left → right = dependency, not elapsed time</span></div><div class="diagramViewport" tabindex="0" role="region" aria-label="Wiring diagram; scroll horizontally on narrow screens"><svg id="diagram" role="img" aria-label="Computed internal wiring diagram"></svg></div><p class="small">This overview shows <strong>internal connections and the supplied release evidence</strong>. A line can bundle several ports; its label names their types. The outer inputs, returns and every individual wire are listed below. Select a process using these buttons or the diagram.</p><div id="boxButtons" class="boxButtons" aria-label="Inspect a process"></div><div class="split"><aside id="inspector" class="panel"></aside><div class="panel"><h3>Computed handoffs</h3><ol id="trace" class="trace"></ol><p class="small">These are model evaluations, not work performed on a site. A rejected relation has no accepted outer output; the trace only explains where its conditions failed.</p></div></div>
-<details><summary>Outer boundary and exact wiring table</summary><div class="split"><div><h3>Supplied to the composite</h3><ul id="inputs"></ul></div><div><h3>Returned by the composite</h3><ul id="outputs"></ul></div></div><p>Sand, cement, water, bricks and lintels are represented as adequate package inputs, not quantities. Trusses, roof coverings and fasteners are bundled as <code>RoofKit</code>; the model installs that kit in the shell. Waste, unused material and detailed quantities are outside this example. The drawing is threaded through successive processes, not silently copied.</p><div class="tablewrap"><table><caption>Every wire in the selected diagram</caption><thead><tr><th>Source port</th><th>Type</th><th>Destination port</th></tr></thead><tbody id="wires"></tbody></table></div><h3>Accepted output record</h3><pre id="outputRecord"></pre></details>
-</section>
-<section class="section" id="mathematics"><p class="eyebrow">02 / THE MATHEMATICS YOU CAN SEE</p><h2>Three layers, with different jobs</h2><div class="concepts"><article><span class="number">1</span><h3>The wiring is a recipe</h3><p>A box has named, typed input and output ports. Each port has exactly one attachment in the chosen syntax. Connections are directed and acyclic. A crossing does not join two wires; a branch would need an explicit operation.</p><p><strong>Operadic substitution:</strong> replace <code>Walling_One_Storey</code> with its internal diagram, matching every boundary port. The expanded picture is produced by that substitution in the code.</p><p class="formula">Φ[Walling ← Ψ] = the expanded wiring</p></article><article><span class="number">2</span><h3>The SMC combines processes</h3><p>Inside the module, a worker-identity check supplies two distinct labour instances to mixing and setting out. They can be placed alongside each other with <strong>⊗</strong>. Their outputs feed later work through sequential composition <strong>∘</strong>. Wires that bypass a step act as identities.</p><div class="smc" aria-label="Mix and Set are parallel processes; their outputs feed Build wall"><div><span>BL ⊗ S ⊗ C ⊗ H2O → <b>Mix</b> → BL ⊗ M</span><span>BL ⊗ P ⊗ D → <b>Set</b> → BL ⊗ L ⊗ P ⊗ D</span></div><strong>↓ routing + other inputs ↓</strong><span><b>Build wall</b> → BuiltWall + returned resources</span></div><p>The symbol <strong>⊗</strong> means a joint resource interface. Distinct workers are enforced by our explicit identity-check relation, not by <code>Rel</code> or tensor alone. It does not promise simultaneous execution, a duration, or spare capacity.</p></article><article><span class="number">3</span><h3>Relations give it meaning</h3><p>Here each type denotes model records; the checks explore a finite fixture family. Each implemented process is a partial function on the selected records, viewed as a relation in <strong>Rel</strong>. Tensor uses Cartesian product. Sequential composition hides a matching intermediate value:</p><p class="formula">(x,z) ∈ S ∘ R ⇔ ∃y: (x,y) ∈ R and (y,z) ∈ S</p><p>The implementation evaluates these deterministic relations. Missing release evidence gives no accepted output at the readiness box. The readiness type records a passed model guard, not a finding about concrete strength.</p></article></div>
-<div class="callout"><h3>Where the operad and the algebra meet</h3><p>The diagram is an operation on interface shapes. Its interpretation sends the constituent process relations to their composite relation: <code>A(Φ)(R₁,…,Rₙ)</code>. Expanding the module and evaluating it, or evaluating the module first and then connecting it, should agree. That is the compositional promise being checked here.</p><button id="verify">Check the finite examples</button><p id="verification" role="status" aria-live="polite">Compare the expanded and collapsed boundary results over the model’s finite fixture family.</p></div>
-</section>
-<section class="section"><p class="eyebrow">03 / WHAT THE EXPERIMENT TEACHES</p><h2>Matching the ports is the beginning</h2><div class="split"><div><h3>Try a stronger replacement</h3><p>Select the revision-B-only wall package while the drawing is A. Its interface still fits. Its input requirements no longer do. Switch the drawing to B and the example can proceed again.</p><p>For substitution in a known context, a replacement must accept the inputs that context supplies and produce acceptable outputs. Mere inclusion of one relation in another is insufficient: an empty relation would satisfy inclusion while doing nothing.</p></div><div><h3>When is this worth the mechanics?</h3><p>A small table can describe all these connections. The value appears when a block recurs, when its interior changes, or when a boundary hides an obligation such as readiness. One checked module can then be reused without losing its interface.</p><p>If the diagram merely repeats a fixed task list, the machinery may add little. This example preserves connections and a few static conditions. It does not preserve all construction knowledge or generate multiple schedules. Timing, shared-resource contention and uncertainty need further models.</p></div></div></section>
-<section class="section" id="sources"><p class="eyebrow">04 / SOURCES → CONCEPTS → THIS CONSTRUCTION</p><h2>The bridge back to the papers</h2><div class="tablewrap"><table><thead><tr><th>Source</th><th>What we use</th><th>What we do not infer</th></tr></thead><tbody><tr><td><a href="https://arxiv.org/abs/2101.12046">Patterson, Spivak & Vagner — Wiring diagrams as normal forms for computing in symmetric monoidal categories</a><br>Definition 4.1; §5 (2021)</td><td>Typed, acyclic wiring with bijective attachments; substitution and interpretation in an SMC.</td><td>No physical feasibility from syntax, and no blanket equivalence between all operad algebras and arbitrary strict SMCs.</td></tr><tr><td><a href="https://arxiv.org/abs/2010.08003">Bakirtzis, Fleming & Vasilakopoulou — Categorical Semantics of Cyber-Physical Systems Theory</a><br>§3.2 and §3.3.1–3.3.3</td><td>Relate architecture to behaviour; compose static relations by hiding internal values.</td><td>Their feedback-capable wiring category differs from our selected acyclic syntax. Static relations and assume–guarantee contracts are distinct.</td></tr></tbody></table></div><p><strong>Our contribution:</strong> the house-shell interpretation, readiness record, explicit resource identities, executable substitution, finite comparisons and failure examples. These are proposed teaching constructions, not theorems about real construction or an implementation of Catlab.</p><p>The broader foray also draws on Spivak’s modular-design explanations and Libkind, Patterson, Baas & Fairbanks’ operadic dynamics. They remain routes for later essays; this one implements no feedback, differential equations, shared-state dynamics or Petri-net semantics.</p><details><summary>What changed from the April essay?</summary><ul><li>Prose-only readiness became an explicit checked handoff from <code>BuiltWall</code> to <code>ReadyWall</code>.</li><li>Port direction, completeness, one-to-one use and cycles are checked separately from model conditions.</li><li>A real expandable wall module preserves its whole boundary, including both labour instances and returned tools/access.</li><li>“Weatherproof shell” became the narrower “roofed structural shell”; openings, services, enclosure and certification remain unmodelled.</li><li>Keyboard-accessible controls, readable narrow-screen diagrams, visible SMC structure and source-specific explanations replace hidden formalism and mouse-only inspection.</li></ul></details><h3>What is still open?</h3><p>Which boundary information is enough for reuse under changing resources or time? When does a family of these modules outperform a simpler table? Which richer interpretation can preserve readiness and contention without overloading the interface? Those are directions for the foray, not results established by this essay.</p></section>
-<footer><p>Portfolio Wave · FORAY-PROJECT-WIRING · Essay 01 · Revised 23 September 2026</p><p><a href="../../index.html">Foray home</a> · <a href="https://github.com/lawrencerowland/building_a_wall">Source and checks</a> · <a href="https://lawrencerowland.github.io/side-projects.html">Side projects</a></p><p class="small">An agent-assisted research essay. Automated model and interface checks are evidence about this demonstration; no human-use validation or engineering approval is claimed. Controls are temporary and reset on reload; no data is stored or sent.</p></footer></main><noscript><p class="panel">JavaScript is needed for the interactive model. The explanation and sources remain readable.</p></noscript><!-- WIRING-BUNDLE-START --><script>
-(()=>{
 /**
  * A bounded teaching construction, not a construction specification or scheduler.
  * Syntax: typed, acyclic, bijective source-to-target port attachments.
  * Semantics: finite partial functions, embedded as relations; rejection is an empty
  * relation for this input. Internal values are existential witnesses, not promises.
  */
-const TYPE = Object.freeze({
+export const TYPE = Object.freeze({
   BL: 'Bricklayer resource instance; mixer and builder have this same type',
   S: 'Sand input', C: 'Cement input', H2O: 'Water input', M: 'Mortar batch',
   P: 'Peg and line kit, retained', D: 'Drawing with declared geometry and revision, retained',
@@ -35,7 +18,7 @@ const TYPE = Object.freeze({
   Roofed: 'Roofed structural shell in this model; weatherproofing is not established'
 });
 
-const DEFAULT_SCENARIO = Object.freeze({
+export const DEFAULT_SCENARIO = Object.freeze({
   accessOK: true, mortarOK: true, geometryOK: true, released: true,
   roofFits: true, sameWorker: false, revision: 'A', evidenceRevision: 'A',
   geometry: 'one-storey-A', evidenceGeometry: 'one-storey-A'
@@ -56,7 +39,7 @@ const wallOutputs = () => [p('mixer', 'BL', 'Mixer returned'), p('builder', 'BL'
   p('wall', 'BuiltWall', 'Built wall assembly'), p('peg', 'P', 'Peg kit returned'),
   p('drawing', 'D', 'Drawing returned'), p('access', 'Sc', 'Access returned')];
 
-function wallingDiagram(replacement = 'standard') {
+export function wallingDiagram(replacement = 'standard') {
   if (!['standard', 'strict'].includes(replacement)) throw new Error(`Unknown replacement: ${replacement}`);
   return {
     id: 'Walling_One_Storey', inputs: wallInputs(), outputs: wallOutputs(),
@@ -99,7 +82,7 @@ function wallingDiagram(replacement = 'standard') {
  * Each inserted outer-boundary segment is spliced into the actual surrounding
  * wire. The same routine handles direct IN -> OUT identity wires.
  */
-function substitute(diagram, boxId, inner) {
+export function substitute(diagram, boxId, inner) {
   for (const [name, candidate] of [['outer', diagram], ['inner', inner]]) {
     const result = validate(candidate);
     if (!result.ok) throw new Error(`Cannot substitute invalid ${name} diagram: ${result.issues.join('; ')}`);
@@ -135,7 +118,7 @@ function substitute(diagram, boxId, inner) {
   return result;
 }
 
-function buildDiagram({ expanded = true, fault = 'none', replacement = 'standard' } = {}) {
+export function buildDiagram({ expanded = true, fault = 'none', replacement = 'standard' } = {}) {
   const inner = wallingDiagram(replacement);
   let diagram = {
     id: 'Wall_then_roof', expanded, replacement, fault,
@@ -187,7 +170,7 @@ function buildDiagram({ expanded = true, fault = 'none', replacement = 'standard
 }
 
 /** Syntactic checks do not establish any physical premise or behavioural claim. */
-function validate(diagram, ancestors = new Set()) {
+export function validate(diagram, ancestors = new Set()) {
   const issues = [];
   if (!diagram || typeof diagram !== 'object') return { ok: false, issues: ['Diagram must be an object.'], order: [] };
   if (ancestors.has(diagram)) return { ok: false, issues: ['Recursive compound diagram is not finite.'], order: [] };
@@ -264,7 +247,7 @@ function validate(diagram, ancestors = new Set()) {
 /** Values are finite fixtures. The flags stand for supplied evidence/conditions;
  * they are not measurements, durations, probabilities, or engineering guarantees.
  */
-function scenarioInputs(scenario = {}) {
+export function scenarioInputs(scenario = {}) {
   const s = { ...DEFAULT_SCENARIO, ...scenario };
   return {
     mixer: { type: 'BL', id: 'mixer-01' },
@@ -334,7 +317,7 @@ function evaluate(rule, input) {
 /** Evaluate the relation for one input assignment. This is dependency evaluation,
  * not a duration, crew allocation, or executable construction schedule.
  */
-function interpret(diagram, inputs) {
+export function interpret(diagram, inputs) {
   const syntax = validate(diagram);
   if (!syntax.ok) return { ok: false, errors: syntax.issues, trace: [], outputs: {} };
   const values = new Map(), errors = [], trace = [];
@@ -389,11 +372,11 @@ function interpret(diagram, inputs) {
   return { ok: errors.length === 0, errors, trace, outputs: errors.length ? {} : outputs };
 }
 
-function run(diagram, scenario = DEFAULT_SCENARIO) {
+export function run(diagram, scenario = DEFAULT_SCENARIO) {
   return interpret(diagram, scenarioInputs(scenario));
 }
 
-function finiteScenarios() {
+export function finiteScenarios() {
   const result = [];
   const keys = ['accessOK', 'mortarOK', 'geometryOK', 'released', 'roofFits', 'sameWorker'];
   for (let bits = 0; bits < 2 ** keys.length; bits++)
@@ -402,7 +385,7 @@ function finiteScenarios() {
   return result;
 }
 
-function checkEquivalence(replacement = 'standard') {
+export function checkEquivalence(replacement = 'standard') {
   const expanded = buildDiagram({ expanded: true, replacement }), collapsed = buildDiagram({ expanded: false, replacement });
   const failures = []; let accepted = 0;
   const scenarios = finiteScenarios();
@@ -413,45 +396,3 @@ function checkEquivalence(replacement = 'standard') {
   }
   return { ok: failures.length === 0, checked: scenarios.length, accepted, rejected: scenarios.length - accepted, failures };
 }
-
-const $=id=>document.getElementById(id);
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let selected='walling';
-let current;
-const fields=['accessOK','mortarOK','geometryOK','released','roofFits','sameWorker'];
-function endpointLabel(endpoint){const [id,port]=endpoint;return `${id==='IN'?'Supplied':id==='OUT'?'Returned':current.boxes.find(b=>b.id===id)?.label??id} · ${port}`;}
-function typeAt(endpoint){const [id,port]=endpoint;return (id==='IN'?current.inputs:current.boxes.find(b=>b.id===id)?.outputs??[]).find(p=>p.id===port)?.type??'?';}
-function inspect(id){selected=id;const b=current.boxes.find(b=>b.id===id);if(!b)return;
- $('inspector').innerHTML=`<p class="eyebrow">SELECTED PROCESS</p><h3>${esc(b.label)}</h3><p>${esc(b.description)}</p><p class="small">Input types → output types</p><div class="signature">${b.inputs.map(p=>esc(p.type)).join(' ⊗ ')}\n→ ${b.outputs.map(p=>esc(p.type)).join(' ⊗ ')}</div><details><summary>Named ports and meanings</summary><h4>Inputs</h4><ul>${b.inputs.map(p=>`<li><code>${esc(p.id)} : ${esc(p.type)}</code> — ${esc(TYPE[p.type])}</li>`).join('')}</ul><h4>Outputs</h4><ul>${b.outputs.map(p=>`<li><code>${esc(p.id)} : ${esc(p.type)}</code> — ${esc(TYPE[p.type])}</li>`).join('')}</ul></details>`;
- document.querySelectorAll('[data-box]').forEach(el=>{const active=el.dataset.box===id;if(el.tagName==='BUTTON')el.setAttribute('aria-pressed',String(active));else el.classList.toggle('selected',active);});
-}
-function draw(){const expanded=$('expanded').checked;const svg=$('diagram');svg.dataset.expanded=String(expanded);svg.replaceChildren();svg.setAttribute('viewBox',expanded?'0 0 1510 620':'0 0 1220 450');
- const ns='http://www.w3.org/2000/svg';const el=(tag,attrs={},parent=svg,text)=>{const e=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>e.setAttribute(k,v));if(text!==undefined)e.textContent=text;parent.append(e);return e;};
- const defs=el('defs');const marker=el('marker',{id:'arrow',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:6,markerHeight:6,orient:'auto-start-reverse'},defs);el('path',{d:'M0 0L10 5L0 10Z',fill:'#66897e'},marker);
- const positions=expanded?{access:[45,30],'walling/crew':[45,350],'walling/mix':[350,205],'walling/set':[350,400],'walling/wall':[660,230],ready:[965,230],roof:[1265,230]}:{access:[70,40],walling:[385,180],ready:[700,180],roof:[1000,180]};
- const grouped=new Map();current.wires.filter(w=>w.from[0]!=='IN'&&w.to[0]!=='OUT').forEach(w=>{const k=w.from[0]+'|'+w.to[0];if(!grouped.has(k))grouped.set(k,[]);grouped.get(k).push(w);});
- grouped.forEach(wires=>{const f=wires[0].from[0],t=wires[0].to[0],a=positions[f],b=positions[t];if(!a||!b)return;const x=a[0]+180,y=a[1]+42,tx=b[0],ty=b[1]+42;const bypass=(f==='walling'||f==='walling/wall')&&t==='roof';const sy=bypass?y+55:y,ey=bypass?ty+55:ty;let d=bypass?`M ${x-55} ${sy} C ${x-55} ${sy+155}, ${tx+70} ${ey+155}, ${tx+70} ${ey}`:`M${x} ${y} C${x+80} ${y}, ${tx-80} ${ty}, ${tx} ${ty}`;
- el('path',{d,class:'wire','marker-end':'url(#arrow)'});const types=wires.map(w=>typeAt(w.from));const label=types.join(' · ');const lx=bypass?(x+tx)/2:(x+tx)/2,ly=bypass?sy+120:(y+ty)/2-12;el('text',{x:lx,y:ly,'text-anchor':'middle',class:'wirelabel'},svg,label);
- });
- const ready=positions.ready;el('path',{d:`M${ready[0]+90} ${ready[1]-62} L${ready[0]+90} ${ready[1]-4}`,class:'wire','marker-end':'url(#arrow)'});el('text',{x:ready[0]+90,y:ready[1]-75,'text-anchor':'middle',class:'wirelabel'},svg,'Supplied release evidence');
- if($('fault').value!=='none')el('text',{x:35,y:expanded?595:432,fill:'#9b3328','font-size':14},svg,'Outer input wiring altered: '+$('fault').selectedOptions[0].textContent+'. See the exact wire table below.');
- current.boxes.forEach(b=>{const pos=positions[b.id];if(!pos)return;const g=el('g',{class:'node','data-box':b.id,role:'button',tabindex:0,'aria-label':`Inspect ${b.label}`});el('rect',{x:pos[0],y:pos[1],width:180,height:84,rx:10},g);const words=b.id==='walling'?['Walling','One Storey']:b.id==='walling/crew'?['Check two','worker identities']:b.id==='ready'?['Check wall','readiness']:b.id==='roof'?['Put roof on']:b.id==='access'?['Check supplied','access']:b.label==='Set out · revision B only'?['Set out','revision B only']:b.label==='Build wall assembly'?['Build wall','assembly']:[b.label];words.forEach((s,i)=>el('text',{x:pos[0]+90,y:pos[1]+29+i*19,'text-anchor':'middle'},g,s));el('text',{x:pos[0]+90,y:pos[1]+73,'text-anchor':'middle',class:'subtitle'},g,`${b.inputs.length} inputs → ${b.outputs.length} outputs`);g.addEventListener('click',()=>inspect(b.id));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inspect(b.id);}});});
- $('diagramTitle').textContent=expanded?'Open the module: the same outer boundary':'One package, several obligations';
-}
-function render(){const scenario={...DEFAULT_SCENARIO,...Object.fromEntries(fields.map(k=>[k,$(k).checked])),revision:$('revision').value,evidenceRevision:$('revision').value};
- current=buildDiagram({expanded:$('expanded').checked,fault:$('fault').value,replacement:$('replacement').value});const syntax=validate(current);const result=run(current,scenario);
- $('result').classList.toggle('bad',!result.ok);$('result').innerHTML=`<strong>${!syntax.ok?'Wiring rejected':result.ok?'Model accepts a roofed structural shell':'Wiring fits; the model rejects this handoff'}</strong><p>${syntax.ok?'Every port is connected once, types match, and the diagram is acyclic.':'The altered diagram fails a structural check.'}</p>${result.errors.length?`<ul>${result.errors.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>`:'<p>The supplied conditions admit this boundary result. Both worker identities, the peg kit, drawing and access are returned.</p>'}`;
- $('houseRoof').setAttribute('fill',result.ok?'#638d82':'#cdd5d9');$('houseBadge').textContent=result.ok?'✓':'?';$('houseCaption').textContent=result.ok?'Accepted by the teaching model — not engineering approval.':'The selected model has no accepted roofed-shell output.';
- $('trace').innerHTML=result.trace.length?result.trace.map(row=>`<li class="${row.status==='fail'?'fail':''}"><b>${row.status==='pass'?'✓':row.status==='fail'?'×':'—'} ${esc(row.label)}</b>${esc(row.detail)}</li>`).join(''):'<li>Fix the wiring before interpreting its behaviour.</li>';
- $('boxButtons').innerHTML=current.boxes.map(b=>`<button data-box="${esc(b.id)}" aria-pressed="false">${esc(b.label)}</button>`).join('');$('boxButtons').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>inspect(b.dataset.box)));
- $('inputs').innerHTML=current.inputs.map(p=>`<li>${esc(p.label)} <code>${esc(p.type)}</code></li>`).join('');$('outputs').innerHTML=current.outputs.map(p=>`<li>${esc(p.label)} <code>${esc(p.type)}</code></li>`).join('');
- $('wires').innerHTML=current.wires.map(w=>`<tr><td>${esc(endpointLabel(w.from))}</td><td><code>${esc(typeAt(w.from))}</code></td><td>${esc(endpointLabel(w.to))}</td></tr>`).join('');$('outputRecord').textContent=result.ok?JSON.stringify(result.outputs,null,2):'No accepted outer output for this input assignment.';
- draw();if(!current.boxes.some(b=>b.id===selected))selected=$('expanded').checked?'walling/wall':'walling';inspect(selected);$('verification').textContent='Compare the expanded and collapsed boundary results over the model’s finite fixture family.';
-}
-[...fields,'expanded','replacement','revision','fault'].forEach(id=>$(id).addEventListener('change',render));
-$('reset').addEventListener('click',()=>{fields.forEach(k=>$(k).checked=DEFAULT_SCENARIO[k]);$('expanded').checked=false;$('replacement').value='standard';$('revision').value='A';$('fault').value='none';selected='walling';render();});
-$('verify').addEventListener('click',()=>{const report=checkEquivalence($('replacement').value);$('verification').textContent=`${report.ok?'PASS':'FAIL'}: ${report.checked} fixture assignments compared; ${report.accepted} accepted and ${report.rejected} rejected. Expanded and collapsed ${report.ok?'agree':'disagree'} on acceptance and the complete outer output. This check uses correct wiring and both drawing/evidence revisions, independently of the currently selected faults. It does not prove arbitrary replacements or physical adequacy.`;});
-render();
-
-})();
-</script><!-- WIRING-BUNDLE-END --></body></html>

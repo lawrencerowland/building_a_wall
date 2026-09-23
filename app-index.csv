@@ -4,7 +4,7 @@
 3,Construction as an Operad Algebra,"Interactive wiring diagrams, equality checks, and hybrid simulation for a wall-and-roof operad model",Compositional modeling,apps/construction-operad-algebra/index.html
 4,Wall + Roof Contracts Algebra,Compose wall + roof safety contracts into a system predicate with an interactive wiring diagram,Compositional modeling,apps/contracts-algebras-wall-roof/index.html
 5,SysML wiring comparison,"Side-by-side SysML internal block diagram and categorical wiring diagram for wall + roof construction",Compositional modeling,apps/sysml-wiring-comparison/index.html
-6,Wall-to-roof wiring diagram (SMC),Interactive wiring diagram with categorical contracts and wiring-table inspector,Wiring diagrams,apps/wall-roof-wiring-smc/index.html
+6,Build a house. Keep the interfaces honest.,"Interactive project-wiring essay exploring readiness conditions, a reusable module and computed checks",Wiring diagrams,apps/wall-roof-wiring-smc/index.html
 7,Cliff shed WBS dual view,Interactive dual-category view mapping tasks to states for a cliffside shed build,Compositional modeling,apps/cliff-shed-wbs-state-dual-view/index.html
 8,Processes ↔ Plans: Shed-on-a-Cliff,Interactive category view that maps shed processes into task dependencies with a morphing split view,Compositional modeling,apps/processes-plans-shed-on-a-cliff-category-view/index.html
 9,Petri → SMC → WBS (Brick Wall),Explore how a Petri net maps into wiring diagrams and WBS schedules for a brick wall,Compositional modeling,apps/petri_to_wbs/index.html
