@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Construction as an Operad Algebra — Wiring Diagrams, Equality Proofs, Hybrid Simulation</title>
+  <title>Construction as an Operad Algebra — Wiring Diagrams, Equality Examples, Hybrid Simulation</title>
   <link rel="stylesheet" href="../../common.css">
   <style>
     :root{
@@ -519,26 +519,27 @@ Inputs ─▶ (Set out line) ─▶ Line ─┘</pre>
     </noscript>
 
     <div class="shell" id="shell">
+      <p class="card small" role="note"><strong>Current reading:</strong> <a href="../wall-roof-wiring-smc/">resources and reusable boundaries</a> · <a href="../wiring-algebra/">wiring and its algebra</a> · <a href="../course-by-course/">course-by-course dynamics</a>. This earlier working preserves function-composition examples and a manually coupled dynamics experiment. Its simplified interfaces and numeric “House” score are teaching choices; they do not reconstruct the complete resource boundary or establish physical performance.</p>
       <header>
         <div class="titleBlock">
           <a class="back-link" href="../../index.html">Back to app index</a>
           <h1>Construction as an Operad Algebra</h1>
           <p class="subtitle">
             A simple “build walls then put on a roof” project, modeled compositionally with wiring diagrams,
-            with <em>formal equality proofs</em> (operad algebra law + interchange), plus a hybrid simulation:
+            with <em>illustrations of equality laws</em> (operad algebra law + interchange), plus a toy hybrid simulation:
             wall height (discrete) and roof stability (continuous).
           </p>
           <div class="badgeRow">
             <span class="badge">Operad syntax: wiring diagrams</span>
             <span class="badge">Semantics: operad algebra (functions / dynamics)</span>
-            <span class="badge">Equality: normal form / same diagram</span>
+            <span class="badge">Equality: fixed-diagram and sample checks</span>
             <span class="badge">Hybrid: discrete + continuous</span>
           </div>
         </div>
 
         <nav aria-label="Sections">
           <button class="tabBtn" data-tab="diagram" aria-selected="true">Wiring diagrams</button>
-          <button class="tabBtn" data-tab="proofs" aria-selected="false">Formal equality proofs</button>
+          <button class="tabBtn" data-tab="proofs" aria-selected="false">Equality examples</button>
           <button class="tabBtn" data-tab="sim" aria-selected="false">Simulation</button>
           <button class="tabBtn" data-tab="julia" aria-selected="false">Julia / AlgebraicDynamics</button>
         </nav>
@@ -556,6 +557,7 @@ Inputs ─▶ (Set out line) ─▶ Line ─┘</pre>
               This is the project “scope” view: boxes are tasks; wires are typed resources / artefacts carried across tasks.
               The diagram is deliberately simple and left-to-right.
             </p>
+            <p class="small">Colours group related roles; matching colours do not establish matching types. Read the named ports and signatures. Bundled material inputs and signal branches are shorthand in this older drawing; an exact one-wire-per-port resource diagram would need separate ports or explicit unpacking/copying operations.</p>
 
             <div class="btnRow" role="group" aria-label="Diagram selection">
               <button class="btn primary" id="btnScope">Show scope diagram</button>
@@ -604,8 +606,8 @@ Inputs ─▶ (Set out line) ─▶ Line ─┘</pre>
           <div class="card">
             <h3>Why this catches scope mistakes</h3>
             <p class="small">
-              If a downstream task expects a type you haven’t produced (e.g., roof install needs “Walls” but you only
-              have “Damaged walls”), the diagram literally won’t “type-check” — the wire types don’t match.
+              With distinct declared types, a downstream task expecting “Walls” cannot accept “Damaged walls” without
+              a suitable conversion. This page illustrates that modelling principle; it does not implement a general type checker for its diagrams.
             </p>
           </div>
           <div class="card">
@@ -620,7 +622,7 @@ Inputs ─▶ (Set out line) ─▶ Line ─┘</pre>
 
       <!-- TAB: PROOFS -->
       <section class="panel hidden" id="tab-proofs">
-        <h2>2) Formal proof of equality</h2>
+        <h2>2) Equality laws and bounded illustrations</h2>
         <p>
           Here are two kinds of equality that matter in compositional project thinking:
           (A) equality from <em>symmetric monoidal structure</em> (interchange law), and
@@ -642,18 +644,18 @@ Inputs ─▶ (Set out line) ─▶ Line ─┘</pre>
             </div>
 
             <p class="small">
-              In wiring-diagram normal form, both sides have the <em>same underlying diagram</em>
-              (same boxes + same wires); only the “parentheses” (grouping boundaries) differ.
+              Interchange equates these two well-typed ways of grouping independent processes. Here both pictures are
+              drawn from the <em>same underlying diagram</em> (same boxes + same wires); only the grouping boundaries differ.
             </p>
 
             <div class="btnRow">
-              <button class="btn primary" id="btnCheckInterchange">Check equality (diagram normal form)</button>
+              <button class="btn primary" id="btnCheckInterchange">Compare the fixed diagrams</button>
               <span class="status" id="statusInterchange"><span class="dot"></span><span>Not checked</span></span>
             </div>
 
             <div class="hint">
-              The “proof” here is: compile both expressions to wiring diagrams and compare the resulting
-              combinatorial normal forms. If identical (up to relabeling), the morphisms are equal.
+              This button compares two layout/group variants copied from one diagram. It illustrates interchange;
+              it does not compile independent expressions or perform a general isomorphism check up to relabelling.
             </div>
           </div>
 
@@ -700,9 +702,9 @@ Inputs ─▶ (Set out line) ─▶ Line ─┘</pre>
             </div>
 
             <p class="hint">
-              We demonstrate equality by evaluating both composite functions on the same input vector and
-              showing the outputs match. The reason this works is not luck — it is exactly what “being an operad algebra”
-              means.
+              The button evaluates both composite functions on one input vector. Agreement checks that example;
+              it does not prove equality on all inputs. The general substitution law is a requirement on an operad algebra,
+              and needs a construction or argument showing that the interpretation preserves substitution.
             </p>
           </div>
 
@@ -728,7 +730,7 @@ Inputs ─▶ (Set out line) ─▶ Line ─┘</pre>
         <div style="height:1rem;"></div>
 
         <div class="card">
-          <h3>What counts as a “formal proof” here?</h3>
+          <h3>The law and the evidence shown here</h3>
           <p class="small">
             There are two complementary notions:
           </p>
@@ -738,12 +740,13 @@ Inputs ─▶ (Set out line) ─▶ Line ─┘</pre>
               (SMC axioms like interchange; operad-algebra axioms like substitution preservation).
             </li>
             <li>
-              <strong>Normal-form proof:</strong> Compile both expressions into the same canonical wiring-diagram form
-              and compare the resulting data structures (diagram identity/isomorphism).
+              <strong>Implemented illustrations:</strong> Compare two variants of one fixed diagram, then evaluate
+              hierarchical and flattened functions on one sample. Neither button is a general normal-form proof procedure.
             </li>
           </ul>
           <p class="small">
-            In practical tooling (e.g., Catlab/AlgebraicJulia), the second style often becomes a fast, automated check.
+            A separate term compiler and a justified diagram normal form could support stronger automated equality checks.
+            The linked current algebra essay makes the interfaces and substitution argument explicit.
           </p>
         </div>
       </section>
@@ -782,8 +785,9 @@ Inputs ─▶ (Set out line) ─▶ Line ─┘</pre>
 
             <h3>Dynamics wiring diagram (the “semantic” model)</h3>
             <p class="small">
-              The diagram below is the compositional view of the hybrid model: the discrete wall subsystem
-              drives the continuous roof subsystem.
+              The diagram below sketches the manually coupled hybrid model: a height threshold and delay derived
+              from the discrete wall subsystem drive the continuous roof subsystem. Those conversions are implemented
+              in the simulation; a literal typed diagram would show them as boxes.
             </p>
             <div class="diagramWrap">
               <svg id="diagDynamicsSmall" class="svgHost small" viewBox="0 0 1000 520" role="img" aria-label="Dynamics wiring diagram"></svg>
@@ -835,20 +839,20 @@ Inputs ─▶ (Set out line) ─▶ Line ─┘</pre>
 
         <div class="grid2">
           <div class="card">
-            <h3>Important note about this sandbox</h3>
+            <h3>Notebook status and scope</h3>
             <p class="small">
-              The execution environment that generated this HTML did not have Julia preinstalled, and it
-              does not permit downloading Julia binaries (so I cannot genuinely run <span style="font-family:var(--mono);">Pkg.add</span> here).
-              The code below is therefore a <em>ready-to-run template</em> for your own Julia setup (local machine, Codespaces, etc.).
+              The original generation run did not execute Julia. The code below is a preserved, unverified template;
+              its package APIs and results need checking in a Julia environment before relying on it.
             </p>
             <p class="small">
-              It uses the same operad-algebra idea: define primitive systems, define a composition pattern (wiring diagram),
-              and compose with <span style="font-family:var(--mono);">oapply</span>.
+              It illustrates the operad-algebra idea by defining primitive systems and a wiring pattern. The actual
+              simulation couples a daily wall loop to a separate roof ODE manually. It does not execute or verify
+              mixed discrete/continuous composition with <span style="font-family:var(--mono);">oapply</span>.
             </p>
           </div>
 
           <div class="card">
-            <h3>What this notebook does</h3>
+            <h3>What the template attempts</h3>
             <ul class="small">
               <li>Installs <span style="font-family:var(--mono);">Catlab</span> and <span style="font-family:var(--mono);">AlgebraicDynamics</span></li>
               <li>Builds a wiring diagram for wall→roof coupling</li>
@@ -1014,7 +1018,7 @@ plot(plt1, plt2; layout=(2,1))</pre>
       </section>
 
       <footer>
-        <strong>How to use this page:</strong> switch tabs above. In “Formal equality proofs”, press the check buttons.
+        <strong>How to use this page:</strong> switch tabs above. In “Equality examples”, press the check buttons.
         In “Simulation”, adjust parameters and export JSON if you want to feed results elsewhere.
         <span style="opacity:0.9">This is a single file: save it as <span style="font-family:var(--mono);">construction-operad.html</span> and open it.</span>
       </footer>
@@ -2204,8 +2208,8 @@ Hybrid state:
 
         const ok = (sigA === sigB);
         const status = document.getElementById('statusInterchange');
-        setStatus(status, ok ? 'ok' : 'bad', ok ? 'Equal ✓ (same normal form)' : 'Not equal ✗');
-        toast(ok ? 'Interchange check: equal (same underlying wiring diagram).' : 'Interchange check: not equal.', ok ? 'info' : 'warn', 5200);
+        setStatus(status, ok ? 'ok' : 'bad', ok ? 'Match ✓ (fixed diagram data)' : 'Do not match ✗');
+        toast(ok ? 'Fixed diagram data agree; the pictures illustrate interchange.' : 'Fixed diagram data do not agree.', ok ? 'info' : 'warn', 5200);
       });
 
       // Equality check: operad-algebra substitution law (evaluate both composites)
@@ -2268,7 +2272,7 @@ Hybrid state:
 
           const ok = Math.abs(outHier - outFlat) < 1e-9;
           const status = document.getElementById('statusOperad');
-          setStatus(status, ok ? 'ok' : 'bad', ok ? 'Equal ✓ (same semantics)' : 'Not equal ✗');
+          setStatus(status, ok ? 'ok' : 'bad', ok ? 'Agree ✓ (this sample)' : 'Disagree ✗ (this sample)');
 
           const resultEl = document.getElementById('operadLawResult');
           resultEl.textContent =
@@ -2276,9 +2280,9 @@ Hybrid state:
             `hierarchical output  = ${outHier.toFixed(8)}\n` +
             `flattened output     = ${outFlat.toFixed(8)}\n` +
             `difference           = ${(outHier - outFlat).toExponential(3)}\n` +
-            (ok ? '✅ Equal (matches operad algebra substitution law).' : '❌ Not equal (unexpected).');
+            (ok ? '✅ Outputs agree on this sample; this is not a proof on all inputs.' : '❌ Outputs disagree on this sample.');
 
-          toast(ok ? 'Operad-law check: equal (hierarchical = flattened).' : 'Operad-law check failed.', ok ? 'info' : 'warn', 5200);
+          toast(ok ? 'Hierarchical and flattened outputs agree on this sample.' : 'Hierarchical and flattened outputs disagree on this sample.', ok ? 'info' : 'warn', 5200);
         } catch(e){
           console.error(e);
           setStatus(document.getElementById('statusOperad'), 'bad', 'Error');
@@ -2351,7 +2355,7 @@ Hybrid state:
       smokeMarker.setAttribute('data-smoke', 'ok');
       window.__canvasStatus = 'ready';
 
-      toast('Loaded. Switch tabs to explore diagrams, proofs, and simulation.', 'info', 3400);
+      toast('Loaded. Switch tabs to explore diagrams, equality examples, and simulation.', 'info', 3400);
     }
 
     try{

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="An interactive course-by-course wall model: scarce materials, returned resources and the difference between repeated outputs and an accumulated wall."><title>How a course repeats · Building a Wall</title><link rel="stylesheet" href="../../common.css"><link rel="stylesheet" href="style.css"></head>
+<body><a class="skip" href="#experiment">Skip to the working model</a><header><a href="../../index.html">← Building a Wall</a><span>PROJECT WIRING DIAGRAMS · FORAY 160</span></header>
+<main><section class="hero"><p class="eyebrow">Essay 03 / September 2026</p><h1>How a course repeats.</h1><p class="lede">A second row needs the remaining materials <em>and</em> somewhere to stand.</p><p>Returning the bricks, mortar, line, drawing and bricklayer makes another step possible. It does not, by itself, say how the new course becomes part of a wall.</p></section>
+<section id="experiment" class="workbench" aria-labelledby="experiment-title"><div class="sectionhead"><div><p class="eyebrow">A SMALL, FINITE MODEL</p><h2 id="experiment-title">Build one course. Inspect what changed.</h2></div><button id="reset">Start again</button></div>
+<div class="experiment-grid"><div class="visual-panel"><div class="visual-heading"><strong id="wall-heading">Wall W-1 · no courses yet</strong><span>8 bricks + 2 mortar units per course</span></div><svg id="wall-visual" viewBox="0 0 640 350" role="img" aria-labelledby="wall-title wall-description"><title id="wall-title">The current wall</title><desc id="wall-description">The diagram updates when a course is accepted.</desc></svg><div class="stock-grid"><div><span>Bricks returned</span><output id="brick-count">24</output></div><div><span>Mortar returned</span><output id="mortar-count">6</output></div><div><span>Courses in W-1</span><output id="course-count">0</output></div></div><p id="balance" class="balance"></p><p class="small">Every brick shown is one model unit. Bond pattern and proportions are illustrative. The line shows its declared position, not a measured site condition.</p></div>
+<div class="controls"><fieldset><legend>Starting materials</legend><div class="pair"><label>Bricks <select id="bricks"><option>0</option><option>8</option><option>16</option><option selected>24</option><option>32</option><option>40</option></select></label><label>Mortar units <select id="mortar"><option>0</option><option>2</option><option>4</option><option selected>6</option><option>8</option><option>10</option></select></label></div><p class="small">Changing either supply starts a new run. These invented whole units make depletion visible; they are not mix ratios or construction quantities.</p></fieldset><fieldset><legend>Declared conditions</legend><label><input type="checkbox" id="foundation" checked> Foundation ready for the first course</label><label><input type="checkbox" id="support"> Existing top course ready for the next</label><button id="line">Position line for course 1</button><p id="line-status" class="small"></p><p class="small">After a course, the line stays where it was and the new top course has no readiness declaration. No curing time is assumed.</p></fieldset><button id="place" class="primary">Try to lay course 1 →</button><div id="result" class="result" role="status" aria-live="polite">The starting inputs are ready for one model step.</div></div></div>
+<div class="returned"><h3>Still at the boundary</h3><p id="returned-resources">Worker BL-07 · drawing revision A · line L-1</p><p class="small">The same worker, drawing and line remain available. No resource is copied or silently discarded; the remaining material counts are returned too. The built courses now belong to W-1.</p></div>
+<details open><summary>Follow the state trace</summary><ol id="trace" class="trace"></ol></details>
+</section>
+<section class="bridge" aria-label="End, way and means"><div><p class="eyebrow">END</p><h2>Reusable work, with memory</h2><p>Find what a recurring work block must retain when its next use depends on what has already been built.</p></div><div><p class="eyebrow">WAY</p><h2>Types plus state</h2><p>Distinguish a repeated output tile from a wall-state update. Track finite stock, the support relation and persistent identities.</p></div><div><p class="eyebrow">MEANS</p><h2>A change you can see</h2><p>Lay a course, try again, declare the next conditions and inspect the accepted or rejected transition. The trace and picture use the same state.</p></div></section>
+<section class="essay-section" id="two-meanings"><p class="eyebrow">01 / TWO DIFFERENT COMPOSITIONS</p><h2>Two outputs do not yet make one wall.</h2><p>Write <strong>Q = M ⊗ L ⊗ BL ⊗ D ⊗ B</strong> for the mortar, positioned line, worker, drawing and bricks carried between steps. These are typed records: a count can decrease while its type stays the same. A returned worker has the same identity.</p>
+<div class="comparison"><article><h3>A tile that emits a course</h3><p>Here the course is a separate output. It is not an input to the next step, so it has to pass that step on an identity wire. A suitable local support and setup for each independent output are assumed outside this toy model.</p><div class="formula">E : Q → Q ⊗ Co<br>(E ⊗ id<sub>Co</sub>) ∘ E : Q → Q ⊗ Co ⊗ Co</div><svg class="tile-diagram" viewBox="0 0 520 205" role="img" aria-label="Q enters E1, the returned Q enters E2, and the first course bypasses E2 on an identity wire. Outputs are Q, course 2, course 1."><g fill="none" stroke="#446c57" stroke-width="2"><path d="M25 70H90M165 70H270M345 70H480M165 85H210V160H480M345 85H382V116H480"/></g><g fill="#fffef8" stroke="#446c57" stroke-width="2"><rect x="90" y="44" width="75" height="57" rx="7"/><rect x="270" y="44" width="75" height="57" rx="7"/></g><g fill="#23382e" font-family="system-ui" font-size="16"><text x="10" y="58">Q</text><text x="117" y="79">E₁</text><text x="297" y="79">E₂</text><text x="475" y="58">Q</text><text x="469" y="105">Co₂</text><text x="469" y="183">Co₁</text><text x="254" y="153">id<tspan baseline-shift="sub" font-size="11">Co</tspan></text></g></svg><p class="small">The written output order is Q, new Co₂, bypassed Co₁. A symmetry can put the courses in chronological order; neither operation attaches one to the other.</p><button id="emit">Evaluate two separate course outputs</button><div id="emitted-result" class="result" role="status" aria-live="polite">Uses the selected starting supplies above, in a separate calculation.</div><div id="emitted-courses" class="emitted-courses" aria-hidden="true"></div></article>
+<article><h3>A step that extends a wall</h3><p>The existing structure is now an explicit input. A successful step appends one course, consumes eight bricks and two mortar units, and retains the worker, drawing and line.</p><div class="formula">S : Q ⊗ W → Q ⊗ W<br>A : Q ⊗ W → Q ⊗ W<br>S ∘ A ∘ S : Q ⊗ W → Q ⊗ W</div><p><strong>W</strong> carries a foundation declaration, an ordered list of courses and the latest support-readiness declaration. Each new course records what supports it: the foundation or the preceding course. <strong>A</strong> is the explicit preparation between accepted steps: position the line for the next course and supply a new support declaration.</p><p>Both S and A are partial functions on these records. A declaration is an input to the model, not something the program discovers. After S, the line is still at the old height and support readiness is cleared. Thus S ∘ S rejects the ordinary first-step output.</p><p class="callout">This is the model you can run above. It remembers the wall; the emitted-course model only returns separate outputs.</p></article></div>
+</section>
+<section class="essay-section"><p class="eyebrow">02 / WHAT THE MODEL CHECKS</p><h2>Repeated work keeps an account.</h2><div class="comparison"><div><h3>Three visible obligations</h3><ol><li><strong>Materials:</strong> each accepted course consumes exactly eight bricks and two mortar units. Initial stock = returned stock + stock in courses.</li><li><strong>Support:</strong> the first course needs the foundation declaration; later courses need a fresh declaration for the existing top course.</li><li><strong>Continuity:</strong> the line must be positioned for the next course. The worker ID, line ID and drawing revision pass through unchanged.</li></ol><p>Rejected attempts leave the wall and stock unchanged. The interface permits up to five courses, forty bricks and ten mortar units. Reaching this bound ends this example, not a real construction process.</p></div><div><h3>One worker is a different interface</h3><p>Here mortar is already supplied and the example uses one worker for successive laying steps. A serial <code>Mix → Set → Lay</code> plan could also use one worker if its assumptions permit it.</p><p>That is a different boundary from <a href="../wall-roof-wiring-smc/">Essay 01’s two-worker preparation</a>: one person mixes, a second sets out and builds, and both return. Two ports of type BL do not create two people. Turning two supplied worker ports into one is a change of interface, not an equivalent collapse.</p><p>Q deliberately contains no mixer, mixing inputs, lintels, roof or access equipment. They have not been hidden inside this course step; they belong to a different scope.</p></div></div><details><summary>How to read these signatures</summary><p>The boxes are interpreted in the symmetric monoidal category of partial functions with Cartesian product, or equivalently as their graphs inside Rel. A product-valued output is still one function value, so multiple output ports do not require nondeterminism. A rejected input has no accepted result.</p><p>The accepted set is guarded by the stated predicates. Identity wires carry a record unchanged; composition passes an intermediate state to the next function. Acyclic wiring explains the connections but does not prove physical feasibility. We do not claim a complete treatment of linear resources: the accounting is in these explicit state updates and guards.</p></details></section>
+<section class="essay-section" id="sources"><p class="eyebrow">03 / SOURCE → CONCEPT → CONSTRUCTION → LIMIT</p><h2>Where the idea comes from.</h2><div class="tablewrap"><table><thead><tr><th>Source</th><th>Idea used here</th><th>Boundary of this essay</th></tr></thead><tbody><tr><td><a href="../wall-roof-wiring-smc/source-map.html">Lawrence’s bricklaying workings, July 2024 / June 2026</a><br>Source map and recoverable workings.</td><td>Return materials, line and worker; repeat a laying box; keep corresponding ports in order. The early request also noticed that the first course is special.</td><td>The old claim that all six outputs could plug directly into an identical five-input Lay was ill-typed. The bypass identity and explicit W state make the two alternatives precise.</td></tr><tr><td><a href="https://arxiv.org/abs/2101.12046">Patterson, Spivak &amp; Vagner (2021)</a><br><em>Wiring diagrams as normal forms for computing in symmetric monoidal categories</em>, §4–5</td><td>Typed acyclic wiring, serial and parallel composition, identity wires and explicit permutations.</td><td>The paper supplies compositional syntax. The material update, support records and model guards are our construction.</td></tr><tr><td><a href="https://arxiv.org/abs/2010.08003">Bakirtzis, Fleming &amp; Vasilakopoulou (2021)</a><br><em>Categorical Semantics of Cyber-Physical Systems Theory</em>, §3.3.1</td><td>Separate architecture from a chosen input/output interpretation; hide matching intermediate values when composing relations.</td><td>Static relational composition alone supplies no curing duration, engineering release or resource schedule. The sequential state update here is explicitly proposed.</td></tr></tbody></table></div><p><strong>What is established:</strong> the finite program conserves its counted materials, preserves its declared resource identities and exposes rejected transitions. Its tests compare sequential state updates and the two-step emitted-output composition.</p><p><strong>What remains assumed:</strong> eight bricks and two mortar units per course are illustrative constants. Suitable design, workmanship, bond, dimensions, mortar condition, site access and safe loading are not calculated. A checked declaration represents supplied evidence; it does not verify that evidence or approve a wall. Time, replenishment, waste, weather and multiple crews require a richer model.</p></section>
+<footer><nav aria-label="Essay navigation"><a href="../wall-roof-wiring-smc/">01 · Honest interfaces</a><a href="../wiring-algebra/">02 · Wiring and interpretation</a><a href="../../index.html">Foray home</a></nav><p>Portfolio Wave · FORAY-PROJECT-WIRING · Essay 03 · 23 September 2026</p><p class="small">An agent-assisted teaching construction. Controls and traces are temporary; reload starts again. Nothing is saved or sent. Automated checks do not establish human-use validation or engineering approval.</p></footer></main><noscript><p>JavaScript is needed for the working model. The signatures, assumptions and source explanation remain readable.</p></noscript>
+<!-- COURSE-BUNDLE-START -->
+<script>
+(()=>{
+/** Finite teaching semantics. Counts are toy units, never construction quantities. */
+const COST = Object.freeze({ bricks: 8, mortar: 2 });
+const LIMITS = Object.freeze({ bricks: 40, mortar: 10, courses: 5 });
+const copy = value => JSON.parse(JSON.stringify(value));
+const count = (value, maximum) => Number.isInteger(value) && value >= 0 && value <= maximum;
+
+function initialState(bricks = 24, mortar = 6) {
+  if (!count(bricks, LIMITS.bricks) || !count(mortar, LIMITS.mortar))
+    throw new RangeError('Choose whole counts: 0–40 bricks and 0–10 mortar units.');
+  return {
+    initial: { bricks, mortar },
+    q: { bricks, mortar, worker: { id: 'BL-07' }, drawing: { revision: 'A' },
+      line: { id: 'L-1', positionedFor: 1 } },
+    wall: { id: 'W-1', courses: [], foundationReady: true, supportReady: false }
+  };
+}
+
+function validateQ(q) {
+  if (!q || !count(q.bricks, LIMITS.bricks) || !count(q.mortar, LIMITS.mortar))
+    return 'Material counts are outside the finite model.';
+  if (typeof q.worker?.id !== 'string' || !q.worker.id ||
+      typeof q.drawing?.revision !== 'string' || !q.drawing.revision ||
+      typeof q.line?.id !== 'string' || !q.line.id || !Number.isInteger(q.line.positionedFor))
+    return 'A worker, drawing revision and positioned line must be supplied.';
+  return null;
+}
+
+function materialIssue(q) {
+  if (q.bricks < COST.bricks && q.mortar < COST.mortar) return 'Insufficient bricks and mortar.';
+  if (q.bricks < COST.bricks) return 'Insufficient bricks.';
+  if (q.mortar < COST.mortar) return 'Insufficient mortar.';
+  return null;
+}
+
+function consume(q) {
+  return { ...copy(q), bricks: q.bricks - COST.bricks, mortar: q.mortar - COST.mortar };
+}
+
+function placeCourse(state) {
+  const rejected = reason => ({ ok: false, reason, state: copy(state) });
+  const malformed = validateQ(state?.q);
+  if (malformed) return rejected(malformed);
+  if (!Array.isArray(state?.wall?.courses)) return rejected('A wall state must be supplied.');
+  const n = state.wall.courses.length;
+  if (n >= LIMITS.courses) return rejected('The five-course teaching boundary has been reached.');
+  if (n === 0 && !state.wall.foundationReady) return rejected('First course: foundation readiness has not been declared.');
+  if (n > 0 && !state.wall.supportReady) return rejected('Next course: readiness of the existing top course has not been declared.');
+  if (state.q.line.positionedFor !== n + 1) return rejected(`The line is at course ${state.q.line.positionedFor}; position it for course ${n + 1}.`);
+  const shortage = materialIssue(state.q);
+  if (shortage) return rejected(shortage);
+  const next = copy(state);
+  next.q = consume(state.q);
+  const course = { id: `C-${n + 1}`, number: n + 1, bricks: COST.bricks, mortar: COST.mortar,
+    workerId: state.q.worker.id, drawingRevision: state.q.drawing.revision,
+    supportedBy: n === 0 ? 'foundation' : state.wall.courses[n - 1].id };
+  next.wall.courses.push(course);
+  // A newly added course does not certify its own readiness for further loading.
+  next.wall.supportReady = false;
+  return { ok: true, reason: `Course ${n + 1} accepted by the model.`, state: next, course: copy(course) };
+}
+
+function setConditions(state, changes) {
+  const next = copy(state);
+  for (const key of ['foundationReady', 'supportReady']) {
+    if (key in changes) {
+      if (typeof changes[key] !== 'boolean') throw new TypeError('Readiness declarations must be booleans.');
+      next.wall[key] = changes[key];
+    }
+  }
+  if (changes.positionLine) next.q.line.positionedFor = next.wall.courses.length + 1;
+  return next;
+}
+
+/** The separate-output tile: Q -> Q × Course. No existing wall is an input. */
+function emitCourse(q) {
+  const malformed = validateQ(q);
+  const shortage = malformed || materialIssue(q);
+  if (shortage) return { ok: false, reason: shortage, q: copy(q) };
+  return { ok: true, q: consume(q), course: { bricks: COST.bricks, mortar: COST.mortar,
+    fromStock: { bricks: q.bricks, mortar: q.mortar }, workerId: q.worker.id, drawingRevision: q.drawing.revision } };
+}
+
+/** (emit × id_Course) ∘ emit; output order is (remaining Q, new C2, bypassed C1). */
+function emitTwo(q) {
+  const first = emitCourse(q);
+  if (!first.ok) return { ok: false, reason: first.reason, failedAt: 1, q: copy(q), courses: [] };
+  const second = emitCourse(first.q);
+  if (!second.ok) return { ok: false, reason: second.reason, failedAt: 2, q: copy(q), courses: [] };
+  return { ok: true, q: second.q, courses: [second.course, first.course] };
+}
+
+function balances(state) {
+  const usedBricks = state.wall.courses.reduce((sum, c) => sum + c.bricks, 0);
+  const usedMortar = state.wall.courses.reduce((sum, c) => sum + c.mortar, 0);
+  return { bricks: { initial: state.initial.bricks, left: state.q.bricks, used: usedBricks },
+    mortar: { initial: state.initial.mortar, left: state.q.mortar, used: usedMortar } };
+}
+
+const $ = id => document.getElementById(id);
+let state = initialState();
+let events = [];
+function addEvent(title, detail, rejected = false) {
+  events.push({ title, detail, rejected });
+}
+function describe(s) {
+  return `${s.wall.courses.length} courses; ${s.q.bricks} bricks and ${s.q.mortar} mortar units returned; ${s.q.worker.id}, drawing ${s.q.drawing.revision}, line ${s.q.line.id}.`;
+}
+function result(message, bad = false) {
+  $('result').textContent = message;
+  $('result').classList.toggle('bad', bad);
+}
+function reset() {
+  state = initialState(Number($('bricks').value), Number($('mortar').value));
+  events = [];
+  addEvent('Starting boundary', describe(state));
+  result('New run. Foundation declared ready and line positioned for course 1. Try a step, or challenge a condition.');
+  $('emitted-result').textContent = 'Uses the selected starting supplies above, in a separate calculation.';
+  $('emitted-result').classList.remove('bad');
+  $('emitted-courses').replaceChildren();
+  render();
+}
+function renderWall() {
+  const n = state.wall.courses.length;
+  const lineY = 277 - (state.q.line.positionedFor - 1) * 44;
+  const rows = state.wall.courses.map((course, row) => {
+    const y = 274 - row * 44;
+    return `<g><rect x="77" y="${y - 2}" width="486" height="40" rx="2" fill="#e3dacf"/><g fill="${row === n - 1 ? '#c58c69' : '#d8a588'}" stroke="#93654c" stroke-width="1.5">${Array.from({ length: COST.bricks }, (_, i) => `<rect x="${80 + i * 60}" y="${y}" width="57" height="35" rx="2"/>`).join('')}</g><text x="53" y="${y + 24}" text-anchor="middle" fill="#5c6657" font-size="15">${course.number}</text></g>`;
+  }).join('');
+  const pendingY = 274 - n * 44;
+  $('wall-visual').innerHTML = `<title id="wall-title">Wall W-1 with ${n} accepted courses</title><desc id="wall-description">${n} rows of eight model bricks. ${n ? 'Each row is supported by the row below or the foundation.' : 'The foundation awaits its first course.'} Line L-1 is positioned for course ${state.q.line.positionedFor}.</desc><rect x="59" y="313" width="526" height="23" rx="3" fill="#b0b6a5"/><text x="319" y="330" text-anchor="middle" font-family="system-ui" font-size="12" fill="#20362d">FOUNDATION · ${state.wall.foundationReady ? 'declared ready' : 'readiness not declared'}</text>${n < LIMITS.courses ? `<rect x="79" y="${pendingY}" width="480" height="36" fill="none" stroke="#9fac96" stroke-dasharray="6 5"/><text x="320" y="${pendingY + 23}" text-anchor="middle" font-size="14" fill="#68795e">next course ${n + 1}</text>` : ''}${rows}<path d="M65 44V310M576 44V310" stroke="#7e795d" stroke-width="4"/><path d="M65 ${lineY}H576" stroke="#2f7390" stroke-width="3" stroke-dasharray="8 4"/><text x="90" y="27" fill="#285a70" font-size="14" font-family="system-ui">LINE L-1 · positioned for course ${state.q.line.positionedFor}</text>`;
+}
+function render() {
+  const n = state.wall.courses.length;
+  $('wall-heading').textContent = `Wall W-1 · ${n ? `${n} ${n === 1 ? 'course' : 'courses'}` : 'no courses yet'}`;
+  $('brick-count').textContent = state.q.bricks;
+  $('mortar-count').textContent = state.q.mortar;
+  $('course-count').textContent = n;
+  const b = balances(state);
+  $('balance').textContent = `Bricks: ${b.bricks.initial} = ${b.bricks.left} left + ${b.bricks.used} in courses. Mortar: ${b.mortar.initial} = ${b.mortar.left} left + ${b.mortar.used} in courses.`;
+  $('foundation').checked = state.wall.foundationReady;
+  $('support').checked = state.wall.supportReady;
+  $('line').textContent = `Position line for course ${n + 1}`;
+  $('line').disabled = n >= LIMITS.courses;
+  $('line-status').textContent = n >= LIMITS.courses ? `Five-course boundary reached. Line L-1 returns at course ${state.q.line.positionedFor}.` : `Line L-1 is at course ${state.q.line.positionedFor}. ${state.q.line.positionedFor === n + 1 ? 'It matches the next step.' : 'It must move before the next step.'}`;
+  $('place').textContent = n >= LIMITS.courses ? 'Check the model boundary →' : `Try to lay course ${n + 1} →`;
+  $('returned-resources').textContent = `Worker ${state.q.worker.id} · drawing revision ${state.q.drawing.revision} · line ${state.q.line.id} · ${state.q.bricks} bricks · ${state.q.mortar} mortar units`;
+  $('trace').replaceChildren(...events.map(event => {
+    const li = document.createElement('li');
+    if (event.rejected) li.className = 'rejected';
+    const title = document.createElement('strong'); title.textContent = event.title;
+    li.append(title, document.createTextNode(event.detail)); return li;
+  }));
+  renderWall();
+}
+$('reset').addEventListener('click', reset);
+for (const id of ['bricks', 'mortar']) $(id).addEventListener('change', reset);
+$('foundation').addEventListener('change', () => {
+  state = setConditions(state, { foundationReady: $('foundation').checked });
+  addEvent('Foundation declaration changed', `Foundation readiness = ${state.wall.foundationReady}. This affects the first course only.`);
+  result('Declaration updated. Try a course to evaluate the model.'); render();
+});
+$('support').addEventListener('change', () => {
+  state = setConditions(state, { supportReady: $('support').checked });
+  addEvent('Support declaration changed', `Top-course readiness = ${state.wall.supportReady}. No physical evidence was checked by this program.`);
+  result('Declaration updated. The next step will also check the line and remaining materials.'); render();
+});
+$('line').addEventListener('click', () => {
+  state = setConditions(state, { positionLine: true });
+  addEvent('Line position declared', `Line ${state.q.line.id} is now recorded at course ${state.q.line.positionedFor}.`);
+  result('Line record updated. Try a course to evaluate the remaining conditions.'); render();
+});
+$('place').addEventListener('click', () => {
+  const evaluation = placeCourse(state);
+  if (evaluation.ok) {
+    state = evaluation.state;
+    addEvent(evaluation.reason, `${describe(state)} Support: ${evaluation.course.supportedBy}. Line remains at course ${state.q.line.positionedFor}; new top-course readiness is undeclared.`);
+    result(`${evaluation.reason} Eight bricks and two mortar units moved from stock into W-1. ${state.wall.courses.length >= LIMITS.courses ? 'The five-course teaching boundary is now complete; all returned resources remain visible.' : 'The next step needs fresh support and line declarations.'}`);
+  } else {
+    addEvent('Rejected · no state change', evaluation.reason);
+    events[events.length - 1].rejected = true;
+    result(`${evaluation.reason} Wall, stock and resource identities are unchanged.`, true);
+  }
+  render();
+});
+$('emit').addEventListener('click', () => {
+  const input = initialState(Number($('bricks').value), Number($('mortar').value)).q;
+  const evaluation = emitTwo(input);
+  $('emitted-result').classList.toggle('bad', !evaluation.ok);
+  $('emitted-courses').replaceChildren();
+  if (!evaluation.ok) {
+    $('emitted-result').textContent = `Two-step composite rejected at E${evaluation.failedAt}: ${evaluation.reason} It has no accepted outer output for this input; the wall run above is unchanged.`;
+    return;
+  }
+  $('emitted-result').textContent = `Two separate outputs accepted. ${evaluation.q.bricks} bricks and ${evaluation.q.mortar} mortar units remain; ${evaluation.q.worker.id}, drawing ${evaluation.q.drawing.revision} and line ${evaluation.q.line.id} return. No support edge joins Co₁ to Co₂. The wall run above is unchanged.`;
+  for (const label of ['Co₂ · new output', 'Co₁ · bypassed output']) {
+    const chip = document.createElement('span'); chip.className = 'course-chip'; chip.textContent = label; $('emitted-courses').append(chip);
+  }
+});
+reset();
+
+})();
+</script>
+<!-- COURSE-BUNDLE-END -->
+</body></html>

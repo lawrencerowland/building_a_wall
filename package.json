@@ -25,10 +25,10 @@
   },
   "scripts": {
     "start": "BROWSER=none WDS_SOCKET_PORT=0 vite --port 3000",
-    "build": "node scripts/bundle-wiring.js && node scripts/build-all.js",
+    "build": "node scripts/bundle-wiring.js && node apps/wiring-algebra/build.mjs && node apps/course-by-course/build.mjs && node scripts/build-all.js",
     "preview": "vite preview",
     "test": "vitest",
-    "test:wiring": "node --test tests/wiring-model.test.mjs tests/wiring-layout.test.mjs"
+    "test:wiring": "node --test tests/*.test.mjs"
   },
   "eslintConfig": {
     "extends": [

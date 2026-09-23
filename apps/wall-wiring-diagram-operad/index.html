@@ -102,6 +102,7 @@
 <body>
 <header>
   <a class="back-link" href="../../index.html">Back to app index</a>
+  <p class="callout small" role="note"><strong>Current reading:</strong> <a href="../wall-roof-wiring-smc/">resources and reusable boundaries</a> · <a href="../wiring-algebra/">wiring and its algebra</a> · <a href="../course-by-course/">course-by-course dynamics</a>. This earlier working preserves a single-crew serial alternative and its suggested acceptance conditions. It is a different scenario from the two same-type labour instances in the source wall module. The older signature stops the peg kit at SetOut and omits its return; the current resource essay explicitly returns it.</p>
   <h1>Construction as a Wiring Diagram (left→right), with Guarded Morphisms</h1>
   <p>Mortar → Set‑out → Wall → Roof, typed resources on wires, contracts as preconditions/acceptance tests.</p>
 </header>
@@ -118,7 +119,7 @@
     <div id="viz"><noscript>Enable JavaScript to see the interactive diagram.</noscript></div>
 
     <div class="callout small" style="margin-top:.9rem;">
-      Hover a wire to highlight one <em>object</em> (type) flowing through the composition; click a type in the sidebar to pin the highlight.
+      Hover a wire to highlight one named <em>object</em> (type) flowing through the composition; click a type in the sidebar to pin the highlight. Colours are a visual aid; exact compatibility depends on port types and interfaces, not a shared colour or resource family.
     </div>
   </section>
 
@@ -165,14 +166,14 @@
 
     <div class="tabpanel" id="tab-contracts" role="tabpanel">
       <h3>“Under certain conditions…”</h3>
-      <p class="small muted">A pragmatic move is to model each process as a <em>guarded morphism</em> (precondition + postcondition/acceptance). Composition then propagates obligations: downstream boxes inherit the strongest unmet upstream constraints.</p>
+      <p class="small muted">A pragmatic move is to model each process as a <em>guarded morphism</em> (precondition + postcondition/acceptance). These lists suggest obligations to formalise; this page does not implement a general calculus for propagating preconditions or proving that downstream requirements follow.</p>
       <div id="contractList" class="small"></div>
       <p class="small muted" style="margin-top:.7rem;">This is the project‑manager translation of the categorical “contract algebra” trick: boxes are still morphisms, but you attach a predicate to each interface and compose predicates along the wiring diagram.</p>
     </div>
 
     <div class="tabpanel" id="tab-formal" role="tabpanel">
       <h3>Signature</h3>
-      <p class="small muted">Let <code>τ</code> be a set of types (wire labels) and <code>W_τ</code> the operad of <em>acyclic</em> wiring diagrams; any strict SMC on objects chosen for <code>τ</code> is a <code>W_τ</code>-algebra (normal‑form view).</p>
+      <p class="small muted">Choose a set <code>τ</code> of wire types and an object for each type in an SMC. In the selected typed, acyclic wiring syntax, an interface is an ordered input/output pair; its algebra carrier is the corresponding hom-set. Diagrams act by tensor, composition, identities and symmetry. This specifies an interpretation under those choices, not a blanket equivalence with every operad algebra.</p>
 
       <h3>Objects</h3>
       <pre id="formalObjs"></pre>
@@ -180,8 +181,9 @@
       <h3>Boxes</h3>
       <pre id="formalBoxes"></pre>
 
-      <h3>Composite morphism</h3>
+      <h3>Composite boundary signature</h3>
       <pre id="formalComposite"></pre>
+      <p class="small muted">This is the outer input/output signature, not a fully written composition term. It preserves this earlier model's omitted peg-kit return; consult the current resource essay for the complete returned-resource boundary.</p>
 
       <h3>Laws used implicitly</h3>
       <ul class="list small">
